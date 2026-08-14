@@ -11,6 +11,9 @@ import javax.inject.Singleton
 @Singleton
 class AppStateHolder @Inject constructor() {
 
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+
     private val _currentRole = MutableStateFlow(UserRole.PATIENT)
     val currentRole: StateFlow<UserRole> = _currentRole.asStateFlow()
 
@@ -28,6 +31,39 @@ class AppStateHolder @Inject constructor() {
 
     private val _isOffline = MutableStateFlow(false)
     val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
+
+    fun login(role: UserRole) {
+        _currentRole.value = role
+        _isLoggedIn.value = true
+    }
+
+    fun loginAsPatient(patient: Patient) {
+        _activePatient.value = patient
+        _currentRole.value = UserRole.PATIENT
+        _isLoggedIn.value = true
+    }
+
+    fun loginAsAsha(asha: AshaWorker) {
+        _activeAsha.value = asha
+        _currentRole.value = UserRole.ASHA
+        _isLoggedIn.value = true
+    }
+
+    fun loginAsDoctor(doctor: Doctor) {
+        _activeDoctor.value = doctor
+        _currentRole.value = UserRole.DOCTOR
+        _isLoggedIn.value = true
+    }
+
+    fun loginAsAdmin() {
+        _currentRole.value = UserRole.ADMIN
+        _isLoggedIn.value = true
+    }
+
+    fun logout() {
+        _isLoggedIn.value = false
+        _activeProxyPatient.value = null
+    }
 
     fun switchRole(newRole: UserRole) {
         _currentRole.value = newRole

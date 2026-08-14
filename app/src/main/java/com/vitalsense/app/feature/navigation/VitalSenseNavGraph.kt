@@ -1,5 +1,6 @@
 package com.vitalsense.app.feature.navigation
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,6 +12,7 @@ import com.vitalsense.app.core.state.AppStateHolder
 import com.vitalsense.app.core.ui.components.TopRoleSwitcherBar
 import com.vitalsense.app.feature.admin.AdminHomeScreen
 import com.vitalsense.app.feature.asha.AshaHomeScreen
+import com.vitalsense.app.feature.auth.LoginScreen
 import com.vitalsense.app.feature.doctor.DoctorHomeScreen
 import com.vitalsense.app.feature.patient.PatientHomeScreen
 import kotlinx.coroutines.launch
@@ -23,6 +25,7 @@ fun VitalSenseNavGraph(
 ) {
     val coroutineScope = rememberCoroutineScope()
 
+    val isLoggedIn by appStateHolder.isLoggedIn.collectAsStateWithLifecycle()
     val currentRole by appStateHolder.currentRole.collectAsStateWithLifecycle()
     val activePatient by appStateHolder.activePatient.collectAsStateWithLifecycle()
     val activeAsha by appStateHolder.activeAsha.collectAsStateWithLifecycle()
@@ -41,103 +44,129 @@ fun VitalSenseNavGraph(
     // The effective patient (either the direct patient or the proxy patient being managed by ASHA)
     val effectivePatient = activeProxyPatient ?: activePatient
 
-    Scaffold(
-        topBar = {
-            TopRoleSwitcherBar(
-                currentRole = currentRole,
-                onRoleSelected = { newRole ->
-                    appStateHolder.switchRole(newRole)
+    AnimatedContent(
+        targetState = isLoggedIn,
+        label = "AuthTransition"
+    ) { loggedIn ->
+        if (!loggedIn) {
+            LoginScreen(
+                onPatientLogin = { selectedPatient ->
+                    appStateHolder.loginAsPatient(selectedPatient)
                 },
-                activeProxyPatient = activeProxyPatient,
-                onExitProxy = {
-                    appStateHolder.clearProxy()
-                    appStateHolder.switchRole(UserRole.ASHA)
+                onAshaLogin = { selectedAsha ->
+                    appStateHolder.loginAsAsha(selectedAsha)
                 },
-                isOffline = isOffline,
-                onToggleOffline = {
-                    appStateHolder.toggleOffline()
-                }
+                onDoctorLogin = { selectedDoctor ->
+                    appStateHolder.loginAsDoctor(selectedDoctor)
+                },
+                onAdminLogin = {
+                    appStateHolder.loginAsAdmin()
+                },
+                modifier = modifier
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-        modifier = modifier.fillMaxSize()
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            when (currentRole) {
-                UserRole.PATIENT -> {
-                    PatientHomeScreen(
-                        patient = effectivePatient,
-                        onCategoryClick = { category ->
-                            // Hook for Person 2/5 to navigate to category detail or symptom entry
+        } else {
+            Scaffold(
+                topBar = {
+                    TopRoleSwitcherBar(
+                        currentRole = currentRole,
+                        onRoleSelected = { newRole ->
+                            appStateHolder.switchRole(newRole)
                         },
-                        onViewHealthCard = {
-                            // Hook for Person 2 to navigate to full Health Card screen
+                        activeProxyPatient = activeProxyPatient,
+                        onExitProxy = {
+                            appStateHolder.clearProxy()
+                            appStateHolder.switchRole(UserRole.ASHA)
                         },
-                        onTriggerSos = {
-                            coroutineScope.launch {
-                                repository.triggerEmergencySos(effectivePatient, null, null)
-                            }
+                        isOffline = isOffline,
+                        onToggleOffline = {
+                            appStateHolder.toggleOffline()
+                        },
+                        onLogout = {
+                            appStateHolder.logout()
                         }
                     )
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background,
+                modifier = modifier.fillMaxSize()
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    when (currentRole) {
+                        UserRole.PATIENT -> {
+                            PatientHomeScreen(
+                                patient = effectivePatient,
+                                onCategoryClick = { _ ->
+                                    // Hook for Person 2/5 to navigate to category detail or symptom entry
+                                },
+                                onViewHealthCard = {
+                                    // Hook for Person 2 to navigate to full Health Card screen
+                                },
+                                onTriggerSos = {
+                                    coroutineScope.launch {
+                                        repository.triggerEmergencySos(effectivePatient, null, null)
+                                    }
+                                }
+                            )
+                        }
 
-                UserRole.ASHA -> {
-                    AshaHomeScreen(
-                        asha = activeAsha,
-                        patients = patients.filter { it.ashaWorkerId == activeAsha.id },
-                        notices = notices,
-                        onSelectProxyPatient = { selectedPatient ->
-                            // Activate Proxy Mode: switch to Patient dashboard on behalf of this patient!
-                            appStateHolder.setProxyPatient(selectedPatient)
-                            appStateHolder.switchRole(UserRole.PATIENT)
-                        },
-                        onRegisterPatientClick = {
-                            // Hook for Person 3 to open patient registration
-                        },
-                        onSendNoticeClick = {
-                            // Hook for Person 3 to broadcast notice
+                        UserRole.ASHA -> {
+                            AshaHomeScreen(
+                                asha = activeAsha,
+                                patients = patients.filter { it.ashaWorkerId == activeAsha.id },
+                                notices = notices,
+                                onSelectProxyPatient = { selectedPatient ->
+                                    // Activate Proxy Mode: switch to Patient dashboard on behalf of this patient!
+                                    appStateHolder.setProxyPatient(selectedPatient)
+                                    appStateHolder.switchRole(UserRole.PATIENT)
+                                },
+                                onRegisterPatientClick = {
+                                    // Hook for Person 3 to open patient registration
+                                },
+                                onSendNoticeClick = {
+                                    // Hook for Person 3 to broadcast notice
+                                }
+                            )
                         }
-                    )
-                }
 
-                UserRole.DOCTOR -> {
-                    DoctorHomeScreen(
-                        doctor = activeDoctor,
-                        pendingConditions = conditions,
-                        appointments = appointments.filter { it.doctorId == activeDoctor.id },
-                        dispensaryStock = dispensaryStock,
-                        onRespondClick = { conditionRecord ->
-                            // Hook for Person 4 to open prescription writer
+                        UserRole.DOCTOR -> {
+                            DoctorHomeScreen(
+                                doctor = activeDoctor,
+                                pendingConditions = conditions,
+                                appointments = appointments.filter { it.doctorId == activeDoctor.id },
+                                dispensaryStock = dispensaryStock,
+                                onRespondClick = { _ ->
+                                    // Hook for Person 4 to open prescription writer
+                                }
+                            )
                         }
-                    )
-                }
 
-                UserRole.ADMIN -> {
-                    AdminHomeScreen(
-                        villages = villages,
-                        notices = notices,
-                        onSendBroadcast = { title, message, village ->
-                            coroutineScope.launch {
-                                repository.sendNotice(
-                                    BroadcastNotice(
-                                        id = "notice_${System.currentTimeMillis()}",
-                                        senderRole = UserRole.ADMIN,
-                                        senderName = "District Chief Medical Officer",
-                                        targetRole = "ALL",
-                                        targetVillage = village,
-                                        title = title,
-                                        message = message,
-                                        timestamp = System.currentTimeMillis(),
-                                        isUrgent = true
-                                    )
-                                )
-                            }
+                        UserRole.ADMIN -> {
+                            AdminHomeScreen(
+                                villages = villages,
+                                notices = notices,
+                                onSendBroadcast = { title, message, village ->
+                                    coroutineScope.launch {
+                                        repository.sendNotice(
+                                            BroadcastNotice(
+                                                id = "notice_${System.currentTimeMillis()}",
+                                                senderRole = UserRole.ADMIN,
+                                                senderName = "District Chief Medical Officer",
+                                                targetRole = "ALL",
+                                                targetVillage = village,
+                                                title = title,
+                                                message = message,
+                                                timestamp = System.currentTimeMillis(),
+                                                isUrgent = true
+                                            )
+                                        )
+                                    }
+                                }
+                            )
                         }
-                    )
+                    }
                 }
             }
         }

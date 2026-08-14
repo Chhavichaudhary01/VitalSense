@@ -7,8 +7,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +28,7 @@ fun TopRoleSwitcherBar(
     onExitProxy: () -> Unit = {},
     isOffline: Boolean = false,
     onToggleOffline: () -> Unit = {},
+    onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -81,28 +80,55 @@ fun TopRoleSwitcherBar(
                 }
             }
 
-            // Connectivity Mode Pill (Clickable for instant offline/online demo testing)
-            Surface(
-                shape = PillShape,
-                color = if (isOffline) Color(0xFFF0EDE6) else SoftMintSuccess.copy(alpha = 0.6f),
-                modifier = Modifier.clickable { onToggleOffline() }
+            // Right Actions: Connectivity Pill & Logout
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                // Connectivity Mode Pill
+                Surface(
+                    shape = PillShape,
+                    color = if (isOffline) Color(0xFFF0EDE6) else SoftMintSuccess.copy(alpha = 0.6f),
+                    modifier = Modifier.clickable { onToggleOffline() }
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(if (isOffline) Color.Gray else Color(0xFF2E7D32))
-                    )
-                    Text(
-                        text = if (isOffline) "Offline (Cached)" else "Online",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (isOffline) TextSecondaryMuted else Color(0xFF1B5E20)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(if (isOffline) Color.Gray else Color(0xFF2E7D32))
+                        )
+                        Text(
+                            text = if (isOffline) "Offline" else "Online",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = if (isOffline) TextSecondaryMuted else Color(0xFF1B5E20)
+                        )
+                    }
+                }
+
+                // Logout Button
+                Surface(
+                    shape = PillShape,
+                    color = SurfaceWhite,
+                    shadowElevation = 1.dp,
+                    modifier = Modifier.clickable { onLogout() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Text(text = "🚪", fontSize = 11.sp)
+                        Text(
+                            text = "Exit",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = TextPrimaryNearBlack
+                        )
+                    }
                 }
             }
         }
