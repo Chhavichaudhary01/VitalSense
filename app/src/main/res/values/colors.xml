@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary_lime">#E8EB7D</color>
+    <color name="secondary_lavender">#A3AEFE</color>
+    <color name="tertiary_pink">#FFB8F0</color>
+    <color name="background_cream">#FFF8ED</color>
+    <color name="surface_white">#FFFFFF</color>
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#7A7A7A</color>
+    <color name="alert_coral">#FF6B6B</color>
+    <color name="warning_amber">#FFD166</color>
+    <color name="success_mint">#C8F5D4</color>
+</resources>

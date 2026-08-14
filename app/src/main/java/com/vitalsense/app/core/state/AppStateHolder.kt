@@ -1,0 +1,59 @@
+package com.vitalsense.app.core.state
+
+import com.vitalsense.app.core.data.local.seed.SeedDataProvider
+import com.vitalsense.app.core.data.model.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class AppStateHolder @Inject constructor() {
+
+    private val _currentRole = MutableStateFlow(UserRole.PATIENT)
+    val currentRole: StateFlow<UserRole> = _currentRole.asStateFlow()
+
+    private val _activePatient = MutableStateFlow(SeedDataProvider.initialPatients.first())
+    val activePatient: StateFlow<Patient> = _activePatient.asStateFlow()
+
+    private val _activeAsha = MutableStateFlow(SeedDataProvider.initialAshaWorkers.first())
+    val activeAsha: StateFlow<AshaWorker> = _activeAsha.asStateFlow()
+
+    private val _activeDoctor = MutableStateFlow(SeedDataProvider.initialDoctors.first())
+    val activeDoctor: StateFlow<Doctor> = _activeDoctor.asStateFlow()
+
+    private val _activeProxyPatient = MutableStateFlow<Patient?>(null)
+    val activeProxyPatient: StateFlow<Patient?> = _activeProxyPatient.asStateFlow()
+
+    private val _isOffline = MutableStateFlow(false)
+    val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
+
+    fun switchRole(newRole: UserRole) {
+        _currentRole.value = newRole
+    }
+
+    fun selectPatient(patient: Patient) {
+        _activePatient.value = patient
+    }
+
+    fun selectAsha(asha: AshaWorker) {
+        _activeAsha.value = asha
+    }
+
+    fun selectDoctor(doctor: Doctor) {
+        _activeDoctor.value = doctor
+    }
+
+    fun setProxyPatient(patient: Patient?) {
+        _activeProxyPatient.value = patient
+    }
+
+    fun clearProxy() {
+        _activeProxyPatient.value = null
+    }
+
+    fun toggleOffline() {
+        _isOffline.value = !_isOffline.value
+    }
+}

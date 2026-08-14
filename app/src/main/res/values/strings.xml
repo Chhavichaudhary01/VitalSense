@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">VitalSense</string>
+    <string name="tagline">SehatSetu — Rural Healthcare Bridge</string>
+    <string name="role_patient">Patient</string>
+    <string name="role_asha">ASHA Worker</string>
+    <string name="role_doctor">Doctor</string>
+    <string name="role_admin">Admin</string>
+</resources>
