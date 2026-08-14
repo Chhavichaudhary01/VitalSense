@@ -2,7 +2,7 @@ package com.vitalsense.app.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Core Design Tokens from design-docs.md
+// Core Design Tokens from SYSTEM_DESIGN.md
 val LimePrimary = Color(0xFFE8EB7D)
 val LavenderSecondary = Color(0xFFA3AEFE)
 val BlushPinkTertiary = Color(0xFFFFB8F0)
