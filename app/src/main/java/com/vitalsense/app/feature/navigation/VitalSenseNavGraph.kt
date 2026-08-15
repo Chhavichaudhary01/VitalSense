@@ -44,6 +44,13 @@ fun VitalSenseNavGraph(
     // The effective patient (either the direct patient or the proxy patient being managed by ASHA)
     val effectivePatient = activeProxyPatient ?: activePatient
 
+    val activeUserName = when (currentRole) {
+        UserRole.PATIENT -> effectivePatient.name
+        UserRole.ASHA -> activeAsha.name
+        UserRole.DOCTOR -> activeDoctor.name
+        UserRole.ADMIN -> "District CMO (Rampur)"
+    }
+
     AnimatedContent(
         targetState = isLoggedIn,
         label = "AuthTransition"
@@ -69,9 +76,7 @@ fun VitalSenseNavGraph(
                 topBar = {
                     TopRoleSwitcherBar(
                         currentRole = currentRole,
-                        onRoleSelected = { newRole ->
-                            appStateHolder.switchRole(newRole)
-                        },
+                        activeUserName = activeUserName,
                         activeProxyPatient = activeProxyPatient,
                         onExitProxy = {
                             appStateHolder.clearProxy()
