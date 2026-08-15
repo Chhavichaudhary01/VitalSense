@@ -31,7 +31,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
-    var selectedRole by remember { mutableStateOf(UserRole.PATIENT) }
+    var selectedRole by remember { mutableStateOf(UserRole.DOCTOR) } // Default to Doctor to showcase Glume UI
 
     // Form inputs
     var phoneInput by remember { mutableStateOf("") }
@@ -48,7 +48,7 @@ fun LoginScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(WarmCreamBackground)
+            .background(GlumeBackground)
             .padding(horizontal = Spacing.md),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
         contentPadding = PaddingValues(top = Spacing.lg, bottom = Spacing.xxl)
@@ -62,31 +62,31 @@ fun LoginScreen(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .background(LimePrimary),
+                            .background(GlumePrimaryPurple),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "V",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                     }
                     Column {
                         Text(
                             text = strings.appName,
                             style = MaterialTheme.typography.displayMedium,
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = strings.tagline,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
                 }
@@ -95,9 +95,9 @@ fun LoginScreen(
                 Surface(
                     onClick = onToggleLanguage,
                     shape = PillShape,
-                    color = SurfaceWhite,
-                    border = BorderStroke(1.5.dp, DarkCharcoal),
-                    shadowElevation = 2.dp,
+                    color = GlumeSurfaceCard,
+                    border = BorderStroke(1.dp, GlumeBorder),
+                    shadowElevation = 0.dp,
                     modifier = Modifier.defaultMinSize(minHeight = 40.dp)
                 ) {
                     Row(
@@ -109,7 +109,7 @@ fun LoginScreen(
                         Text(
                             text = currentLanguage.displayName,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                     }
                 }
@@ -122,12 +122,12 @@ fun LoginScreen(
                 Text(
                     text = strings.whoIsUsing,
                     style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimaryNearBlack
+                    color = GlumeTextPrimary
                 )
                 Text(
                     text = strings.selectRoleDesc,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondaryMuted
+                    color = GlumeTextSecondary
                 )
             }
         }
@@ -144,7 +144,6 @@ fun LoginScreen(
                         title = strings.rolePatient,
                         desc = strings.rolePatientDesc,
                         icon = "👤",
-                        color = LimePrimary,
                         isSelected = selectedRole == UserRole.PATIENT,
                         onClick = { selectedRole = UserRole.PATIENT },
                         modifier = Modifier.weight(1f)
@@ -154,7 +153,6 @@ fun LoginScreen(
                         title = strings.roleAsha,
                         desc = strings.roleAshaDesc,
                         icon = "🤝",
-                        color = LavenderSecondary,
                         isSelected = selectedRole == UserRole.ASHA,
                         onClick = { selectedRole = UserRole.ASHA },
                         modifier = Modifier.weight(1f)
@@ -169,7 +167,6 @@ fun LoginScreen(
                         title = strings.roleDoctor,
                         desc = strings.roleDoctorDesc,
                         icon = "🩺",
-                        color = BlushPinkTertiary,
                         isSelected = selectedRole == UserRole.DOCTOR,
                         onClick = { selectedRole = UserRole.DOCTOR },
                         modifier = Modifier.weight(1f)
@@ -179,7 +176,6 @@ fun LoginScreen(
                         title = strings.roleAdmin,
                         desc = strings.roleAdminDesc,
                         icon = "🛡️",
-                        color = AmberWarning,
                         isSelected = selectedRole == UserRole.ADMIN,
                         onClick = { selectedRole = UserRole.ADMIN },
                         modifier = Modifier.weight(1f)
@@ -191,8 +187,7 @@ fun LoginScreen(
         // 4. Role Credentials Form & 1-Tap Demo Login
         item {
             VitalSenseCard(
-                elevation = 2.dp,
-                backgroundColor = SurfaceWhite
+                backgroundColor = GlumeSurfaceCard
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
@@ -203,7 +198,7 @@ fun LoginScreen(
                             UserRole.ADMIN -> strings.adminSignIn
                         },
                         style = MaterialTheme.typography.titleLarge,
-                        color = TextPrimaryNearBlack
+                        color = GlumeTextPrimary
                     )
 
                     when (selectedRole) {
@@ -230,14 +225,14 @@ fun LoginScreen(
                             Text(
                                 text = strings.quickDemoLogin,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondaryMuted
+                                color = GlumeTextSecondary
                             )
                             samplePatients.forEach { patient ->
                                 Surface(
                                     onClick = { onPatientLogin(patient) },
                                     shape = PillShape,
-                                    color = LimePrimary.copy(alpha = 0.35f),
-                                    border = BorderStroke(1.dp, CardBorderSubtle),
+                                    color = GlumeSurfaceElevated,
+                                    border = BorderStroke(1.dp, GlumeBorder),
                                     modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                                 ) {
                                     Row(
@@ -248,7 +243,7 @@ fun LoginScreen(
                                         Text(
                                             text = "${patient.name} (${patient.villageName})",
                                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = TextPrimaryNearBlack
+                                            color = GlumeTextPrimary
                                         )
                                         SeverityBadge(severity = patient.currentRiskLevel)
                                     }
@@ -273,20 +268,20 @@ fun LoginScreen(
                             VitalSenseButton(
                                 text = strings.logInAsAsha,
                                 onClick = { onAshaLogin(sampleAshas.first()) },
-                                style = ButtonStyle.DARK
+                                style = ButtonStyle.PRIMARY
                             )
 
                             Text(
                                 text = strings.quickDemoLogin,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondaryMuted
+                                color = GlumeTextSecondary
                             )
                             sampleAshas.forEach { asha ->
                                 Surface(
                                     onClick = { onAshaLogin(asha) },
                                     shape = PillShape,
-                                    color = LavenderSecondary.copy(alpha = 0.35f),
-                                    border = BorderStroke(1.dp, CardBorderSubtle),
+                                    color = GlumeSurfaceElevated,
+                                    border = BorderStroke(1.dp, GlumeBorder),
                                     modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                                 ) {
                                     Row(
@@ -297,12 +292,12 @@ fun LoginScreen(
                                         Text(
                                             text = "${asha.name} (${asha.ashaUniqueId})",
                                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = TextPrimaryNearBlack
+                                            color = GlumeTextPrimary
                                         )
                                         Text(
                                             text = "${asha.activePatientCount} patients",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = TextSecondaryMuted
+                                            color = GlumeTextSecondary
                                         )
                                     }
                                 }
@@ -332,14 +327,14 @@ fun LoginScreen(
                             Text(
                                 text = strings.quickDemoLogin,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondaryMuted
+                                color = GlumeTextSecondary
                             )
                             sampleDoctors.forEach { doc ->
                                 Surface(
                                     onClick = { onDoctorLogin(doc) },
                                     shape = PillShape,
-                                    color = BlushPinkTertiary.copy(alpha = 0.35f),
-                                    border = BorderStroke(1.dp, CardBorderSubtle),
+                                    color = GlumeSurfaceElevated,
+                                    border = BorderStroke(1.dp, GlumeBorder),
                                     modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                                 ) {
                                     Row(
@@ -350,12 +345,12 @@ fun LoginScreen(
                                         Text(
                                             text = doc.name,
                                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = TextPrimaryNearBlack
+                                            color = GlumeTextPrimary
                                         )
                                         Text(
                                             text = doc.specialty.displayName,
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = TextSecondaryMuted
+                                            color = GlumePrimaryPurpleLight
                                         )
                                     }
                                 }
@@ -373,19 +368,19 @@ fun LoginScreen(
                             VitalSenseButton(
                                 text = strings.logInAsAdmin,
                                 onClick = onAdminLogin,
-                                style = ButtonStyle.DARK
+                                style = ButtonStyle.PRIMARY
                             )
 
                             Text(
                                 text = strings.quickDemoLogin,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondaryMuted
+                                color = GlumeTextSecondary
                             )
                             Surface(
                                 onClick = onAdminLogin,
                                 shape = PillShape,
-                                color = AmberWarning.copy(alpha = 0.35f),
-                                border = BorderStroke(1.dp, CardBorderSubtle),
+                                color = GlumeSurfaceElevated,
+                                border = BorderStroke(1.dp, GlumeBorder),
                                 modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                             ) {
                                 Row(
@@ -396,12 +391,12 @@ fun LoginScreen(
                                     Text(
                                         text = "District Chief Medical Officer (Rampur)",
                                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                        color = TextPrimaryNearBlack
+                                        color = GlumeTextPrimary
                                     )
                                     Text(
                                         text = "Full Access",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = AmberWarningDark
+                                        color = GlumeSuccessText
                                     )
                                 }
                             }
@@ -421,7 +416,7 @@ fun LoginScreen(
                 Text(
                     text = strings.offlineBanner,
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondaryMuted
+                    color = GlumeTextSecondary
                 )
             }
         }
@@ -434,7 +429,6 @@ private fun RoleCard(
     title: String,
     desc: String,
     icon: String,
-    color: Color,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -443,9 +437,9 @@ private fun RoleCard(
         onClick = onClick,
         modifier = modifier.defaultMinSize(minHeight = 90.dp),
         shape = CardShape,
-        color = if (isSelected) color.copy(alpha = 0.45f) else SurfaceWhite,
-        shadowElevation = if (isSelected) 2.dp else 1.dp,
-        border = if (isSelected) BorderStroke(2.dp, DarkCharcoal) else BorderStroke(1.dp, CardBorderColor)
+        color = if (isSelected) GlumePrimaryPurpleContainer else GlumeSurfaceCard,
+        shadowElevation = 0.dp,
+        border = if (isSelected) BorderStroke(1.5.dp, GlumePrimaryPurple) else BorderStroke(1.dp, GlumeBorder)
     ) {
         Column(
             modifier = Modifier
@@ -462,12 +456,12 @@ private fun RoleCard(
                 if (isSelected) {
                     Box(
                         modifier = Modifier
-                            .size(18.dp)
+                            .size(20.dp)
                             .clip(CircleShape)
-                            .background(DarkCharcoal),
+                            .background(GlumePrimaryPurple),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "✓", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "✓", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -475,12 +469,12 @@ private fun RoleCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimaryNearBlack
+                    color = if (isSelected) GlumePrimaryPurpleLight else GlumeTextPrimary
                 )
                 Text(
                     text = desc,
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondaryMuted,
+                    color = GlumeTextSecondary,
                     maxLines = 1
                 )
             }

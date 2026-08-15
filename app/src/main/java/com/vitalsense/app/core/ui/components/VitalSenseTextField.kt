@@ -34,9 +34,9 @@ fun VitalSenseTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(text = label, style = MaterialTheme.typography.bodyMedium) },
+            label = { Text(text = label, style = MaterialTheme.typography.bodyMedium, color = GlumeTextSecondary) },
             placeholder = if (placeholder != null) {
-                { Text(text = placeholder, style = MaterialTheme.typography.bodyMedium, color = TextSecondaryMuted) }
+                { Text(text = placeholder, style = MaterialTheme.typography.bodyMedium, color = GlumeTextTertiary) }
             } else null,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
@@ -49,16 +49,18 @@ fun VitalSenseTextField(
             enabled = enabled,
             shape = InputShape,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = SurfaceWhite,
-                unfocusedContainerColor = SurfaceWhite,
-                disabledContainerColor = SurfaceCream,
-                errorContainerColor = SurfaceWhite,
-                focusedBorderColor = InputBorderFocused,
-                unfocusedBorderColor = InputBorderColor,
-                errorBorderColor = CoralAlert,
-                focusedLabelColor = TextPrimaryNearBlack,
-                unfocusedLabelColor = TextSecondaryMuted,
-                cursorColor = DarkCharcoal
+                focusedContainerColor = GlumeSurfaceElevated,
+                unfocusedContainerColor = GlumeSurfaceCard,
+                disabledContainerColor = GlumeSurfaceElevated.copy(alpha = 0.4f),
+                errorContainerColor = GlumeSurfaceCard,
+                focusedBorderColor = GlumePrimaryPurple,
+                unfocusedBorderColor = GlumeBorder,
+                errorBorderColor = GlumeAlertCoral,
+                focusedLabelColor = GlumePrimaryPurpleLight,
+                unfocusedLabelColor = GlumeTextSecondary,
+                cursorColor = GlumePrimaryPurple,
+                focusedTextColor = GlumeTextPrimary,
+                unfocusedTextColor = GlumeTextPrimary
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -67,7 +69,7 @@ fun VitalSenseTextField(
             Text(
                 text = errorMessage,
                 style = MaterialTheme.typography.bodySmall,
-                color = CoralAlert,
+                color = GlumeAlertCoral,
                 modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xxs)
             )
         }

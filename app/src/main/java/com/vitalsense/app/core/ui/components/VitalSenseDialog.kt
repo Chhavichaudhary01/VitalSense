@@ -34,9 +34,9 @@ fun VitalSenseDialog(
                 .fillMaxWidth()
                 .wrapContentHeight(),
             shape = DialogShape,
-            color = WarmCreamBackground,
+            color = GlumeSurfaceCard,
             shadowElevation = 8.dp,
-            border = BorderStroke(1.dp, CardBorderColor)
+            border = BorderStroke(1.dp, GlumeBorder)
         ) {
             Column(
                 modifier = Modifier
@@ -61,12 +61,14 @@ fun VitalSenseDialog(
                         Column {
                             Text(
                                 text = title,
-                                style = MaterialTheme.typography.titleLarge
+                                style = MaterialTheme.typography.titleLarge,
+                                color = GlumeTextPrimary
                             )
                             if (subtitle != null) {
                                 Text(
                                     text = subtitle,
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = GlumeTextSecondary
                                 )
                             }
                         }
@@ -79,12 +81,12 @@ fun VitalSenseDialog(
                         Text(
                             text = "✕",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
                 }
 
-                HorizontalDivider(color = DividerSubtle, thickness = 1.dp)
+                HorizontalDivider(color = GlumeBorder, thickness = 1.dp)
 
                 // Body content
                 content()
