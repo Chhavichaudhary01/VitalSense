@@ -4,10 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -19,26 +21,32 @@ import com.vitalsense.app.core.ui.theme.*
 @Composable
 fun DoctorHomeScreen(
     doctor: Doctor,
-    pendingConditions: List<ConditionRecord>,
+    cases: List<ConditionRecord>,
     appointments: List<Appointment>,
     dispensaryStock: List<DispensaryItem>,
-    onRespondClick: (ConditionRecord) -> Unit = {},
+    onSelectCase: (ConditionRecord) -> Unit,
+    onAcceptAppointment: (String) -> Unit = {},
+    onDeclineAppointment: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val pendingCases = cases.filter { it.status == CaseStatus.PENDING_REVIEW || it.status == CaseStatus.IN_PROGRESS }
+    val severeCount = cases.count { it.severity == SeverityLevel.SEVERE || it.severity == SeverityLevel.HIGH }
+    val lowStockCount = dispensaryStock.count { it.isLowStock }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(WarmCreamBackground)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 12.dp, bottom = 32.dp)
+        contentPadding = PaddingValues(top = 12.dp, bottom = 36.dp)
     ) {
         // 1. Doctor Header
         item {
             Column {
                 Text(
                     text = doctor.name,
-                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 24.sp),
+                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 22.sp),
                     color = TextPrimaryNearBlack
                 )
                 Text(
@@ -49,11 +57,11 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 2. Metrics summary
+        // 2. Metrics summary KPI Cards (§4.6)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 VitalSenseCard(
                     modifier = Modifier.weight(1f),
@@ -61,13 +69,26 @@ fun DoctorHomeScreen(
                 ) {
                     Column {
                         Text(
-                            text = "${pendingConditions.size}",
+                            text = "${pendingCases.size}",
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
                         )
+                        Text(text = "Pending Cases", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+
+                VitalSenseCard(
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = if (severeCount > 0) CoralAlert.copy(alpha = 0.25f) else SoftMintSuccess.copy(alpha = 0.35f)
+                ) {
+                    Column {
                         Text(
-                            text = "Pending Cases",
-                            style = MaterialTheme.typography.labelSmall
+                            text = "$severeCount",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = if (severeCount > 0) CoralAlert else TextPrimaryNearBlack
+                            )
                         )
+                        Text(text = "High / Severe Alerts", style = MaterialTheme.typography.labelSmall)
                     }
                 }
 
@@ -80,138 +101,250 @@ fun DoctorHomeScreen(
                             text = "${appointments.size}",
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
                         )
-                        Text(
-                            text = "Appointments",
-                            style = MaterialTheme.typography.labelSmall
-                        )
+                        Text(text = "Appointments", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
         }
 
-        // 3. Section: Pending Patient Cases Queue
+        // 3. Section: Triage Patient Cases Queue (§2.1, §4.1)
         item {
-            Text(
-                text = "Pending Clinical Cases (${pendingConditions.size})",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = TextPrimaryNearBlack
-            )
-        }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Specialist Case Queue (${cases.size})",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = TextPrimaryNearBlack
+                )
 
-        items(pendingConditions) { record ->
-            VitalSenseCard(elevation = 2.dp) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = record.patientName,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                            Text(
-                                text = "Village: ${record.villageName} · Category: ${record.category.displayName}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondaryMuted
-                            )
-                        }
-                        SeverityBadge(severity = record.severity)
-                    }
-
+                Surface(shape = PillShape, color = SurfaceWhite) {
                     Text(
-                        text = "Symptoms: ${record.notes}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextPrimaryNearBlack
+                        text = "Scoped to ${doctor.specialty.displayName}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        color = TextSecondaryMuted
                     )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (record.ashaProxyLogged) {
-                            Surface(shape = PillShape, color = LavenderSecondary.copy(alpha = 0.4f)) {
-                                Text(
-                                    text = "Logged by ASHA Helper",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                )
-                            }
-                        } else {
-                            Spacer(modifier = Modifier.width(1.dp))
-                        }
-
-                        Button(
-                            onClick = { onRespondClick(record) },
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal)
-                        ) {
-                            Text(text = "Prescribe & Guide →", color = LimePrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        }
-                    }
                 }
             }
         }
 
-        // 4. Section: Upcoming Appointments
-        item {
-            Text(
-                text = "Scheduled Appointments",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = TextPrimaryNearBlack
-            )
-        }
-
-        items(appointments) { appointment ->
-            VitalSenseCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
+        if (cases.isEmpty()) {
+            item {
+                VitalSenseCard(backgroundColor = SurfaceWhite) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(text = "✨", fontSize = 28.sp)
                         Text(
-                            text = appointment.patientName,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            text = "No pending cases in your specialty queue",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "${appointment.dateFormatted} at ${appointment.timeSlot}",
+                            text = "All patient cases for ${doctor.specialty.displayName} have been reviewed.",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
                     }
-                    Surface(
-                        shape = PillShape,
-                        color = if (appointment.status == "Confirmed") SoftMintSuccess.copy(alpha = 0.5f) else AmberWarning.copy(alpha = 0.4f)
-                    ) {
+                }
+            }
+        } else {
+            items(cases) { record ->
+                val isMentalHealth = record.category == ConditionCategory.MENTAL_HEALTH ||
+                        record.requestedDoctorType == DoctorSpecialty.PSYCHOLOGIST
+
+                VitalSenseCard(elevation = 2.dp) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = record.patientName,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "Village: ${record.villageName} · ${record.category.displayName}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondaryMuted
+                                )
+                            }
+                            SeverityBadge(severity = record.severity)
+                        }
+
+                        // Mental Health Referral Flag (§2.6)
+                        if (isMentalHealth) {
+                            Surface(shape = PillShape, color = LavenderSecondary.copy(alpha = 0.45f)) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(text = "🧠", fontSize = 11.sp)
+                                    Text(
+                                        text = "Mental Health Referral (Patient Stress Section)",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = TextPrimaryNearBlack
+                                    )
+                                }
+                            }
+                        }
+
                         Text(
-                            text = appointment.status,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            text = "Symptoms: ${record.notes}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimaryNearBlack
                         )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Status Pill
+                            Surface(
+                                shape = PillShape,
+                                color = Color(record.status.colorHex).copy(alpha = 0.3f)
+                            ) {
+                                Text(
+                                    text = record.status.displayName,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    color = TextPrimaryNearBlack
+                                )
+                            }
+
+                            Button(
+                                onClick = { onSelectCase(record) },
+                                shape = PillShape,
+                                colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal)
+                            ) {
+                                Text(text = "Review Case →", color = LimePrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // 5. Section: Mock Dispensary Stock Check (PRD §3.3 & §4.5)
+        // 4. Section: Upcoming Appointments (§2.4)
         item {
             Text(
-                text = "Dispensary Stock & Medicine Availability",
+                text = "Scheduled Appointments (${appointments.size})",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 ),
                 color = TextPrimaryNearBlack
             )
+        }
+
+        if (appointments.isEmpty()) {
+            item {
+                Text(
+                    text = "No scheduled appointments found.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondaryMuted
+                )
+            }
+        } else {
+            items(appointments) { appointment ->
+                val isPending = appointment.status.contains("Pending", ignoreCase = true)
+
+                VitalSenseCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = appointment.patientName,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "${appointment.dateFormatted} at ${appointment.timeSlot}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondaryMuted
+                                )
+                            }
+                            Surface(
+                                shape = PillShape,
+                                color = if (appointment.status == "Confirmed") SoftMintSuccess.copy(alpha = 0.5f) else AmberWarning.copy(alpha = 0.4f)
+                            ) {
+                                Text(
+                                    text = appointment.status,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
+                        if (isPending) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TextButton(
+                                    onClick = { onDeclineAppointment(appointment.id) },
+                                    shape = PillShape
+                                ) {
+                                    Text("Decline", color = CoralAlert, fontSize = 12.sp)
+                                }
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Button(
+                                    onClick = { onAcceptAppointment(appointment.id) },
+                                    shape = PillShape,
+                                    colors = ButtonDefaults.buttonColors(containerColor = SoftMintSuccess),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(28.dp)
+                                ) {
+                                    Text("Accept ✓", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5. Section: Dispensary Stock & Availability Check (§2.3)
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Dispensary Stock Check",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = TextPrimaryNearBlack
+                )
+                if (lowStockCount > 0) {
+                    Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.2f)) {
+                        Text(
+                            text = "$lowStockCount LOW STOCK",
+                            style = MaterialTheme.typography.labelSmall.copy(color = CoralAlert, fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+            }
         }
 
         items(dispensaryStock) { item ->

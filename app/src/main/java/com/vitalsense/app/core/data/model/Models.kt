@@ -63,6 +63,16 @@ data class ConditionRecord(
     val notes: String,
     val timestamp: Long,
     val ashaProxyLogged: Boolean = false,
+    val status: CaseStatus = CaseStatus.PENDING_REVIEW,
+    val assignedDoctorId: String? = null,
+    val assignedDoctorName: String? = null,
+    val doctorResponse: String? = null,
+    val doctorResponseTimestamp: Long? = null,
+    val doctorResponseDoctorName: String? = null,
+    val privateDoctorNotes: String? = null,
+    val referredByDoctorId: String? = null,
+    val referredByDoctorName: String? = null,
+    val referralNotes: String? = null,
     val isPendingSync: Boolean = false
 )
 
@@ -76,6 +86,7 @@ data class PrescribedMedicine(
 
 data class Prescription(
     val id: String,
+    val caseId: String? = null,
     val patientId: String,
     val patientName: String,
     val doctorId: String,
@@ -97,8 +108,9 @@ data class Appointment(
     val doctorSpecialty: String,
     val dateFormatted: String,
     val timeSlot: String,
-    val status: String, // "Confirmed", "Pending", "Completed"
-    val proposedBy: UserRole
+    val status: String, // "Confirmed", "Pending", "Declined", "Completed"
+    val proposedBy: UserRole,
+    val outcomeNotes: String? = null
 )
 
 data class BroadcastNotice(

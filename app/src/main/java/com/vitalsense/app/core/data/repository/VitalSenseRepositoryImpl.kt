@@ -159,6 +159,21 @@ class VitalSenseRepositoryImpl @Inject constructor(
         list.filter { it.patientId == patientId }
     }
 
+    override fun getCasesForDoctor(doctorId: String, specialty: DoctorSpecialty): Flow<List<ConditionRecord>> = _conditions.map { list ->
+        list.filter { record ->
+            record.requestedDoctorType == specialty || record.assignedDoctorId == doctorId
+        }.sortedWith(
+            compareBy<ConditionRecord> { record ->
+                when (record.severity) {
+                    SeverityLevel.SEVERE -> 0
+                    SeverityLevel.HIGH -> 1
+                    SeverityLevel.MODERATE -> 2
+                    SeverityLevel.LOW -> 3
+                }
+            }.thenByDescending { it.timestamp }
+        )
+    }
+
     override suspend fun logCondition(record: ConditionRecord) {
         // 1. Instant in-memory update
         _conditions.update { listOf(record) + it }
@@ -195,7 +210,11 @@ class VitalSenseRepositoryImpl @Inject constructor(
                     record.id, record.patientId, record.patientName, record.villageId,
                     record.villageName, record.category, record.severity,
                     record.requestedDoctorType, record.notes, record.timestamp,
-                    record.ashaProxyLogged, isPendingSync = true
+                    record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                    record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                    record.doctorResponseDoctorName, record.privateDoctorNotes,
+                    record.referredByDoctorId, record.referredByDoctorName,
+                    record.referralNotes, isPendingSync = true
                 )
             )
 
@@ -206,11 +225,116 @@ class VitalSenseRepositoryImpl @Inject constructor(
                         record.id, record.patientId, record.patientName, record.villageId,
                         record.villageName, record.category, record.severity,
                         record.requestedDoctorType, record.notes, record.timestamp,
-                        record.ashaProxyLogged, isPendingSync = false
+                        record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                        record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                        record.doctorResponseDoctorName, record.privateDoctorNotes,
+                        record.referredByDoctorId, record.referredByDoctorName,
+                        record.referralNotes, isPendingSync = false
                     )
                 )
             } catch (e: Exception) {
                 // Stays in Room with isPendingSync = true for background retry
+            }
+        }
+    }
+
+    override suspend fun respondToCase(
+        caseId: String,
+        doctorId: String,
+        doctorName: String,
+        responseText: String,
+        privateNotes: String?,
+        newStatus: CaseStatus
+    ) {
+        val now = System.currentTimeMillis()
+        var updatedRecord: ConditionRecord? = null
+
+        _conditions.update { list ->
+            list.map { record ->
+                if (record.id == caseId) {
+                    val updated = record.copy(
+                        status = newStatus,
+                        doctorResponse = responseText,
+                        doctorResponseTimestamp = now,
+                        doctorResponseDoctorName = doctorName,
+                        privateDoctorNotes = privateNotes ?: record.privateDoctorNotes,
+                        assignedDoctorId = doctorId,
+                        assignedDoctorName = doctorName
+                    )
+                    updatedRecord = updated
+                    updated
+                } else record
+            }
+        }
+
+        updatedRecord?.let { record ->
+            scope.launch {
+                dao.insertConditionRecord(
+                    ConditionRecordEntity(
+                        record.id, record.patientId, record.patientName, record.villageId,
+                        record.villageName, record.category, record.severity,
+                        record.requestedDoctorType, record.notes, record.timestamp,
+                        record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                        record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                        record.doctorResponseDoctorName, record.privateDoctorNotes,
+                        record.referredByDoctorId, record.referredByDoctorName,
+                        record.referralNotes, isPendingSync = false
+                    )
+                )
+                try {
+                    firestoreDataSource.uploadConditionRecord(record)
+                } catch (e: Exception) {
+                    // Stays in Room
+                }
+            }
+        }
+    }
+
+    override suspend fun referCaseToSpecialist(
+        caseId: String,
+        referringDoctor: Doctor,
+        targetSpecialty: DoctorSpecialty,
+        referralNotes: String
+    ) {
+        var updatedRecord: ConditionRecord? = null
+
+        _conditions.update { list ->
+            list.map { record ->
+                if (record.id == caseId) {
+                    val updated = record.copy(
+                        status = CaseStatus.REFERRED,
+                        requestedDoctorType = targetSpecialty,
+                        referredByDoctorId = referringDoctor.id,
+                        referredByDoctorName = referringDoctor.name,
+                        referralNotes = referralNotes,
+                        assignedDoctorId = null,
+                        assignedDoctorName = null
+                    )
+                    updatedRecord = updated
+                    updated
+                } else record
+            }
+        }
+
+        updatedRecord?.let { record ->
+            scope.launch {
+                dao.insertConditionRecord(
+                    ConditionRecordEntity(
+                        record.id, record.patientId, record.patientName, record.villageId,
+                        record.villageName, record.category, record.severity,
+                        record.requestedDoctorType, record.notes, record.timestamp,
+                        record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                        record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                        record.doctorResponseDoctorName, record.privateDoctorNotes,
+                        record.referredByDoctorId, record.referredByDoctorName,
+                        record.referralNotes, isPendingSync = false
+                    )
+                )
+                try {
+                    firestoreDataSource.uploadConditionRecord(record)
+                } catch (e: Exception) {
+                    // Stays in Room
+                }
             }
         }
     }
@@ -222,13 +346,28 @@ class VitalSenseRepositoryImpl @Inject constructor(
         list.filter { it.patientId == patientId }
     }
 
+    override fun getPrescriptionsByCase(caseId: String): Flow<List<Prescription>> = _prescriptions.map { list ->
+        list.filter { it.caseId == caseId }
+    }
+
     override suspend fun savePrescription(prescription: Prescription) {
         _prescriptions.update { listOf(prescription) + it }
+
+        // Also mark the case as RESPONDED if tied to a case
+        if (prescription.caseId != null) {
+            _conditions.update { list ->
+                list.map { c ->
+                    if (c.id == prescription.caseId && c.status == CaseStatus.PENDING_REVIEW) {
+                        c.copy(status = CaseStatus.RESPONDED)
+                    } else c
+                }
+            }
+        }
 
         scope.launch {
             dao.insertPrescription(
                 PrescriptionEntity(
-                    prescription.id, prescription.patientId, prescription.patientName,
+                    prescription.id, prescription.caseId, prescription.patientId, prescription.patientName,
                     prescription.doctorId, prescription.doctorName, prescription.doctorSpecialty,
                     prescription.timestamp, prescription.dateFormatted,
                     gson.toJson(prescription.medicines), prescription.instructions,
@@ -272,14 +411,53 @@ class VitalSenseRepositoryImpl @Inject constructor(
                     appointment.id, appointment.patientId, appointment.patientName,
                     appointment.doctorId, appointment.doctorName, appointment.doctorSpecialty,
                     appointment.dateFormatted, appointment.timeSlot, appointment.status,
-                    appointment.proposedBy
+                    appointment.proposedBy, appointment.outcomeNotes
                 )
             )
 
             try {
                 firestoreDataSource.uploadAppointment(appointment)
             } catch (e: Exception) {
-                // Offline fallback
+                // Stays in Room
+            }
+        }
+    }
+
+    override suspend fun updateAppointmentStatus(
+        appointmentId: String,
+        newStatus: String,
+        outcomeNotes: String?
+    ) {
+        var updatedAppointment: Appointment? = null
+
+        _appointments.update { list ->
+            list.map { appt ->
+                if (appt.id == appointmentId) {
+                    val updated = appt.copy(
+                        status = newStatus,
+                        outcomeNotes = outcomeNotes ?: appt.outcomeNotes
+                    )
+                    updatedAppointment = updated
+                    updated
+                } else appt
+            }
+        }
+
+        updatedAppointment?.let { appt ->
+            scope.launch {
+                dao.insertAppointment(
+                    AppointmentEntity(
+                        appt.id, appt.patientId, appt.patientName,
+                        appt.doctorId, appt.doctorName, appt.doctorSpecialty,
+                        appt.dateFormatted, appt.timeSlot, appt.status,
+                        appt.proposedBy, appt.outcomeNotes
+                    )
+                )
+                try {
+                    firestoreDataSource.uploadAppointment(appt)
+                } catch (e: Exception) {
+                    // Stays in Room
+                }
             }
         }
     }

@@ -15,7 +15,9 @@ import com.vitalsense.app.feature.admin.AdminHomeScreen
 import com.vitalsense.app.feature.admin.AdminViewModel
 import com.vitalsense.app.feature.asha.AshaHomeScreen
 import com.vitalsense.app.feature.auth.LoginScreen
+import com.vitalsense.app.feature.doctor.CaseDetailScreen
 import com.vitalsense.app.feature.doctor.DoctorHomeScreen
+import com.vitalsense.app.feature.doctor.DoctorViewModel
 import com.vitalsense.app.feature.patient.PatientHomeScreen
 import com.vitalsense.app.feature.patient.PatientViewModel
 import kotlinx.coroutines.launch
@@ -26,7 +28,8 @@ fun VitalSenseNavGraph(
     repository: VitalSenseRepository,
     modifier: Modifier = Modifier,
     adminViewModel: AdminViewModel = hiltViewModel(),
-    patientViewModel: PatientViewModel = hiltViewModel()
+    patientViewModel: PatientViewModel = hiltViewModel(),
+    doctorViewModel: DoctorViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -38,15 +41,20 @@ fun VitalSenseNavGraph(
     val activeProxyPatient by appStateHolder.activeProxyPatient.collectAsStateWithLifecycle()
     val isOffline by appStateHolder.isOffline.collectAsStateWithLifecycle()
 
-    // Data streams from repository
+    // Doctor specific scoped streams (§2 & §3)
+    val doctorCases by doctorViewModel.scopedCases.collectAsStateWithLifecycle()
+    val doctorAppointments by doctorViewModel.appointments.collectAsStateWithLifecycle()
+    val doctorDispensaryStock by doctorViewModel.dispensaryStock.collectAsStateWithLifecycle()
+    val selectedDoctorCase by doctorViewModel.selectedCase.collectAsStateWithLifecycle()
+    val patientPrescriptions by doctorViewModel.patientPrescriptions.collectAsStateWithLifecycle()
+    val patientProfile by doctorViewModel.patientProfile.collectAsStateWithLifecycle()
+
+    // Data streams from repository for general components
     val villages by repository.getVillages().collectAsStateWithLifecycle(initialValue = emptyList())
     val patients by repository.getPatients().collectAsStateWithLifecycle(initialValue = emptyList())
-    val conditions by repository.getConditionRecords().collectAsStateWithLifecycle(initialValue = emptyList())
-    val appointments by repository.getAppointments().collectAsStateWithLifecycle(initialValue = emptyList())
     val notices by repository.getNotices().collectAsStateWithLifecycle(initialValue = emptyList())
-    val dispensaryStock by repository.getDispensaryStock().collectAsStateWithLifecycle(initialValue = emptyList())
 
-    // The effective patient (either the direct patient or the proxy patient being managed by ASHA)
+    // The effective patient (either direct or proxy managed by ASHA)
     val effectivePatient = activeProxyPatient ?: activePatient
 
     val activeUserName = when (currentRole) {
@@ -92,6 +100,7 @@ fun VitalSenseNavGraph(
                             appStateHolder.toggleOffline()
                         },
                         onLogout = {
+                            doctorViewModel.clearSelectedCase()
                             appStateHolder.logout()
                         }
                     )
@@ -161,15 +170,64 @@ fun VitalSenseNavGraph(
                         }
 
                         UserRole.DOCTOR -> {
-                            DoctorHomeScreen(
-                                doctor = activeDoctor,
-                                pendingConditions = conditions,
-                                appointments = appointments.filter { it.doctorId == activeDoctor.id },
-                                dispensaryStock = dispensaryStock,
-                                onRespondClick = { _ ->
-                                    // Hook for Person 4 to open prescription writer
-                                }
-                            )
+                            val activeCase = selectedDoctorCase
+                            if (activeCase != null) {
+                                CaseDetailScreen(
+                                    record = activeCase,
+                                    patient = patientProfile,
+                                    priorPrescriptions = patientPrescriptions,
+                                    dispensaryStock = doctorDispensaryStock,
+                                    currentDoctor = activeDoctor,
+                                    onBack = { doctorViewModel.clearSelectedCase() },
+                                    onSubmitResponse = { responseText, privateNotes ->
+                                        doctorViewModel.submitMedicalResponse(
+                                            caseId = activeCase.id,
+                                            responseText = responseText,
+                                            privateNotes = privateNotes
+                                        )
+                                    },
+                                    onIssuePrescription = { medicines, instructions ->
+                                        doctorViewModel.issuePrescription(
+                                            caseId = activeCase.id,
+                                            patientId = activeCase.patientId,
+                                            patientName = activeCase.patientName,
+                                            medicines = medicines,
+                                            instructions = instructions
+                                        )
+                                    },
+                                    onProposeAppointment = { date, timeSlot ->
+                                        doctorViewModel.proposeAppointment(
+                                            patientId = activeCase.patientId,
+                                            patientName = activeCase.patientName,
+                                            dateFormatted = date,
+                                            timeSlot = timeSlot
+                                        )
+                                    },
+                                    onReferCase = { targetSpecialty, referralNotes ->
+                                        doctorViewModel.referCase(
+                                            caseId = activeCase.id,
+                                            targetSpecialty = targetSpecialty,
+                                            referralNotes = referralNotes
+                                        )
+                                    }
+                                )
+                            } else {
+                                DoctorHomeScreen(
+                                    doctor = activeDoctor,
+                                    cases = doctorCases,
+                                    appointments = doctorAppointments,
+                                    dispensaryStock = doctorDispensaryStock,
+                                    onSelectCase = { record ->
+                                        doctorViewModel.selectCase(record)
+                                    },
+                                    onAcceptAppointment = { apptId ->
+                                        doctorViewModel.acceptAppointment(apptId)
+                                    },
+                                    onDeclineAppointment = { apptId ->
+                                        doctorViewModel.declineAppointment(apptId)
+                                    }
+                                )
+                            }
                         }
 
                         UserRole.ADMIN -> {

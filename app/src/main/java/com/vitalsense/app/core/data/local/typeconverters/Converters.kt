@@ -33,6 +33,12 @@ class Converters {
     fun toDoctorSpecialty(value: String): DoctorSpecialty = runCatching { DoctorSpecialty.valueOf(value) }.getOrDefault(DoctorSpecialty.GENERAL_PHYSICIAN)
 
     @TypeConverter
+    fun fromCaseStatus(value: CaseStatus): String = value.name
+
+    @TypeConverter
+    fun toCaseStatus(value: String): CaseStatus = runCatching { CaseStatus.valueOf(value) }.getOrDefault(CaseStatus.PENDING_REVIEW)
+
+    @TypeConverter
     fun fromStringList(value: List<String>): String = gson.toJson(value)
 
     @TypeConverter
