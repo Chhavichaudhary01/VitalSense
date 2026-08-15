@@ -288,6 +288,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
     override fun getNotices(): Flow<List<BroadcastNotice>> = _notices.asStateFlow()
 
     override suspend fun sendNotice(notice: BroadcastNotice) {
+        android.util.Log.d("VitalSenseFirebase", "📢 sendNotice triggered: ${notice.title}")
         _notices.update { listOf(notice) + it }
 
         scope.launch {
@@ -302,7 +303,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
             try {
                 firestoreDataSource.uploadNotice(notice)
             } catch (e: Exception) {
-                // Offline fallback
+                android.util.Log.e("VitalSenseFirebase", "❌ sendNotice Firestore upload error: ${e.message}", e)
             }
         }
     }
@@ -319,6 +320,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
         locationLat: Double?,
         locationLng: Double?
     ): Boolean {
+        android.util.Log.d("VitalSenseFirebase", "🚨 triggerEmergencySos called for patient: ${patient.name}")
         val sosNotice = BroadcastNotice(
             id = "sos_${System.currentTimeMillis()}",
             senderRole = UserRole.PATIENT,
