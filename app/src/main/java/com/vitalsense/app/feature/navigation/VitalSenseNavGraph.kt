@@ -5,23 +5,28 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.data.repository.VitalSenseRepository
 import com.vitalsense.app.core.state.AppStateHolder
 import com.vitalsense.app.core.ui.components.TopRoleSwitcherBar
 import com.vitalsense.app.feature.admin.AdminHomeScreen
+import com.vitalsense.app.feature.admin.AdminViewModel
 import com.vitalsense.app.feature.asha.AshaHomeScreen
 import com.vitalsense.app.feature.auth.LoginScreen
 import com.vitalsense.app.feature.doctor.DoctorHomeScreen
 import com.vitalsense.app.feature.patient.PatientHomeScreen
+import com.vitalsense.app.feature.patient.PatientViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun VitalSenseNavGraph(
     appStateHolder: AppStateHolder,
     repository: VitalSenseRepository,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    adminViewModel: AdminViewModel = hiltViewModel(),
+    patientViewModel: PatientViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -101,20 +106,39 @@ fun VitalSenseNavGraph(
                 ) {
                     when (currentRole) {
                         UserRole.PATIENT -> {
-                            PatientHomeScreen(
-                                patient = effectivePatient,
-                                onCategoryClick = { _ ->
-                                    // Hook for Person 2/5 to navigate to category detail or symptom entry
-                                },
-                                onViewHealthCard = {
-                                    // Hook for Person 2 to navigate to full Health Card screen
-                                },
-                                onTriggerSos = {
-                                    coroutineScope.launch {
-                                        repository.triggerEmergencySos(effectivePatient, null, null)
+                            var showMentalWellness by remember { mutableStateOf(false) }
+
+                            if (showMentalWellness) {
+                                com.vitalsense.app.feature.patient.mentalhealth.MentalWellnessScreen(
+                                    patient = effectivePatient,
+                                    onLogMood = { notes, severity ->
+                                        patientViewModel.logMentalWellness(
+                                            patient = effectivePatient,
+                                            moodNotes = notes,
+                                            severityLevel = severity,
+                                            isProxy = activeProxyPatient != null
+                                        )
+                                    },
+                                    onBack = { showMentalWellness = false }
+                                )
+                            } else {
+                                PatientHomeScreen(
+                                    patient = effectivePatient,
+                                    onCategoryClick = { category ->
+                                        if (category == ConditionCategory.MENTAL_HEALTH) {
+                                            showMentalWellness = true
+                                        }
+                                    },
+                                    onViewHealthCard = {
+                                        // Hook for Person 2 to navigate to full Health Card screen
+                                    },
+                                    onTriggerSos = {
+                                        coroutineScope.launch {
+                                            repository.triggerEmergencySos(effectivePatient, null, null)
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
 
                         UserRole.ASHA -> {
@@ -153,21 +177,11 @@ fun VitalSenseNavGraph(
                                 villages = villages,
                                 notices = notices,
                                 onSendBroadcast = { title, message, village ->
-                                    coroutineScope.launch {
-                                        repository.sendNotice(
-                                            BroadcastNotice(
-                                                id = "notice_${System.currentTimeMillis()}",
-                                                senderRole = UserRole.ADMIN,
-                                                senderName = "District Chief Medical Officer",
-                                                targetRole = "ALL",
-                                                targetVillage = village,
-                                                title = title,
-                                                message = message,
-                                                timestamp = System.currentTimeMillis(),
-                                                isUrgent = true
-                                            )
-                                        )
-                                    }
+                                    adminViewModel.sendBroadcast(
+                                        title = title,
+                                        message = message,
+                                        targetVillage = village
+                                    )
                                 }
                             )
                         }
