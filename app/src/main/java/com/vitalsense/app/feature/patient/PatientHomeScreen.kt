@@ -28,13 +28,16 @@ import com.vitalsense.app.core.ui.theme.*
 fun PatientHomeScreen(
     patient: Patient,
     notices: List<BroadcastNotice> = emptyList(),
+    prescriptions: List<Prescription> = emptyList(),
     onCategoryClick: (ConditionCategory) -> Unit = {},
     onViewHealthCard: () -> Unit = {},
     onTriggerSos: () -> Unit = {},
+    onSavePrescription: (Prescription) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showSosConfirmation by remember { mutableStateOf(false) }
     var sosSentSuccess by remember { mutableStateOf(false) }
+    var showPrescriptionUploadDialog by remember { mutableStateOf(false) }
 
     val adminAdvisories = notices.filter {
         it.senderRole == UserRole.ADMIN || it.targetRole == "ALL" || it.targetRole == "PATIENT"
@@ -225,15 +228,129 @@ fun PatientHomeScreen(
             }
         }
         
+        // 4.5 My Prescriptions & Medicines Section
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "💊 My Prescriptions (${prescriptions.size})",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = TextPrimaryNearBlack
+                )
+
+                Button(
+                    onClick = { showPrescriptionUploadDialog = true },
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = LimePrimary, contentColor = TextPrimaryNearBlack),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(30.dp)
+                ) {
+                    Text("➕ Upload / Add Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        if (prescriptions.isEmpty()) {
+            item {
+                VitalSenseCard(backgroundColor = SurfaceWhite) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "No prescriptions recorded yet",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = "Scan paper slip or write down your medicines",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondaryMuted
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = { showPrescriptionUploadDialog = true },
+                            shape = PillShape
+                        ) {
+                            Text("Upload", fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
+        } else {
+            items(prescriptions) { rx ->
+                VitalSenseCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = rx.doctorName,
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "${rx.doctorSpecialty} · ${rx.dateFormatted}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextSecondaryMuted
+                                )
+                            }
+                            if (rx.isOcrExtracted) {
+                                Surface(shape = PillShape, color = SoftMintSuccess.copy(alpha = 0.5f)) {
+                                    Text(
+                                        text = "AI Scanned",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        rx.medicines.forEach { med ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "• ${med.name} (${med.dosage})",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                                Text(
+                                    text = "${med.frequency} · ${med.duration}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextSecondaryMuted
+                                )
+                            }
+                        }
+
+                        if (rx.instructions.isNotBlank()) {
+                            Text(
+                                text = "Note: ${rx.instructions}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondaryMuted
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         item {
             Text("Other Services", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, fontSize = 18.sp), color = TextPrimaryNearBlack)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                VitalSenseButton("My Prescriptions", onClick = { }, modifier = Modifier.fillMaxWidth())
-                VitalSenseButton("My Appointments", onClick = { }, modifier = Modifier.fillMaxWidth())
+                VitalSenseButton("Upload Prescription (Camera / Write Down)", onClick = { showPrescriptionUploadDialog = true }, modifier = Modifier.fillMaxWidth())
                 VitalSenseButton("Find Doctors (Map)", onClick = { }, modifier = Modifier.fillMaxWidth())
                 VitalSenseButton("Government Schemes", onClick = { }, modifier = Modifier.fillMaxWidth())
-                VitalSenseButton("Upload Prescription (OCR)", onClick = { }, modifier = Modifier.fillMaxWidth())
-                VitalSenseButton("Help / Manual", onClick = { }, modifier = Modifier.fillMaxWidth())
+                VitalSenseButton("Help / User Manual", onClick = { }, modifier = Modifier.fillMaxWidth())
             }
         }
 
@@ -459,4 +576,16 @@ fun PatientHomeScreen(
             }
         )
     }
+
+    if (showPrescriptionUploadDialog) {
+        com.vitalsense.app.feature.prescriptions.PrescriptionUploadDialog(
+            patient = patient,
+            isAshaProxy = false,
+            onDismiss = { showPrescriptionUploadDialog = false },
+            onSavePrescription = { rx ->
+                onSavePrescription(rx)
+            }
+        )
+    }
 }
+

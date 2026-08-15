@@ -30,6 +30,8 @@ fun CaseDetailScreen(
     priorPrescriptions: List<Prescription>,
     dispensaryStock: List<DispensaryItem>,
     currentDoctor: Doctor,
+    allConditions: List<ConditionRecord> = emptyList(),
+    allAppointments: List<Appointment> = emptyList(),
     onBack: () -> Unit,
     onSubmitResponse: (responseText: String, privateNotes: String?) -> Unit,
     onIssuePrescription: (medicines: List<PrescribedMedicine>, instructions: String) -> Unit,
@@ -42,6 +44,7 @@ fun CaseDetailScreen(
     var showPrivateNotes by remember { mutableStateOf(record.privateDoctorNotes?.isNotBlank() == true) }
 
     var showHealthCardDialog by remember { mutableStateOf(false) }
+    var showHistoryDialog by remember { mutableStateOf(false) }
     var showPrescriptionDialog by remember { mutableStateOf(false) }
     var showAppointmentDialog by remember { mutableStateOf(false) }
     var showReferDialog by remember { mutableStateOf(false) }
@@ -148,15 +151,26 @@ fun CaseDetailScreen(
                             )
                         }
 
-                        // View-Only Health Card Trigger
+                        // View-Only Health Card & Past Records Triggers
                         patient?.let { pat ->
-                            OutlinedButton(
-                                onClick = { showHealthCardDialog = true },
-                                shape = PillShape,
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                modifier = Modifier.height(30.dp)
-                            ) {
-                                Text(text = "🪪 View Health Card", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                OutlinedButton(
+                                    onClick = { showHistoryDialog = true },
+                                    shape = PillShape,
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text(text = "📋 Past Records & Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+
+                                OutlinedButton(
+                                    onClick = { showHealthCardDialog = true },
+                                    shape = PillShape,
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text(text = "🪪 Health Card", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
@@ -415,6 +429,16 @@ fun CaseDetailScreen(
     }
 
     // Modal Dialogs
+    if (showHistoryDialog && patient != null) {
+        PatientHistoryDialog(
+            patient = patient,
+            conditions = allConditions,
+            prescriptions = priorPrescriptions,
+            appointments = allAppointments,
+            onDismiss = { showHistoryDialog = false }
+        )
+    }
+
     if (showHealthCardDialog && patient != null) {
         PatientHealthCardViewOnlyDialog(
             patient = patient,

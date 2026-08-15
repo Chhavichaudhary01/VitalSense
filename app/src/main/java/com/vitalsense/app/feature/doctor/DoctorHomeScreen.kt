@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.feature.doctor.components.PatientHistoryDialog
 import com.vitalsense.app.feature.doctor.components.ScheduleAppointmentDialog
 
 @Composable
@@ -27,6 +28,8 @@ fun DoctorHomeScreen(
     dispensaryStock: List<DispensaryItem>,
     patients: List<Patient> = emptyList(),
     notices: List<BroadcastNotice> = emptyList(),
+    allConditions: List<ConditionRecord> = emptyList(),
+    allPrescriptions: List<Prescription> = emptyList(),
     onSelectCase: (ConditionRecord) -> Unit,
     onAcceptAppointment: (String) -> Unit = {},
     onDeclineAppointment: (String) -> Unit = {},
@@ -34,6 +37,8 @@ fun DoctorHomeScreen(
     modifier: Modifier = Modifier
 ) {
     var showScheduleDialog by remember { mutableStateOf(false) }
+    var selectedPatientForHistory by remember { mutableStateOf<Patient?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
 
     val pendingCases = cases.filter { it.status == CaseStatus.PENDING_REVIEW || it.status == CaseStatus.IN_PROGRESS }
     val severeCount = cases.count { it.severity == SeverityLevel.SEVERE || it.severity == SeverityLevel.HIGH }
@@ -293,12 +298,43 @@ fun DoctorHomeScreen(
                                 )
                             }
 
-                            Button(
-                                onClick = { onSelectCase(record) },
-                                shape = PillShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal)
-                            ) {
-                                Text(text = "Review Case →", color = LimePrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        selectedPatientForHistory = patients.find { it.id == record.patientId }
+                                            ?: Patient(
+                                                id = record.patientId,
+                                                name = record.patientName,
+                                                age = 30,
+                                                gender = "Not specified",
+                                                phone = "N/A",
+                                                villageId = "vil_1",
+                                                villageName = record.villageName,
+                                                ashaWorkerId = "asha_1",
+                                                ashaWorkerName = "ASHA Assigned",
+                                                currentRiskLevel = record.severity,
+                                                lastCondition = record.notes,
+                                                lastVisitDate = "Recent",
+                                                nextAppointmentDate = null,
+                                                emergencyContact = "108"
+                                            )
+                                    },
+                                    shape = PillShape,
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Text(text = "📋 History & Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+
+                                Button(
+                                    onClick = { onSelectCase(record) },
+                                    shape = PillShape,
+                                    colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal),
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Text(text = "Review Case →", color = LimePrimary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                }
                             }
                         }
                     }
@@ -485,6 +521,70 @@ fun DoctorHomeScreen(
                 }
             }
         }
+
+        // 7. Patient Medical History & Prescriptions Directory
+        if (patients.isNotEmpty()) {
+            item {
+                Text(
+                    text = "🔍 Patient Records & Prescriptions Directory",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = TextPrimaryNearBlack
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search patient by name or village...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = PillShape,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = SurfaceWhite,
+                        unfocusedContainerColor = SurfaceWhite
+                    )
+                )
+            }
+
+            val filteredPatients = patients.filter {
+                it.name.contains(searchQuery, ignoreCase = true) ||
+                it.villageName.contains(searchQuery, ignoreCase = true)
+            }
+
+            items(filteredPatients) { pat ->
+                VitalSenseCard {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = pat.name,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = "${pat.villageName} · Age: ${pat.age} (${pat.gender}) · ASHA: ${pat.ashaWorkerName}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondaryMuted
+                            )
+                        }
+                        Button(
+                            onClick = { selectedPatientForHistory = pat },
+                            shape = PillShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = LavenderSecondary, contentColor = TextPrimaryNearBlack),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text("📋 View History & Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     if (showScheduleDialog) {
@@ -494,6 +594,16 @@ fun DoctorHomeScreen(
             onPropose = { patientId, patientName, date, timeSlot ->
                 onProposeAppointment(patientId, patientName, date, timeSlot)
             }
+        )
+    }
+
+    selectedPatientForHistory?.let { patient ->
+        PatientHistoryDialog(
+            patient = patient,
+            conditions = allConditions,
+            prescriptions = allPrescriptions,
+            appointments = appointments,
+            onDismiss = { selectedPatientForHistory = null }
         )
     }
 }
