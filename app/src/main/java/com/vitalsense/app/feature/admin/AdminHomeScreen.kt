@@ -1,5 +1,6 @@
 package com.vitalsense.app.feature.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,18 +9,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import kotlin.math.max
-import kotlin.math.min
 
 @Composable
 fun AdminHomeScreen(
@@ -35,23 +34,22 @@ fun AdminHomeScreen(
     var selectedVillageName by remember { mutableStateOf("All Villages") }
     var isFormError by remember { mutableStateOf(false) }
 
-    // Admin view strictly filters out Patient SOS alerts (visible to ASHA & Doctor only)
     val adminIssuedDirectives = notices.filter { it.senderRole == UserRole.ADMIN }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(WarmCreamBackground)
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 12.dp, bottom = 32.dp)
+            .padding(horizontal = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
         // 1. Admin Header
         item {
             Column {
                 Text(
                     text = "District Health Command",
-                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 24.sp),
+                    style = MaterialTheme.typography.displayMedium,
                     color = TextPrimaryNearBlack
                 )
                 Text(
@@ -66,19 +64,17 @@ fun AdminHomeScreen(
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 VitalSenseCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = CoralAlert.copy(alpha = 0.2f)
+                    backgroundColor = CoralAlert.copy(alpha = 0.15f),
+                    contentPadding = Spacing.sm
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
                             text = "${villages.sumOf { it.activeCases }}",
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = CoralAlert
-                            )
+                            style = MaterialTheme.typography.displayMedium.copy(color = CoralAlertDark)
                         )
                         Text(text = "Total Active Cases", style = MaterialTheme.typography.labelSmall)
                     }
@@ -86,12 +82,14 @@ fun AdminHomeScreen(
 
                 VitalSenseCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = LimePrimary.copy(alpha = 0.6f)
+                    backgroundColor = LimePrimary.copy(alpha = 0.6f),
+                    contentPadding = Spacing.sm
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
                             text = "${villages.size}",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.displayMedium,
+                            color = TextPrimaryNearBlack
                         )
                         Text(text = "Monitored Villages", style = MaterialTheme.typography.labelSmall)
                     }
@@ -99,7 +97,7 @@ fun AdminHomeScreen(
             }
         }
 
-        // 3. Section: Village Disease Trend Heat Map Cards (PRD §4.2)
+        // 3. Section: Village Disease Trend Heat Map Cards
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -107,15 +105,12 @@ fun AdminHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "🗺️ Village Outbreak Surveillance",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    text = "🗺️ Outbreak Surveillance",
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
                 Text(
-                    text = "Live Trend Refresh",
+                    text = "Live Telemetry Refresh",
                     style = MaterialTheme.typography.labelSmall,
                     color = TextSecondaryMuted
                 )
@@ -135,22 +130,19 @@ fun AdminHomeScreen(
             )
         }
 
-        // 4.1 Admin Issued Directives Log (Excludes Patient SOS)
+        // 4.1 Admin Issued Directives Log
         if (adminIssuedDirectives.isNotEmpty()) {
             item {
                 Text(
                     text = "📋 Dispatched Directives (${adminIssuedDirectives.size})",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
             }
 
             items(adminIssuedDirectives) { directive ->
                 VitalSenseCard(backgroundColor = SurfaceWhite) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -158,25 +150,25 @@ fun AdminHomeScreen(
                         ) {
                             Text(
                                 text = directive.title,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                style = MaterialTheme.typography.titleMedium,
                                 color = TextPrimaryNearBlack
                             )
                             Surface(shape = PillShape, color = SoftMintSuccess.copy(alpha = 0.5f)) {
                                 Text(
                                     text = "ACTIVE",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SoftMintText),
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                                 )
                             }
                         }
                         Text(
                             text = directive.message,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = TextPrimaryNearBlack
                         )
                         Text(
                             text = "Target: ${directive.targetVillage ?: "All Monitored Villages"}",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
                     }
@@ -184,14 +176,11 @@ fun AdminHomeScreen(
             }
         }
 
-        // 4.5 District Dispensary Inventory (PRD Mock Requirement)
+        // 4.5 District Dispensary Inventory
         item {
             Text(
                 text = "🏥 District Dispensary Inventory",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
+                style = MaterialTheme.typography.headlineMedium,
                 color = TextPrimaryNearBlack
             )
         }
@@ -199,7 +188,7 @@ fun AdminHomeScreen(
         items(dispensaryStock) { item ->
             val isLowStock = item.availableQuantity <= item.reorderThreshold
             VitalSenseCard(
-                backgroundColor = if (isLowStock) CoralAlert.copy(alpha = 0.1f) else SurfaceWhite
+                backgroundColor = if (isLowStock) CoralAlert.copy(alpha = 0.08f) else SurfaceWhite
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -209,7 +198,7 @@ fun AdminHomeScreen(
                     Column {
                         Text(
                             text = item.medicineName,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleMedium
                         )
                         Text(
                             text = "Category: ${item.category}",
@@ -220,16 +209,15 @@ fun AdminHomeScreen(
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = "${item.availableQuantity} ${item.unit}",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = if (isLowStock) CoralAlert else TextPrimaryNearBlack
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = if (isLowStock) CoralAlertDark else TextPrimaryNearBlack
                             )
                         )
                         if (isLowStock) {
                             Text(
                                 text = "LOW STOCK",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = CoralAlert
+                                color = CoralAlertDark
                             )
                         }
                     }
@@ -237,71 +225,89 @@ fun AdminHomeScreen(
             }
         }
 
-        // 5. Active Directives Sent
+        // 5. Monitored Villages breakdown
         item {
             Text(
-                text = "Active Directives & Broadcasts",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
+                text = "Monitored Villages (${villages.size})",
+                style = MaterialTheme.typography.headlineMedium,
                 color = TextPrimaryNearBlack
             )
         }
 
-        items(notices) { notice ->
-            VitalSenseCard {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = notice.title,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Text(
-                        text = notice.message,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "Target: ${notice.targetRole} (${notice.targetVillage ?: "All Villages"}) · Sender: ${notice.senderName}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondaryMuted
-                    )
+        items(villages) { village ->
+            val hasHighRisk = village.highRiskCount > 0
+            VitalSenseCard(
+                backgroundColor = if (hasHighRisk) CoralAlert.copy(alpha = 0.08f) else SurfaceWhite
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = village.name,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = "Population: ${village.population} · Active Cases: ${village.activeCases}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondaryMuted
+                            )
+                        }
+
+                        if (hasHighRisk) {
+                            Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.2f)) {
+                                Text(
+                                    text = "${village.highRiskCount} HIGH RISK",
+                                    style = MaterialTheme.typography.labelSmall.copy(color = CoralAlertDark, fontWeight = FontWeight.Bold),
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
+                                )
+                            }
+                        }
+                    }
+
+                    val villageRiskLevel = when {
+                        village.highRiskCount > 0 -> SeverityLevel.SEVERE
+                        village.activeCases >= 3 -> SeverityLevel.HIGH
+                        village.activeCases > 0 -> SeverityLevel.MODERATE
+                        else -> SeverityLevel.LOW
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "State: ${village.state} (${village.district})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextPrimaryNearBlack
+                        )
+                        Text(
+                            text = "Risk: ${villageRiskLevel.displayName}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = when (villageRiskLevel) {
+                                    SeverityLevel.SEVERE -> CoralAlertDark
+                                    SeverityLevel.HIGH -> OrangeHighRisk
+                                    SeverityLevel.MODERATE -> AmberWarningDark
+                                    SeverityLevel.LOW -> SoftMintText
+                                }
+                            )
+                        )
+                    }
                 }
             }
         }
     }
 
+    // Broadcast Notice Modal
     if (showBroadcastDialog) {
-        AlertDialog(
+        VitalSenseDialog(
             onDismissRequest = { showBroadcastDialog = false; isFormError = false },
-            title = { Text("📢 Send Outbreak Directive", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = broadcastTitle,
-                        onValueChange = { broadcastTitle = it; isFormError = false },
-                        label = { Text("Directive Title") },
-                        placeholder = { Text("e.g. ⚠️ Dengue Outbreak Alert") },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = isFormError && broadcastTitle.isBlank()
-                    )
-                    OutlinedTextField(
-                        value = broadcastMessage,
-                        onValueChange = { broadcastMessage = it; isFormError = false },
-                        label = { Text("Directive Details / Action Instructions") },
-                        placeholder = { Text("Conduct door-to-door testing...") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        isError = isFormError && broadcastMessage.isBlank()
-                    )
-                    if (isFormError) {
-                        Text(
-                            text = "Title and message cannot be empty",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                }
-            },
+            title = "📢 Broadcast Health Directive",
+            subtitle = "Directly dispatches notification to Patients, ASHA workers, and Doctors",
             confirmButton = {
                 Button(
                     onClick = {
@@ -320,17 +326,74 @@ fun AdminHomeScreen(
                             isFormError = true
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal)
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal),
+                    shape = PillShape,
+                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
                 ) {
-                    Text("Broadcast Now", color = LimePrimary, fontWeight = FontWeight.Bold)
+                    Text("Broadcast Now", color = LimePrimary, style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showBroadcastDialog = false; isFormError = false }) {
-                    Text("Cancel", color = TextPrimaryNearBlack)
+                TextButton(
+                    onClick = { showBroadcastDialog = false; isFormError = false },
+                    shape = PillShape,
+                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
+                ) {
+                    Text("Cancel", style = MaterialTheme.typography.labelLarge)
                 }
             }
-        )
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                VitalSenseTextField(
+                    value = broadcastTitle,
+                    onValueChange = { broadcastTitle = it },
+                    label = "Directive Title",
+                    placeholder = "e.g. Seasonal Dengue / Malaria Advisory",
+                    isError = isFormError && broadcastTitle.isBlank(),
+                    errorMessage = "Title cannot be empty"
+                )
+
+                VitalSenseTextField(
+                    value = broadcastMessage,
+                    onValueChange = { broadcastMessage = it },
+                    label = "Detailed Message & Guidelines",
+                    placeholder = "Boil drinking water, use mosquito nets, report fevers...",
+                    singleLine = false,
+                    maxLines = 4,
+                    isError = isFormError && broadcastMessage.isBlank(),
+                    errorMessage = "Message cannot be empty"
+                )
+
+                Text(
+                    text = "Target Scope:",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = TextPrimaryNearBlack
+                )
+
+                val villageOptions = listOf("All Villages") + villages.map { it.name }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    villageOptions.take(3).forEach { option ->
+                        val isSelected = selectedVillageName == option
+                        Surface(
+                            onClick = { selectedVillageName = option },
+                            shape = PillShape,
+                            color = if (isSelected) LimePrimary else SurfaceWhite,
+                            border = BorderStroke(1.dp, if (isSelected) DarkCharcoal else CardBorderColor)
+                        ) {
+                            Text(
+                                text = option,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+                                color = TextPrimaryNearBlack
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -338,13 +401,14 @@ fun AdminHomeScreen(
 fun VillageHeatMap(villages: List<Village>) {
     VitalSenseCard(
         backgroundColor = DarkCharcoal,
-        elevation = 4.dp
+        elevation = 3.dp,
+        border = BorderStroke(1.dp, Color(0xFF333528))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -354,7 +418,7 @@ fun VillageHeatMap(villages: List<Village>) {
                 Text(
                     text = "Geo-Density Outbreak Mapping",
                     color = SurfaceWhite,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     text = "GPS Coordinates HUD",
@@ -366,13 +430,14 @@ fun VillageHeatMap(villages: List<Village>) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp)
+                    .height(200.dp)
                     .background(Color(0xFF1E1E1E), shape = CardShape)
             ) {
                 if (villages.isEmpty()) {
                     Text(
                         text = "No village geolocation telemetry",
                         color = TextSecondaryMuted,
+                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 } else {
@@ -387,7 +452,7 @@ fun VillageHeatMap(villages: List<Village>) {
                     androidx.compose.foundation.Canvas(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(20.dp)
+                            .padding(Spacing.md)
                     ) {
                         val width = size.width
                         val height = size.height
@@ -399,7 +464,7 @@ fun VillageHeatMap(villages: List<Village>) {
                             val x = normX * width
                             val y = normY * height
 
-                            val radius = (15f + (village.activeCases * 8f)).coerceIn(15f, 50f)
+                            val radius = (15f + (village.activeCases * 8f)).coerceIn(15f, 45f)
                             val baseColor = when {
                                 village.highRiskCount > 0 || village.activeCases >= 3 -> CoralAlert
                                 village.activeCases > 0 -> AmberWarning
@@ -420,7 +485,7 @@ fun VillageHeatMap(villages: List<Village>) {
                             // Draw solid center node
                             drawCircle(
                                 color = baseColor,
-                                radius = 8f,
+                                radius = 7f,
                                 center = Offset(x, y)
                             )
                         }
@@ -430,9 +495,9 @@ fun VillageHeatMap(villages: List<Village>) {
                     Column(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
-                            .padding(8.dp)
+                            .padding(Spacing.xs)
                             .background(Color.Black.copy(alpha = 0.6f), shape = CardShape)
-                            .padding(6.dp)
+                            .padding(Spacing.xxs)
                     ) {
                         Text("🔴 High Risk / Cluster", color = CoralAlert, style = MaterialTheme.typography.labelSmall)
                         Text("🟡 Monitored Cases", color = AmberWarning, style = MaterialTheme.typography.labelSmall)

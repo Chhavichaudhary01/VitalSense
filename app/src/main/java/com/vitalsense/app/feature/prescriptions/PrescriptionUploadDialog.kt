@@ -3,6 +3,7 @@ package com.vitalsense.app.feature.prescriptions
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -19,14 +21,15 @@ import androidx.compose.ui.window.Dialog
 import com.vitalsense.app.core.data.model.Patient
 import com.vitalsense.app.core.data.model.PrescribedMedicine
 import com.vitalsense.app.core.data.model.Prescription
+import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
+import com.vitalsense.app.core.ui.components.VitalSenseTextField
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.prescriptions.ocr.PrescriptionOcrHelper
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrescriptionUploadDialog(
     patient: Patient,
@@ -87,17 +90,18 @@ fun PrescriptionUploadDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.92f),
-            shape = CardShape,
+                .wrapContentHeight(),
+            shape = DialogShape,
             color = WarmCreamBackground,
-            shadowElevation = 8.dp
+            shadowElevation = 8.dp,
+            border = BorderStroke(1.dp, CardBorderColor)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(18.dp)
+                    .fillMaxWidth()
+                    .padding(Spacing.lg)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 // Header
                 Row(
@@ -107,53 +111,58 @@ fun PrescriptionUploadDialog(
                 ) {
                     Column {
                         Text(
-                            text = if (isAshaProxy) "🤝 Upload Prescription (ASHA Helper)" else "💊 Upload Prescription",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            text = if (isAshaProxy) "🤝 Upload Prescription" else "💊 Upload Prescription",
+                            style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            text = "For Patient: ${patient.name} (${patient.villageName})",
+                            text = "Patient: ${patient.name} (${patient.villageName})",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
                     }
-                    IconButton(onClick = onDismiss) {
-                        Text(text = "✕", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
+                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = TextSecondaryMuted)
                     }
                 }
 
-                // Tab Selector: Camera / AI Scan vs Write Down
-                TabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = SurfaceWhite,
-                    contentColor = TextPrimaryNearBlack
+                HorizontalDivider(color = DividerSubtle)
+
+                // Custom Styled Tab Selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Tab(
-                        selected = selectedTab == 0,
+                    Surface(
                         onClick = { selectedTab = 0 },
-                        text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(text = "📷", fontSize = 14.sp)
-                                Text(text = "Camera / AI Scan", fontWeight = FontWeight.Bold)
-                            }
+                        shape = PillShape,
+                        color = if (selectedTab == 0) LimePrimary else SurfaceWhite,
+                        border = BorderStroke(1.dp, if (selectedTab == 0) DarkCharcoal else CardBorderColor),
+                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "📷 Camera / AI Scan", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
+                    }
+
+                    Surface(
                         onClick = { selectedTab = 1 },
-                        text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(text = "✍️", fontSize = 14.sp)
-                                Text(text = "Write Down", fontWeight = FontWeight.Bold)
-                            }
+                        shape = PillShape,
+                        color = if (selectedTab == 1) LimePrimary else SurfaceWhite,
+                        border = BorderStroke(1.dp, if (selectedTab == 1) DarkCharcoal else CardBorderColor),
+                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "✍️ Write Down", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         }
-                    )
+                    }
                 }
 
                 // TAB 0: CAMERA / ON-DEVICE OCR
@@ -161,16 +170,17 @@ fun PrescriptionUploadDialog(
                     Surface(
                         shape = CardShape,
                         color = SoftMintSuccess.copy(alpha = 0.35f),
+                        border = BorderStroke(1.dp, SoftMintSuccess),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
-                            modifier = Modifier.padding(10.dp),
+                            modifier = Modifier.padding(Spacing.sm),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
-                            Text(text = "⚡", fontSize = 18.sp)
+                            Text(text = "⚡", style = MaterialTheme.typography.titleMedium)
                             Text(
-                                text = "On-Device AI: Reads paper prescription photo even with 0 internet connection.",
+                                text = "On-Device AI: Scans doctor slips offline with zero internet.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextPrimaryNearBlack
                             )
@@ -178,57 +188,57 @@ fun PrescriptionUploadDialog(
                     }
 
                     Text(
-                        text = "Scan Physical Doctor Slip:",
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        text = "Select Document Sample:",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                         color = TextPrimaryNearBlack
                     )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
                         Button(
                             onClick = { runSampleOcr("General") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 36.dp),
                             shape = PillShape,
                             colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
                         ) {
-                            Text("General Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("General", style = MaterialTheme.typography.labelSmall)
                         }
                         Button(
                             onClick = { runSampleOcr("Fever") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 36.dp),
                             shape = PillShape,
                             colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
                         ) {
-                            Text("Fever/Cold", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Fever/Cold", style = MaterialTheme.typography.labelSmall)
                         }
                         Button(
                             onClick = { runSampleOcr("Maternal") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 36.dp),
                             shape = PillShape,
                             colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
                         ) {
-                            Text("Maternal", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Maternal", style = MaterialTheme.typography.labelSmall)
                         }
                     }
 
                     if (isProcessingOcr) {
                         Column(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            modifier = Modifier.fillMaxWidth().padding(Spacing.md),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            CircularProgressIndicator(color = DarkCharcoal)
-                            Spacer(modifier = Modifier.height(6.dp))
+                            CircularProgressIndicator(color = DarkCharcoal, modifier = Modifier.size(32.dp))
+                            Spacer(modifier = Modifier.height(Spacing.xs))
                             Text("Extracting handwritten text on-device...", style = MaterialTheme.typography.bodySmall)
                         }
                     }
 
                     if (recognizedOcrText.isNotBlank()) {
                         VitalSenseCard(backgroundColor = SurfaceWhite) {
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                                 Text(
-                                    text = "Extracted Text:",
+                                    text = "Extracted Raw Text:",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Text(text = recognizedOcrText, style = MaterialTheme.typography.bodySmall, color = TextSecondaryMuted)
@@ -237,7 +247,7 @@ fun PrescriptionUploadDialog(
 
                         Text(
                             text = "Parsed Medicines (${ocrMedicines.size}):",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimaryNearBlack
                         )
 
@@ -253,26 +263,24 @@ fun PrescriptionUploadDialog(
                                         Text(text = "${med.dosage} · ${med.frequency} · ${med.duration}", style = MaterialTheme.typography.bodySmall, color = TextSecondaryMuted)
                                     }
                                     Surface(shape = PillShape, color = SoftMintSuccess.copy(alpha = 0.5f)) {
-                                        Text("AI Extracted", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                                        Text("AI Parsed", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SoftMintText), modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs))
                                     }
                                 }
                             }
                         }
 
-                        OutlinedTextField(
+                        VitalSenseTextField(
                             value = ocrDoctorName,
                             onValueChange = { ocrDoctorName = it },
-                            label = { Text("Prescribing Doctor / Hospital") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
+                            label = "Prescribing Doctor / Hospital"
                         )
 
-                        OutlinedTextField(
+                        VitalSenseTextField(
                             value = ocrInstructions,
                             onValueChange = { ocrInstructions = it },
-                            label = { Text("Instructions / Diet Notes") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
+                            label = "Instructions / Diet Notes",
+                            singleLine = false,
+                            maxLines = 3
                         )
 
                         Button(
@@ -294,66 +302,62 @@ fun PrescriptionUploadDialog(
                                 onSavePrescription(rx)
                                 onDismiss()
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp),
                             shape = PillShape,
                             colors = ButtonDefaults.buttonColors(containerColor = LimePrimary, contentColor = TextPrimaryNearBlack)
                         ) {
-                            Text("Save Digitized Prescription ✓", fontWeight = FontWeight.Bold)
+                            Text("Save Digitized Prescription ✓", style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
 
                 // TAB 1: WRITE DOWN (MANUAL PRESCRIPTION ENTRY)
                 if (selectedTab == 1) {
-                    OutlinedTextField(
+                    VitalSenseTextField(
                         value = manualDoctorName,
                         onValueChange = { manualDoctorName = it },
-                        label = { Text("Doctor Name / Clinic Name") },
-                        placeholder = { Text("e.g. Dr. Rajesh Sharma (District Hospital)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
+                        label = "Doctor Name / Clinic Name",
+                        placeholder = "e.g. Dr. Rajesh Sharma (District Hospital)"
                     )
 
                     // Add Medicine Form Box
                     VitalSenseCard(backgroundColor = SurfaceWhite) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                             Text(
                                 text = "➕ Add Prescribed Medicine:",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                 color = TextPrimaryNearBlack
                             )
 
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = currentMedName,
                                 onValueChange = { currentMedName = it },
-                                label = { Text("Medicine Name") },
-                                placeholder = { Text("e.g. Paracetamol / Amoxicillin") },
-                                modifier = Modifier.fillMaxWidth()
+                                label = "Medicine Name",
+                                placeholder = "e.g. Paracetamol / Amoxicillin"
                             )
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                             ) {
-                                OutlinedTextField(
+                                VitalSenseTextField(
                                     value = currentDosage,
                                     onValueChange = { currentDosage = it },
-                                    label = { Text("Dosage") },
+                                    label = "Dosage",
                                     modifier = Modifier.weight(1f)
                                 )
-                                OutlinedTextField(
+                                VitalSenseTextField(
                                     value = currentDuration,
                                     onValueChange = { currentDuration = it },
-                                    label = { Text("Duration") },
+                                    label = "Duration",
                                     modifier = Modifier.weight(1f)
                                 )
                             }
 
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = currentFrequency,
                                 onValueChange = { currentFrequency = it },
-                                label = { Text("Frequency / Timing") },
-                                modifier = Modifier.fillMaxWidth()
+                                label = "Frequency / Timing"
                             )
 
                             Button(
@@ -375,11 +379,11 @@ fun PrescriptionUploadDialog(
                                     }
                                 },
                                 enabled = currentMedName.isNotBlank(),
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 40.dp),
                                 shape = PillShape,
                                 colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
                             ) {
-                                Text("+ Add to Medicine List", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                Text("+ Add to Medicine List", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -400,24 +404,24 @@ fun PrescriptionUploadDialog(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column {
-                                        Text(text = "${idx + 1}. ${med.name}", fontWeight = FontWeight.Bold)
+                                        Text(text = "${idx + 1}. ${med.name}", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
                                         Text(text = "${med.dosage} · ${med.frequency} · ${med.duration}", style = MaterialTheme.typography.bodySmall, color = TextSecondaryMuted)
                                     }
-                                    IconButton(onClick = { manualMedicines.removeAt(idx) }) {
-                                        Text("🗑️", fontSize = 14.sp)
+                                    IconButton(onClick = { manualMedicines.removeAt(idx) }, modifier = Modifier.size(32.dp)) {
+                                        Text("🗑️", style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
                             }
                         }
                     }
 
-                    OutlinedTextField(
+                    VitalSenseTextField(
                         value = manualInstructions,
                         onValueChange = { manualInstructions = it },
-                        label = { Text("Instructions / Precautions") },
-                        placeholder = { Text("e.g. Drink plenty of water, avoid cold foods") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
+                        label = "Instructions / Precautions",
+                        placeholder = "e.g. Drink plenty of water, avoid cold foods",
+                        singleLine = false,
+                        maxLines = 2
                     )
 
                     Button(
@@ -440,11 +444,11 @@ fun PrescriptionUploadDialog(
                             onDismiss()
                         },
                         enabled = manualMedicines.isNotEmpty() || currentMedName.isNotBlank(),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp),
                         shape = PillShape,
                         colors = ButtonDefaults.buttonColors(containerColor = LimePrimary, contentColor = TextPrimaryNearBlack)
                     ) {
-                        Text("Save Prescription Record ✓", fontWeight = FontWeight.Bold)
+                        Text("Save Prescription Record ✓", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

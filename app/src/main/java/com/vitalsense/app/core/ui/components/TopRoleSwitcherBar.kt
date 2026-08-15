@@ -1,19 +1,18 @@
 package com.vitalsense.app.core.ui.components
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.Patient
 import com.vitalsense.app.core.data.model.UserRole
 import com.vitalsense.app.core.ui.theme.*
@@ -38,18 +37,19 @@ fun TopRoleSwitcherBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = Spacing.md, vertical = Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // App Logo & Role Scoped User Info
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                modifier = Modifier.weight(1f, fill = false)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .background(
                             when (currentRole) {
@@ -68,23 +68,16 @@ fun TopRoleSwitcherBar(
                             UserRole.DOCTOR -> "🩺"
                             UserRole.ADMIN -> "🛡️"
                         },
-                        fontSize = 18.sp
+                        style = MaterialTheme.typography.titleMedium
                     )
                 }
                 Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = if (activeUserName.isNotBlank()) activeUserName else "VitalSense",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            ),
-                            color = TextPrimaryNearBlack
-                        )
-                    }
+                    Text(
+                        text = if (activeUserName.isNotBlank()) activeUserName else "VitalSense",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextPrimaryNearBlack,
+                        maxLines = 1
+                    )
                     Text(
                         text = when (currentRole) {
                             UserRole.PATIENT -> "Patient Portal"
@@ -98,51 +91,55 @@ fun TopRoleSwitcherBar(
                 }
             }
 
-            // Right Actions: Connectivity Pill & Logout
+            // Right Actions: Connectivity Pill & Logout (Enforcing accessible 48dp touch bounds)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 // Connectivity Mode Pill
                 Surface(
+                    onClick = onToggleOffline,
                     shape = PillShape,
-                    color = if (isOffline) Color(0xFFF0EDE6) else SoftMintSuccess.copy(alpha = 0.6f),
-                    modifier = Modifier.clickable { onToggleOffline() }
+                    color = if (isOffline) Color(0xFFF3EFE8) else SoftMintSuccess.copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, CardBorderSubtle),
+                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(7.dp)
+                                .size(8.dp)
                                 .clip(CircleShape)
-                                .background(if (isOffline) Color.Gray else Color(0xFF2E7D32))
+                                .background(if (isOffline) Color.Gray else SoftMintText)
                         )
                         Text(
                             text = if (isOffline) "Offline" else "Online",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = if (isOffline) TextSecondaryMuted else Color(0xFF1B5E20)
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = if (isOffline) TextSecondaryMuted else SoftMintText
                         )
                     }
                 }
 
                 // Logout / Exit Button
                 Surface(
+                    onClick = onLogout,
                     shape = PillShape,
                     color = SurfaceWhite,
+                    border = BorderStroke(1.dp, CardBorderColor),
                     shadowElevation = 1.dp,
-                    modifier = Modifier.clickable { onLogout() }
+                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
-                        Text(text = "🚪", fontSize = 11.sp)
+                        Text(text = "🚪", style = MaterialTheme.typography.labelSmall)
                         Text(
-                            text = "Logout",
+                            text = "Exit",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimaryNearBlack
                         )
@@ -151,7 +148,7 @@ fun TopRoleSwitcherBar(
             }
         }
 
-        // ASHA Proxy Indicator Banner (Only shown when ASHA is acting as proxy for a patient)
+        // ASHA Proxy Indicator Banner
         AnimatedVisibility(
             visible = activeProxyPatient != null,
             enter = expandVertically() + fadeIn(),
@@ -162,22 +159,23 @@ fun TopRoleSwitcherBar(
                     color = AmberWarning.copy(alpha = 0.25f),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    shape = CardShape
+                        .padding(horizontal = Spacing.md, vertical = Spacing.xxs),
+                    shape = CardShape,
+                    border = BorderStroke(1.dp, AmberWarning.copy(alpha = 0.5f))
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(text = "🤝", fontSize = 14.sp)
+                            Text(text = "🤝", style = MaterialTheme.typography.titleMedium)
                             Column {
                                 Text(
                                     text = "Acting as Proxy for Patient:",
@@ -198,10 +196,10 @@ fun TopRoleSwitcherBar(
                                 containerColor = DarkCharcoal,
                                 contentColor = LimePrimary
                             ),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            modifier = Modifier.height(28.dp)
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.height(34.dp)
                         ) {
-                            Text(text = "Exit Proxy", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(text = "Exit Proxy", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -210,8 +208,7 @@ fun TopRoleSwitcherBar(
 
         HorizontalDivider(
             thickness = 1.dp,
-            color = Color(0xFFF0EAE0),
-            modifier = Modifier.padding(top = 2.dp)
+            color = DividerSubtle
         )
     }
 }
