@@ -231,11 +231,68 @@ fun AshaHomeScreen(
             }
         }
 
-        // 6. Recent Broadcast Notices / Alerts
-        if (notices.isNotEmpty()) {
+        val emergencySosAlerts = notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT }
+        val adminAdvisories = notices.filter { it.senderRole == UserRole.ADMIN }
+
+        // 6. Emergency Patient SOS Alerts
+        if (emergencySosAlerts.isNotEmpty()) {
             item {
                 Text(
-                    text = "Village Health Advisories",
+                    text = "🚨 Emergency Patient SOS Alerts (${emergencySosAlerts.size})",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = CoralAlert
+                    )
+                )
+            }
+
+            items(emergencySosAlerts) { sos ->
+                VitalSenseCard(
+                    backgroundColor = CoralAlert.copy(alpha = 0.15f),
+                    elevation = 3.dp
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = sos.title,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = CoralAlert
+                                )
+                            )
+                            Surface(shape = PillShape, color = CoralAlert) {
+                                Text(
+                                    text = "HIGH PRIORITY",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SurfaceWhite),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = sos.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimaryNearBlack
+                        )
+                        Text(
+                            text = "From: ${sos.senderName} · Village: ${sos.targetVillage ?: "General"}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondaryMuted
+                        )
+                    }
+                }
+            }
+        }
+
+        // 7. District Health Advisories (Admin Broadcasts)
+        if (adminAdvisories.isNotEmpty()) {
+            item {
+                Text(
+                    text = "📢 District Health Advisories",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
@@ -244,7 +301,7 @@ fun AshaHomeScreen(
                 )
             }
 
-            items(notices) { notice ->
+            items(adminAdvisories) { notice ->
                 VitalSenseCard(
                     backgroundColor = if (notice.isUrgent) CoralAlert.copy(alpha = 0.15f) else SurfaceWhite
                 ) {
@@ -262,7 +319,7 @@ fun AshaHomeScreen(
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "From: ${notice.senderName}",
+                            text = "Issued by: ${notice.senderName} (${notice.senderRole.name})",
                             style = MaterialTheme.typography.labelSmall,
                             color = TextSecondaryMuted
                         )

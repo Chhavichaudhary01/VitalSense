@@ -152,6 +152,7 @@ fun VitalSenseNavGraph(
 
                                 PatientHomeScreen(
                                     patient = effectivePatient,
+                                    notices = notices,
                                     onCategoryClick = { category ->
                                         if (category == ConditionCategory.MENTAL_HEALTH) {
                                             showMentalWellness = true
@@ -257,6 +258,7 @@ fun VitalSenseNavGraph(
                                     appointments = doctorAppointments,
                                     dispensaryStock = doctorDispensaryStock,
                                     patients = patients,
+                                    notices = notices,
                                     onSelectCase = { record ->
                                         doctorViewModel.selectCase(record)
                                     },
