@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1056788502080",
+    "project_id": "vitalsense-58b28",
+    "storage_bucket": "vitalsense-58b28.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056788502080:android:436d93fe256b585c7db1a5",
+        "android_client_info": {
+          "package_name": "com.vitalsense.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbVbSP0MHaFCkQYQpIng2-QAZShCz-XO8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
