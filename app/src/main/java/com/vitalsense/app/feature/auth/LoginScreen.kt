@@ -1,13 +1,10 @@
 package com.vitalsense.app.feature.auth
 
-import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,9 +47,9 @@ fun LoginScreen(
         modifier = modifier
             .fillMaxSize()
             .background(WarmCreamBackground)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 28.dp, bottom = 40.dp)
+            .padding(horizontal = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        contentPadding = PaddingValues(top = Spacing.lg, bottom = Spacing.xxl)
     ) {
         // 1. App Header & Language Switcher
         item {
@@ -63,7 +60,7 @@ fun LoginScreen(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     Box(
                         modifier = Modifier
@@ -74,18 +71,14 @@ fun LoginScreen(
                     ) {
                         Text(
                             text = "V",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimaryNearBlack
                         )
                     }
                     Column {
                         Text(
                             text = "VitalSense",
-                            style = MaterialTheme.typography.displayMedium.copy(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
+                            style = MaterialTheme.typography.displayMedium,
                             color = TextPrimaryNearBlack
                         )
                         Text(
@@ -98,19 +91,20 @@ fun LoginScreen(
 
                 // Language toggle pill
                 Surface(
+                    onClick = {
+                        selectedLanguage = if (selectedLanguage == "English") "हिंदी (Hindi)" else "English"
+                    },
                     shape = PillShape,
                     color = SurfaceWhite,
-                    shadowElevation = 1.dp,
-                    modifier = Modifier.clickable {
-                        selectedLanguage = if (selectedLanguage == "English") "हिंदी (Hindi)" else "English"
-                    }
+                    border = BorderStroke(1.dp, CardBorderColor),
+                    shadowElevation = 1.dp
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
-                        Text(text = "🌐", fontSize = 12.sp)
+                        Text(text = "🌐", style = MaterialTheme.typography.labelSmall)
                         Text(
                             text = selectedLanguage,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
@@ -123,28 +117,26 @@ fun LoginScreen(
 
         // 2. Welcome Title
         item {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Who is using the app?",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                ),
-                color = TextPrimaryNearBlack
-            )
-            Text(
-                text = "Select your role to access your dedicated healthcare portal:",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSecondaryMuted
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                Text(
+                    text = "Who is using the app?",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = TextPrimaryNearBlack
+                )
+                Text(
+                    text = "Select your role to access your dedicated healthcare portal:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondaryMuted
+                )
+            }
         }
 
         // 3. 4-Role Selector Cards (2x2 Grid)
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     RoleCard(
                         role = UserRole.PATIENT,
@@ -169,7 +161,7 @@ fun LoginScreen(
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     RoleCard(
                         role = UserRole.DOCTOR,
@@ -198,45 +190,34 @@ fun LoginScreen(
         // 4. Role Credentials Form & 1-Tap Demo Login
         item {
             VitalSenseCard(
-                elevation = 3.dp,
+                elevation = 2.dp,
                 backgroundColor = SurfaceWhite
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = when (selectedRole) {
-                                UserRole.PATIENT -> "👤 Patient Sign-In"
-                                UserRole.ASHA -> "🤝 ASHA Worker Sign-In"
-                                UserRole.DOCTOR -> "🩺 Doctor Clinical Portal"
-                                UserRole.ADMIN -> "🛡️ District Health Admin"
-                            },
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
-                        )
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    Text(
+                        text = when (selectedRole) {
+                            UserRole.PATIENT -> "👤 Patient Sign-In"
+                            UserRole.ASHA -> "🤝 ASHA Worker Sign-In"
+                            UserRole.DOCTOR -> "🩺 Doctor Clinical Portal"
+                            UserRole.ADMIN -> "🛡️ District Health Admin"
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TextPrimaryNearBlack
+                    )
 
                     when (selectedRole) {
                         UserRole.PATIENT -> {
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = phoneInput,
                                 onValueChange = { phoneInput = it },
-                                label = { Text("Mobile Number") },
-                                placeholder = { Text("+91 98111 22334") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = InputShape
+                                label = "Mobile Number",
+                                placeholder = "+91 98111 22334"
                             )
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = ashaIdInput,
                                 onValueChange = { ashaIdInput = it },
-                                label = { Text("ASHA Helper ID (Optional)") },
-                                placeholder = { Text("e.g. ASHA-7701") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = InputShape
+                                label = "ASHA Helper ID (Optional)",
+                                placeholder = "e.g. ASHA-7701"
                             )
                             VitalSenseButton(
                                 text = "Log In as Patient →",
@@ -244,22 +225,22 @@ fun LoginScreen(
                                 style = ButtonStyle.PRIMARY
                             )
 
-                            // 1-Tap Demo Logins for Judges/Evaluators
+                            // 1-Tap Demo Logins for Evaluators
                             Text(
-                                text = "⚡ Quick 1-Tap Demo Login as:",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                text = "⚡ Quick 1-Tap Demo Login:",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondaryMuted
                             )
                             samplePatients.forEach { patient ->
                                 Surface(
+                                    onClick = { onPatientLogin(patient) },
                                     shape = PillShape,
                                     color = LimePrimary.copy(alpha = 0.35f),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { onPatientLogin(patient) }
+                                    border = BorderStroke(1.dp, CardBorderSubtle),
+                                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
@@ -275,24 +256,18 @@ fun LoginScreen(
                         }
 
                         UserRole.ASHA -> {
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = ashaIdInput,
                                 onValueChange = { ashaIdInput = it },
-                                label = { Text("Unique ASHA ID") },
-                                placeholder = { Text("e.g. ASHA-7701") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = InputShape
+                                label = "Unique ASHA ID",
+                                placeholder = "e.g. ASHA-7701"
                             )
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = pinInput,
                                 onValueChange = { pinInput = it },
-                                label = { Text("4-Digit Security PIN") },
-                                placeholder = { Text("••••") },
-                                visualTransformation = PasswordVisualTransformation(),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = InputShape
+                                label = "4-Digit Security PIN",
+                                placeholder = "••••",
+                                visualTransformation = PasswordVisualTransformation()
                             )
                             VitalSenseButton(
                                 text = "Log In to ASHA Caseload →",
@@ -301,20 +276,20 @@ fun LoginScreen(
                             )
 
                             Text(
-                                text = "⚡ Quick 1-Tap Demo Login as:",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                text = "⚡ Quick 1-Tap Demo Login:",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondaryMuted
                             )
                             sampleAshas.forEach { asha ->
                                 Surface(
+                                    onClick = { onAshaLogin(asha) },
                                     shape = PillShape,
                                     color = LavenderSecondary.copy(alpha = 0.35f),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { onAshaLogin(asha) }
+                                    border = BorderStroke(1.dp, CardBorderSubtle),
+                                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
@@ -334,24 +309,18 @@ fun LoginScreen(
                         }
 
                         UserRole.DOCTOR -> {
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = doctorEmailInput,
                                 onValueChange = { doctorEmailInput = it },
-                                label = { Text("Medical Registration / Email") },
-                                placeholder = { Text("dr.rajesh@vitalsense.org") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = InputShape
+                                label = "Medical Registration / Email",
+                                placeholder = "dr.rajesh@vitalsense.org"
                             )
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = doctorPasswordInput,
                                 onValueChange = { doctorPasswordInput = it },
-                                label = { Text("Password") },
-                                placeholder = { Text("••••••••") },
-                                visualTransformation = PasswordVisualTransformation(),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = InputShape
+                                label = "Password",
+                                placeholder = "••••••••",
+                                visualTransformation = PasswordVisualTransformation()
                             )
                             VitalSenseButton(
                                 text = "Log In to Clinical Portal →",
@@ -360,20 +329,20 @@ fun LoginScreen(
                             )
 
                             Text(
-                                text = "⚡ Quick 1-Tap Demo Login as:",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                text = "⚡ Quick 1-Tap Demo Login:",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondaryMuted
                             )
                             sampleDoctors.forEach { doc ->
                                 Surface(
+                                    onClick = { onDoctorLogin(doc) },
                                     shape = PillShape,
                                     color = BlushPinkTertiary.copy(alpha = 0.35f),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { onDoctorLogin(doc) }
+                                    border = BorderStroke(1.dp, CardBorderSubtle),
+                                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
@@ -393,15 +362,12 @@ fun LoginScreen(
                         }
 
                         UserRole.ADMIN -> {
-                            OutlinedTextField(
+                            VitalSenseTextField(
                                 value = adminPasscodeInput,
                                 onValueChange = { adminPasscodeInput = it },
-                                label = { Text("District Admin Passcode") },
-                                placeholder = { Text("ADMIN-RAMPUR-2026") },
-                                visualTransformation = PasswordVisualTransformation(),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = InputShape
+                                label = "District Admin Passcode",
+                                placeholder = "ADMIN-RAMPUR-2026",
+                                visualTransformation = PasswordVisualTransformation()
                             )
                             VitalSenseButton(
                                 text = "Enter District Health Command →",
@@ -410,19 +376,19 @@ fun LoginScreen(
                             )
 
                             Text(
-                                text = "⚡ Quick 1-Tap Demo Login as:",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                text = "⚡ Quick 1-Tap Demo Login:",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondaryMuted
                             )
                             Surface(
+                                onClick = onAdminLogin,
                                 shape = PillShape,
                                 color = AmberWarning.copy(alpha = 0.35f),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onAdminLogin() }
+                                border = BorderStroke(1.dp, CardBorderSubtle),
+                                modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                    modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
@@ -433,8 +399,8 @@ fun LoginScreen(
                                     )
                                     Text(
                                         text = "Full Access",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color(0xFFE65100)
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = AmberWarningDark
                                     )
                                 }
                             }
@@ -444,7 +410,7 @@ fun LoginScreen(
             }
         }
 
-        // 5. Offline resilience reassurance badge
+        // 5. Offline resilience badge
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -473,30 +439,29 @@ private fun RoleCard(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier
-            .height(95.dp)
-            .clickable { onClick() },
+        onClick = onClick,
+        modifier = modifier.defaultMinSize(minHeight = 90.dp),
         shape = CardShape,
-        color = if (isSelected) color.copy(alpha = 0.5f) else SurfaceWhite,
-        shadowElevation = if (isSelected) 3.dp else 1.dp,
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, DarkCharcoal) else null
+        color = if (isSelected) color.copy(alpha = 0.45f) else SurfaceWhite,
+        shadowElevation = if (isSelected) 2.dp else 1.dp,
+        border = if (isSelected) BorderStroke(2.dp, DarkCharcoal) else BorderStroke(1.dp, CardBorderColor)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .fillMaxWidth()
+                .padding(Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = icon, fontSize = 20.sp)
+                Text(text = icon, style = MaterialTheme.typography.titleLarge)
                 if (isSelected) {
                     Box(
                         modifier = Modifier
-                            .size(16.dp)
+                            .size(18.dp)
                             .clip(CircleShape)
                             .background(DarkCharcoal),
                         contentAlignment = Alignment.Center

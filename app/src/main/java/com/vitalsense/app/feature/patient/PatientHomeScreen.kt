@@ -1,16 +1,11 @@
 package com.vitalsense.app.feature.patient
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,13 +38,15 @@ fun PatientHomeScreen(
         it.senderRole == UserRole.ADMIN || it.targetRole == "ALL" || it.targetRole == "PATIENT"
     }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(WarmCreamBackground)
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 12.dp, bottom = 32.dp)
+            .padding(horizontal = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
         // 1. Personalized Greeting
         item {
@@ -62,7 +59,7 @@ fun PatientHomeScreen(
                     Column {
                         Text(
                             text = "Namaste, ${patient.name.split(" ").first()}",
-                            style = MaterialTheme.typography.displayMedium.copy(fontSize = 26.sp),
+                            style = MaterialTheme.typography.displayMedium,
                             color = TextPrimaryNearBlack
                         )
                         Text(
@@ -76,22 +73,22 @@ fun PatientHomeScreen(
             }
         }
 
-        // 2. Inline Dismissible Page Guide (PRD §4.9)
+        // 2. Inline Dismissible Page Guide
         item {
             InlineHelpBanner(
                 title = "Your Rural Health Portal",
-                message = "Tap any health category below to log your symptoms, check prescriptions, or connect with your ASHA helper."
+                message = "Tap any health category below to log symptoms, check prescriptions, or connect with your ASHA helper."
             )
         }
 
-        // 3. Hero Card: Health Card & Daily Status (Design Docs §4.1)
+        // 3. Hero Card: Offline Health Card & Daily Status
         item {
             VitalSenseCard(
                 backgroundColor = LimePrimary.copy(alpha = 0.85f),
-                elevation = 3.dp,
+                elevation = 2.dp,
                 onClick = onViewHealthCard
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,16 +96,12 @@ fun PatientHomeScreen(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
-                            Text(text = "🪪", fontSize = 18.sp)
+                            Text(text = "🪪", style = MaterialTheme.typography.titleMedium)
                             Text(
                                 text = "OFFLINE HEALTH CARD",
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    letterSpacing = 0.5.sp
-                                ),
+                                style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.5.sp),
                                 color = DarkCharcoal
                             )
                         }
@@ -117,21 +110,16 @@ fun PatientHomeScreen(
                             color = DarkCharcoal
                         ) {
                             Text(
-                                text = "View Full Card →",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = LimePrimary,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                text = "View Card →",
+                                style = MaterialTheme.typography.labelSmall.copy(color = LimePrimary, fontWeight = FontWeight.Bold),
+                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                             )
                         }
                     }
 
                     Text(
                         text = "Active Condition: ${patient.lastCondition}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = TextPrimaryNearBlack
                     )
 
@@ -147,78 +135,52 @@ fun PatientHomeScreen(
                         )
                         Text(
                             text = "Cached Offline ✓",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2E7D32)
-                            )
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SoftMintText)
                         )
                     }
                 }
             }
         }
 
-        // 4. Section Title: "How can I help you today?"
+        // 4. Section Title: Health Categories
         item {
-            Text(
-                text = "How can I help you today?",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = TextPrimaryNearBlack
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                Text(
+                    text = "How can we help you today?",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = TextPrimaryNearBlack
+                )
+                Text(
+                    text = "Tap a service to report health condition or consult a doctor:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondaryMuted
+                )
+            }
         }
 
-        // 5. 2-Column Category Grid
+        // 4.1 Categories 2-Column Grid
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                val categories = ConditionCategory.values().toList()
-                val chunked = categories.chunked(2)
+            val categories = listOf(
+                ConditionCategory.GENERAL_MEDICINE,
+                ConditionCategory.MATERNAL_HEALTH,
+                ConditionCategory.FITNESS,
+                ConditionCategory.NUTRITION,
+                ConditionCategory.MENTAL_HEALTH
+            )
 
-                chunked.forEach { rowCategories ->
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                categories.chunked(2).forEach { rowCategories ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
                         rowCategories.forEach { category ->
-                            VitalSenseCard(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(105.dp),
-                                backgroundColor = Color(category.colorHex).copy(alpha = 0.35f),
-                                onClick = { onCategoryClick(category) }
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(34.dp)
-                                            .clip(CircleShape)
-                                            .background(SurfaceWhite),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(text = category.emoji, fontSize = 18.sp)
-                                    }
-
-                                    Column {
-                                        Text(
-                                            text = category.displayName,
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 13.sp
-                                            ),
-                                            color = TextPrimaryNearBlack
-                                        )
-                                        Text(
-                                            text = "Tap to open",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = TextSecondaryMuted
-                                        )
-                                    }
-                                }
-                            }
+                            CategoryChip(
+                                category = category,
+                                isSelected = false,
+                                onClick = { onCategoryClick(category) },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                         if (rowCategories.size == 1) {
                             Spacer(modifier = Modifier.weight(1f))
@@ -227,8 +189,8 @@ fun PatientHomeScreen(
                 }
             }
         }
-        
-        // 4.5 My Prescriptions & Medicines Section
+
+        // 5. My Prescriptions & Medicines Section
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -237,10 +199,7 @@ fun PatientHomeScreen(
             ) {
                 Text(
                     text = "💊 My Prescriptions (${prescriptions.size})",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
 
@@ -248,10 +207,10 @@ fun PatientHomeScreen(
                     onClick = { showPrescriptionUploadDialog = true },
                     shape = PillShape,
                     colors = ButtonDefaults.buttonColors(containerColor = LimePrimary, contentColor = TextPrimaryNearBlack),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    modifier = Modifier.height(30.dp)
+                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                    modifier = Modifier.defaultMinSize(minHeight = 34.dp)
                 ) {
-                    Text("➕ Upload / Add Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("➕ Upload Rx", style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -270,7 +229,7 @@ fun PatientHomeScreen(
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Text(
-                                text = "Scan paper slip or write down your medicines",
+                                text = "Scan paper slip or write down medicines",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondaryMuted
                             )
@@ -279,7 +238,7 @@ fun PatientHomeScreen(
                             onClick = { showPrescriptionUploadDialog = true },
                             shape = PillShape
                         ) {
-                            Text("Upload", fontSize = 11.sp)
+                            Text("Upload", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -287,7 +246,7 @@ fun PatientHomeScreen(
         } else {
             items(prescriptions) { rx ->
                 VitalSenseCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -300,7 +259,7 @@ fun PatientHomeScreen(
                                 )
                                 Text(
                                     text = "${rx.doctorSpecialty} · ${rx.dateFormatted}",
-                                    style = MaterialTheme.typography.labelSmall,
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = TextSecondaryMuted
                                 )
                             }
@@ -309,7 +268,7 @@ fun PatientHomeScreen(
                                     Text(
                                         text = "AI Scanned",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                                     )
                                 }
                             }
@@ -326,7 +285,7 @@ fun PatientHomeScreen(
                                 )
                                 Text(
                                     text = "${med.frequency} · ${med.duration}",
-                                    style = MaterialTheme.typography.labelSmall,
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = TextSecondaryMuted
                                 )
                             }
@@ -344,34 +303,21 @@ fun PatientHomeScreen(
             }
         }
 
-        item {
-            Text("Other Services", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, fontSize = 18.sp), color = TextPrimaryNearBlack)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                VitalSenseButton("Upload Prescription (Camera / Write Down)", onClick = { showPrescriptionUploadDialog = true }, modifier = Modifier.fillMaxWidth())
-                VitalSenseButton("Find Doctors (Map)", onClick = { }, modifier = Modifier.fillMaxWidth())
-                VitalSenseButton("Government Schemes", onClick = { }, modifier = Modifier.fillMaxWidth())
-                VitalSenseButton("Help / User Manual", onClick = { }, modifier = Modifier.fillMaxWidth())
-            }
-        }
-
-        // 5. District Health Advisories (Admin Broadcasts)
+        // 6. District Health Advisories (Admin Broadcasts)
         if (adminAdvisories.isNotEmpty()) {
             item {
                 Text(
                     text = "📢 District Health Advisories",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
             }
 
             items(adminAdvisories) { advisory ->
                 VitalSenseCard(
-                    backgroundColor = if (advisory.isUrgent) CoralAlert.copy(alpha = 0.15f) else SurfaceWhite
+                    backgroundColor = if (advisory.isUrgent) CoralAlert.copy(alpha = 0.12f) else SurfaceWhite
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -379,15 +325,15 @@ fun PatientHomeScreen(
                         ) {
                             Text(
                                 text = advisory.title,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = if (advisory.isUrgent) CoralAlert else TextPrimaryNearBlack
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (advisory.isUrgent) CoralAlertDark else TextPrimaryNearBlack
                             )
                             if (advisory.isUrgent) {
-                                Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.2f)) {
+                                Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.25f)) {
                                     Text(
                                         text = "URGENT",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlert),
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlertDark),
+                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                                     )
                                 }
                             }
@@ -399,7 +345,7 @@ fun PatientHomeScreen(
                         )
                         Text(
                             text = "Issued by: ${advisory.senderName} (${advisory.senderRole.name})",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
                     }
@@ -407,31 +353,35 @@ fun PatientHomeScreen(
             }
         }
 
-        // 6. Persistent Emergency SOS Banner (Coral / High Visibility)
+        // 7. Persistent Emergency SOS Banner
         item {
-            Spacer(modifier = Modifier.height(4.dp))
-            VitalSenseCard(
-                backgroundColor = CoralAlert,
-                elevation = 4.dp,
-                onClick = { showSosConfirmation = true }
+            Spacer(modifier = Modifier.height(Spacing.xxs))
+            Surface(
+                onClick = { showSosConfirmation = true },
+                modifier = Modifier.fillMaxWidth(),
+                shape = CardShape,
+                color = CoralAlert,
+                shadowElevation = 3.dp
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.md, vertical = Spacing.md),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(44.dp)
                                 .clip(CircleShape)
                                 .background(SurfaceWhite),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "🚨", fontSize = 20.sp)
+                            Text(text = "🚨", style = MaterialTheme.typography.titleMedium)
                         }
                         Column {
                             Text(
@@ -442,139 +392,142 @@ fun PatientHomeScreen(
                                 )
                             )
                             Text(
-                                text = "Alert ASHA & Family (Works via SMS)",
+                                text = "Alert ASHA & Doctor (Works via SMS)",
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = SurfaceWhite.copy(alpha = 0.9f)
+                                    color = SurfaceWhite.copy(alpha = 0.95f)
                                 )
                             )
                         }
                     }
-                    Text(
-                        text = "TRIGGER",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = SurfaceWhite
+                    Surface(
+                        shape = PillShape,
+                        color = SurfaceWhite
+                    ) {
+                        Text(
+                            text = "TRIGGER",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = CoralAlertDark
+                            ),
+                            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                         )
-                    )
+                    }
                 }
             }
         }
     }
 
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val sosMsg = "EMERGENCY SOS from ${patient.name} (${patient.villageName}, Age ${patient.age}). Contact: ${patient.phone}."
 
-    // SOS Confirmation Bottom Sheet / Dialog
+    // Custom Styled SOS Confirmation Dialog
     if (showSosConfirmation) {
-        AlertDialog(
+        VitalSenseDialog(
             onDismissRequest = { showSosConfirmation = false },
-            title = {
-                Text(
-                    text = "🚨 Confirm Emergency SOS",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "This will immediately send an Emergency SOS alert with your location to:",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = "• ASHA Helper: ${patient.ashaWorkerName}\n• Emergency Contact: ${patient.emergencyContact}",
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    Text(
-                        text = "📡 Falls back to cellular SMS with GPS location if mobile internet is unavailable.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF2E7D32)
-                    )
-                }
-            },
+            title = "Confirm Emergency SOS",
+            icon = { Text("🚨", style = MaterialTheme.typography.titleLarge) },
             confirmButton = {
                 Button(
                     onClick = {
                         showSosConfirmation = false
-                        sosSentSuccess = true
                         onTriggerSos()
+                        sosSentSuccess = true
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = CoralAlert)
+                    colors = ButtonDefaults.buttonColors(containerColor = CoralAlert),
+                    shape = PillShape,
+                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
                 ) {
-                    Text("Broadcast SOS Alert", color = SurfaceWhite, fontWeight = FontWeight.Bold)
+                    Text("Yes, Send Emergency Alert", color = SurfaceWhite, style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showSosConfirmation = false }) {
-                    Text("Cancel", color = TextPrimaryNearBlack)
+                TextButton(
+                    onClick = { showSosConfirmation = false },
+                    shape = PillShape,
+                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
+                ) {
+                    Text("Cancel", style = MaterialTheme.typography.labelLarge)
                 }
             }
-        )
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(
+                    text = "This will immediately send an Emergency SOS alert with your location to:",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "• ASHA Helper: ${patient.ashaWorkerName}\n• Available PHC Doctors\n• Emergency SMS to ${patient.emergencyContact}",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = TextPrimaryNearBlack
+                )
+            }
+        }
     }
 
+    // Custom Styled SOS Sent Dialog with 0-Internet Fallbacks
     if (sosSentSuccess) {
-        val sosMsg = com.vitalsense.app.core.util.EmergencySosHelper.createSosMessage(patient)
-        AlertDialog(
+        VitalSenseDialog(
             onDismissRequest = { sosSentSuccess = false },
-            title = {
-                Text("🚨 SOS Alert Active", fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        "Emergency broadcast sent with your GPS location to ${patient.ashaWorkerName} and health monitoring.",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Divider()
-
-                    Text(
-                        text = "Zero Internet Fallbacks:",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = TextPrimaryNearBlack
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                com.vitalsense.app.core.util.EmergencySosHelper.sendCellularSmsFallback(
-                                    context = context,
-                                    recipientPhone = patient.emergencyContact,
-                                    message = sosMsg
-                                )
-                            },
-                            modifier = Modifier.weight(1f),
-                            shape = PillShape
-                        ) {
-                            Text("💬 SMS ASHA", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-
-                        Button(
-                            onClick = {
-                                com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(
-                                    context = context,
-                                    phoneNumber = "108"
-                                )
-                            },
-                            modifier = Modifier.weight(1f),
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = CoralAlert)
-                        ) {
-                            Text("📞 Call 108", color = SurfaceWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            },
+            title = "Emergency SOS Dispatched",
+            icon = { Text("🚨", style = MaterialTheme.typography.titleLarge) },
             confirmButton = {
                 Button(
                     onClick = { sosSentSuccess = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal)
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal),
+                    shape = PillShape,
+                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
                 ) {
-                    Text("Done", color = LimePrimary)
+                    Text("Done", color = LimePrimary, style = MaterialTheme.typography.labelLarge)
                 }
             }
-        )
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                Text(
+                    text = "Emergency broadcast sent with your location to ${patient.ashaWorkerName} and health monitoring.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                HorizontalDivider(color = DividerSubtle)
+
+                Text(
+                    text = "Zero Internet Fallbacks:",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = TextPrimaryNearBlack
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            com.vitalsense.app.core.util.EmergencySosHelper.sendCellularSmsFallback(
+                                context = context,
+                                recipientPhone = patient.emergencyContact,
+                                message = sosMsg
+                            )
+                        },
+                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
+                        shape = PillShape
+                    ) {
+                        Text("💬 SMS ASHA", style = MaterialTheme.typography.labelSmall)
+                    }
+
+                    Button(
+                        onClick = {
+                            com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(
+                                context = context,
+                                phoneNumber = "108"
+                            )
+                        },
+                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
+                        shape = PillShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = CoralAlert)
+                    ) {
+                        Text("📞 Call 108", color = SurfaceWhite, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+        }
     }
 
     if (showPrescriptionUploadDialog) {
@@ -582,10 +535,7 @@ fun PatientHomeScreen(
             patient = patient,
             isAshaProxy = false,
             onDismiss = { showPrescriptionUploadDialog = false },
-            onSavePrescription = { rx ->
-                onSavePrescription(rx)
-            }
+            onSavePrescription = onSavePrescription
         )
     }
 }
-

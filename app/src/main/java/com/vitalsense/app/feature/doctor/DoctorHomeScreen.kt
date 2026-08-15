@@ -1,5 +1,6 @@
 package com.vitalsense.app.feature.doctor
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -51,16 +52,16 @@ fun DoctorHomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(WarmCreamBackground)
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 12.dp, bottom = 36.dp)
+            .padding(horizontal = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
         // 1. Doctor Header
         item {
             Column {
                 Text(
                     text = doctor.name,
-                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 22.sp),
+                    style = MaterialTheme.typography.displayMedium,
                     color = TextPrimaryNearBlack
                 )
                 Text(
@@ -71,31 +72,22 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 1.5 Emergency Patient SOS Alerts (Visible to Doctor & ASHA only)
+        // 1.5 Emergency Patient SOS Alerts
         if (emergencySosAlerts.isNotEmpty()) {
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "🚨 Patient Emergency SOS Alerts (${emergencySosAlerts.size})",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = CoralAlert
-                        )
-                    )
-                }
+                Text(
+                    text = "🚨 Patient Emergency SOS Alerts (${emergencySosAlerts.size})",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = CoralAlertDark
+                )
             }
 
             items(emergencySosAlerts) { sos ->
                 VitalSenseCard(
-                    backgroundColor = CoralAlert.copy(alpha = 0.15f),
-                    elevation = 3.dp
+                    backgroundColor = CoralAlert.copy(alpha = 0.12f),
+                    elevation = 2.dp
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -103,16 +95,14 @@ fun DoctorHomeScreen(
                         ) {
                             Text(
                                 text = sos.title,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = CoralAlert
-                                )
+                                style = MaterialTheme.typography.titleMedium,
+                                color = CoralAlertDark
                             )
                             Surface(shape = PillShape, color = CoralAlert) {
                                 Text(
                                     text = "HIGH PRIORITY",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SurfaceWhite),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                                 )
                             }
                         }
@@ -123,7 +113,7 @@ fun DoctorHomeScreen(
                         )
                         Text(
                             text = "Village: ${sos.targetVillage ?: "General"} · Patient Alert",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
                     }
@@ -131,57 +121,90 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 2. Metrics summary KPI Cards (§4.6)
+        // 2. Metrics summary KPI Cards
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
+                // Pending Cases KPI
                 VitalSenseCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = LimePrimary.copy(alpha = 0.5f)
+                    backgroundColor = SurfaceWhite,
+                    contentPadding = Spacing.sm
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                        Text(
+                            text = "Pending",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondaryMuted
+                        )
                         Text(
                             text = "${pendingCases.size}",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.displayMedium,
+                            color = TextPrimaryNearBlack
                         )
-                        Text(text = "Pending Cases", style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            text = "Active in Queue",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondaryMuted
+                        )
                     }
                 }
 
+                // Severe / Critical Alert KPI
                 VitalSenseCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = if (severeCount > 0) CoralAlert.copy(alpha = 0.25f) else SoftMintSuccess.copy(alpha = 0.35f)
+                    backgroundColor = if (severeCount > 0) CoralAlert.copy(alpha = 0.12f) else SurfaceWhite,
+                    contentPadding = Spacing.sm
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                        Text(
+                            text = "Critical Cases",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (severeCount > 0) CoralAlertDark else TextSecondaryMuted
+                        )
                         Text(
                             text = "$severeCount",
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = if (severeCount > 0) CoralAlert else TextPrimaryNearBlack
-                            )
+                            style = MaterialTheme.typography.displayMedium,
+                            color = if (severeCount > 0) CoralAlertDark else TextPrimaryNearBlack
                         )
-                        Text(text = "High / Severe Alerts", style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            text = if (severeCount > 0) "Immediate Triage" else "All Normal",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (severeCount > 0) CoralAlertDark else TextSecondaryMuted
+                        )
                     }
                 }
 
+                // Scheduled Appointments KPI
                 VitalSenseCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = LavenderSecondary.copy(alpha = 0.4f)
+                    backgroundColor = SurfaceWhite,
+                    contentPadding = Spacing.sm
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                        Text(
+                            text = "Appointments",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondaryMuted
+                        )
                         Text(
                             text = "${appointments.size}",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.displayMedium,
+                            color = TextPrimaryNearBlack
                         )
-                        Text(text = "Appointments", style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            text = "Scheduled",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondaryMuted
+                        )
                     }
                 }
             }
         }
 
-        // 3. Section: Triage Patient Cases Queue (§2.1, §4.1)
+        // 3. Section: Specialist Triage Queue
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -189,22 +212,15 @@ fun DoctorHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Specialist Case Queue (${cases.size})",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    text = "Specialist Triage Queue (${cases.size})",
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
-
-                Surface(shape = PillShape, color = SurfaceWhite) {
-                    Text(
-                        text = "Scoped to ${doctor.specialty.displayName}",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        color = TextSecondaryMuted
-                    )
-                }
+                Text(
+                    text = "${doctor.specialty.displayName} Stream",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextSecondaryMuted
+                )
             }
         }
 
@@ -212,31 +228,28 @@ fun DoctorHomeScreen(
             item {
                 VitalSenseCard(backgroundColor = SurfaceWhite) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(Spacing.md),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
-                        Text(text = "✨", fontSize = 28.sp)
+                        Text(text = "🎉", style = MaterialTheme.typography.titleLarge)
                         Text(
-                            text = "No pending cases in your specialty queue",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            text = "No pending patient cases in your triage queue.",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = TextPrimaryNearBlack
-                        )
-                        Text(
-                            text = "All patient cases for ${doctor.specialty.displayName} have been reviewed.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
                         )
                     }
                 }
             }
         } else {
             items(cases) { record ->
-                val isMentalHealth = record.category == ConditionCategory.MENTAL_HEALTH ||
-                        record.requestedDoctorType == DoctorSpecialty.PSYCHOLOGIST
+                val isSevere = record.severity == SeverityLevel.SEVERE || record.severity == SeverityLevel.HIGH
+                val isMentalHealth = record.category == ConditionCategory.MENTAL_HEALTH || record.requestedDoctorType == DoctorSpecialty.PSYCHOLOGIST
 
-                VitalSenseCard(elevation = 2.dp) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                VitalSenseCard(
+                    backgroundColor = if (isSevere) CoralAlert.copy(alpha = 0.08f) else SurfaceWhite
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -245,7 +258,7 @@ fun DoctorHomeScreen(
                             Column {
                                 Text(
                                     text = record.patientName,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
                                     text = "Village: ${record.villageName} · ${record.category.displayName}",
@@ -256,17 +269,16 @@ fun DoctorHomeScreen(
                             SeverityBadge(severity = record.severity)
                         }
 
-                        // Mental Health Referral Flag (§2.6)
                         if (isMentalHealth) {
                             Surface(shape = PillShape, color = LavenderSecondary.copy(alpha = 0.45f)) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                                 ) {
-                                    Text(text = "🧠", fontSize = 11.sp)
+                                    Text(text = "🧠", style = MaterialTheme.typography.labelSmall)
                                     Text(
-                                        text = "Mental Health Referral (Patient Stress Section)",
+                                        text = "Mental Health Referral",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                         color = TextPrimaryNearBlack
                                     )
@@ -288,17 +300,17 @@ fun DoctorHomeScreen(
                             // Status Pill
                             Surface(
                                 shape = PillShape,
-                                color = Color(record.status.colorHex).copy(alpha = 0.3f)
+                                color = Color(record.status.colorHex).copy(alpha = 0.25f)
                             ) {
                                 Text(
                                     text = record.status.displayName,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs),
                                     color = TextPrimaryNearBlack
                                 )
                             }
 
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                                 OutlinedButton(
                                     onClick = {
                                         selectedPatientForHistory = patients.find { it.id == record.patientId }
@@ -320,20 +332,21 @@ fun DoctorHomeScreen(
                                             )
                                     },
                                     shape = PillShape,
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                                    modifier = Modifier.height(32.dp)
+                                    border = BorderStroke(1.dp, CardBorderColor),
+                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                                 ) {
-                                    Text(text = "📋 History & Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(text = "📋 History", style = MaterialTheme.typography.labelSmall)
                                 }
 
                                 Button(
                                     onClick = { onSelectCase(record) },
                                     shape = PillShape,
                                     colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal),
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                    modifier = Modifier.height(32.dp)
+                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                                 ) {
-                                    Text(text = "Review Case →", color = LimePrimary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                    Text(text = "Review →", color = LimePrimary, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -342,7 +355,7 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 4. Section: Upcoming Appointments (§2.4)
+        // 4. Section: Upcoming Appointments
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -351,40 +364,39 @@ fun DoctorHomeScreen(
             ) {
                 Text(
                     text = "Scheduled Appointments (${appointments.size})",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
 
-                // Prominent Propose / Schedule Appointment Button
                 Button(
                     onClick = { showScheduleDialog = true },
                     shape = PillShape,
                     colors = ButtonDefaults.buttonColors(containerColor = LavenderSecondary, contentColor = TextPrimaryNearBlack),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    modifier = Modifier.height(30.dp)
+                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                    modifier = Modifier.defaultMinSize(minHeight = 34.dp)
                 ) {
-                    Text(text = "➕ Propose Appt", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "➕ Propose Appt", style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
 
         if (appointments.isEmpty()) {
             item {
-                Text(
-                    text = "No scheduled appointments found.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondaryMuted
-                )
+                VitalSenseCard(backgroundColor = SurfaceWhite) {
+                    Text(
+                        text = "No appointments scheduled. Tap 'Propose Appt' to schedule a patient consultation.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondaryMuted
+                    )
+                }
             }
         } else {
             items(appointments) { appointment ->
                 val isPending = appointment.status.contains("Pending", ignoreCase = true)
-
-                VitalSenseCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                VitalSenseCard(
+                    backgroundColor = if (isPending) AmberWarning.copy(alpha = 0.15f) else SurfaceWhite
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -393,7 +405,7 @@ fun DoctorHomeScreen(
                             Column {
                                 Text(
                                     text = appointment.patientName,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
                                     text = "${appointment.dateFormatted} at ${appointment.timeSlot}",
@@ -403,12 +415,13 @@ fun DoctorHomeScreen(
                             }
                             Surface(
                                 shape = PillShape,
-                                color = if (appointment.status == "Confirmed") SoftMintSuccess.copy(alpha = 0.5f) else AmberWarning.copy(alpha = 0.4f)
+                                color = if (isPending) AmberWarning else SoftMintSuccess
                             ) {
                                 Text(
                                     text = appointment.status,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs),
+                                    color = TextPrimaryNearBlack
                                 )
                             }
                         }
@@ -416,24 +429,23 @@ fun DoctorHomeScreen(
                         if (isPending) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.xs, Alignment.End),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 TextButton(
                                     onClick = { onDeclineAppointment(appointment.id) },
                                     shape = PillShape
                                 ) {
-                                    Text("Decline", color = CoralAlert, fontSize = 12.sp)
+                                    Text("Decline", color = CoralAlertDark, style = MaterialTheme.typography.labelSmall)
                                 }
-                                Spacer(modifier = Modifier.width(6.dp))
                                 Button(
                                     onClick = { onAcceptAppointment(appointment.id) },
                                     shape = PillShape,
                                     colors = ButtonDefaults.buttonColors(containerColor = SoftMintSuccess),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                    modifier = Modifier.height(28.dp)
+                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                    modifier = Modifier.defaultMinSize(minHeight = 32.dp)
                                 ) {
-                                    Text("Accept ✓", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                    Text("Accept ✓", color = SoftMintText, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                 }
                             }
                         }
@@ -442,7 +454,7 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 5. Section: Dispensary Stock & Availability Check (§2.3)
+        // 5. Section: Dispensary Stock Check
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -451,19 +463,59 @@ fun DoctorHomeScreen(
             ) {
                 Text(
                     text = "Dispensary Stock Check",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
                 if (lowStockCount > 0) {
-                    Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.2f)) {
+                    Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.25f)) {
                         Text(
                             text = "$lowStockCount LOW STOCK",
-                            style = MaterialTheme.typography.labelSmall.copy(color = CoralAlert, fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            style = MaterialTheme.typography.labelSmall.copy(color = CoralAlertDark, fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                         )
+                    }
+                }
+            }
+        }
+
+        items(dispensaryStock) { item ->
+            VitalSenseCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = item.medicineName,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = item.category,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondaryMuted
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Text(
+                            text = "${item.availableQuantity} ${item.unit}",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = if (item.isLowStock) CoralAlertDark else TextPrimaryNearBlack
+                            )
+                        )
+                        if (item.isLowStock) {
+                            Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.25f)) {
+                                Text(
+                                    text = "LOW",
+                                    style = MaterialTheme.typography.labelSmall.copy(color = CoralAlertDark, fontWeight = FontWeight.Bold),
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -474,19 +526,16 @@ fun DoctorHomeScreen(
             item {
                 Text(
                     text = "📢 District Health Directives",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
             }
 
             items(adminDirectives) { directive ->
                 VitalSenseCard(
-                    backgroundColor = if (directive.isUrgent) CoralAlert.copy(alpha = 0.15f) else SurfaceWhite
+                    backgroundColor = if (directive.isUrgent) CoralAlert.copy(alpha = 0.12f) else SurfaceWhite
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -494,15 +543,15 @@ fun DoctorHomeScreen(
                         ) {
                             Text(
                                 text = directive.title,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = if (directive.isUrgent) CoralAlert else TextPrimaryNearBlack
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (directive.isUrgent) CoralAlertDark else TextPrimaryNearBlack
                             )
                             if (directive.isUrgent) {
-                                Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.2f)) {
+                                Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.25f)) {
                                     Text(
                                         text = "DIRECTIVE",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlert),
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlertDark),
+                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                                     )
                                 }
                             }
@@ -514,7 +563,7 @@ fun DoctorHomeScreen(
                         )
                         Text(
                             text = "From: ${directive.senderName} (${directive.senderRole.name})",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
                     }
@@ -526,26 +575,18 @@ fun DoctorHomeScreen(
         if (patients.isNotEmpty()) {
             item {
                 Text(
-                    text = "🔍 Patient Records & Prescriptions Directory",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
+                    text = "🔍 Patient Records Directory",
+                    style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
             }
 
             item {
-                OutlinedTextField(
+                VitalSenseTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search patient by name or village...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = PillShape,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = SurfaceWhite,
-                        unfocusedContainerColor = SurfaceWhite
-                    )
+                    label = "Search Patient",
+                    placeholder = "Search by name or village..."
                 )
             }
 
@@ -564,7 +605,7 @@ fun DoctorHomeScreen(
                         Column {
                             Text(
                                 text = pat.name,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                style = MaterialTheme.typography.titleMedium
                             )
                             Text(
                                 text = "${pat.villageName} · Age: ${pat.age} (${pat.gender}) · ASHA: ${pat.ashaWorkerName}",
@@ -576,10 +617,10 @@ fun DoctorHomeScreen(
                             onClick = { selectedPatientForHistory = pat },
                             shape = PillShape,
                             colors = ButtonDefaults.buttonColors(containerColor = LavenderSecondary, contentColor = TextPrimaryNearBlack),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            modifier = Modifier.height(30.dp)
+                            contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                            modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                         ) {
-                            Text("📋 View History & Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("📋 History", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
