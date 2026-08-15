@@ -4,6 +4,7 @@ import android.content.Context
 import com.vitalsense.app.core.data.local.VitalSenseDatabase
 import com.vitalsense.app.core.data.repository.VitalSenseRepository
 import com.vitalsense.app.core.data.repository.VitalSenseRepositoryImpl
+import com.vitalsense.app.core.data.remote.FirestoreDataSource
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,8 +27,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideVitalSenseRepository(
-        database: VitalSenseDatabase
+        database: VitalSenseDatabase,
+        firestoreDataSource: FirestoreDataSource
     ): VitalSenseRepository {
-        return VitalSenseRepositoryImpl(database)
+        return VitalSenseRepositoryImpl(database, firestoreDataSource)
     }
 }
