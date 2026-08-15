@@ -12,6 +12,7 @@ class VitalSenseApp : Application() {
         try {
             FirebaseApp.initializeApp(this)
             Log.d("VitalSenseFirebase", "FirebaseApp initialized successfully in VitalSenseApp")
+            com.vitalsense.app.core.sync.SyncManager(this).schedulePeriodicSync()
         } catch (e: Exception) {
             Log.e("VitalSenseFirebase", "FirebaseApp initialization error: ${e.message}", e)
         }

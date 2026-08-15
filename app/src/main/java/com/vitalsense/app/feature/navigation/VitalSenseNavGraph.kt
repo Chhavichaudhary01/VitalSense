@@ -189,6 +189,11 @@ fun VitalSenseNavGraph(
                                 },
                                 onSendNoticeClick = {
                                     // Hook for Person 3 to broadcast notice
+                                },
+                                onSavePrescription = { rx ->
+                                    coroutineScope.launch {
+                                        repository.savePrescription(rx)
+                                    }
                                 }
                             )
                         }
