@@ -2,6 +2,7 @@ package com.vitalsense.app.core.data.local.dao
 
 import androidx.room.*
 import com.vitalsense.app.core.data.local.entity.*
+import com.vitalsense.app.core.data.model.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -57,6 +58,9 @@ interface VitalSenseDao {
     @Query("SELECT * FROM condition_records WHERE patientId = :patientId ORDER BY timestamp DESC")
     fun getConditionsForPatient(patientId: String): Flow<List<ConditionRecordEntity>>
 
+    @Query("SELECT * FROM condition_records WHERE requestedDoctorType = :specialty OR assignedDoctorId = :doctorId ORDER BY CASE severity WHEN 'SEVERE' THEN 1 WHEN 'HIGH' THEN 2 WHEN 'MODERATE' THEN 3 ELSE 4 END, timestamp DESC")
+    fun getCasesForDoctor(specialty: DoctorSpecialty, doctorId: String): Flow<List<ConditionRecordEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertConditionRecord(record: ConditionRecordEntity)
 
@@ -69,6 +73,9 @@ interface VitalSenseDao {
 
     @Query("SELECT * FROM prescriptions WHERE patientId = :patientId ORDER BY timestamp DESC")
     fun getPrescriptionsForPatient(patientId: String): Flow<List<PrescriptionEntity>>
+
+    @Query("SELECT * FROM prescriptions WHERE caseId = :caseId ORDER BY timestamp DESC")
+    fun getPrescriptionsByCase(caseId: String): Flow<List<PrescriptionEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPrescription(prescription: PrescriptionEntity)

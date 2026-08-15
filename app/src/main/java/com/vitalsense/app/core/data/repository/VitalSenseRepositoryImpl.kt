@@ -1,11 +1,11 @@
 package com.vitalsense.app.core.data.repository
 
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.vitalsense.app.core.data.local.VitalSenseDatabase
 import com.vitalsense.app.core.data.local.entity.*
 import com.vitalsense.app.core.data.local.seed.SeedDataProvider
 import com.vitalsense.app.core.data.model.*
+import com.vitalsense.app.core.data.remote.FirestoreDataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -15,14 +15,15 @@ import javax.inject.Singleton
 
 @Singleton
 class VitalSenseRepositoryImpl @Inject constructor(
-    private val database: VitalSenseDatabase
+    private val database: VitalSenseDatabase,
+    private val firestoreDataSource: FirestoreDataSource
 ) : VitalSenseRepository {
 
     private val gson = Gson()
     private val dao = database.vitalSenseDao()
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    // In-memory reactive state caches for instant prototype responsiveness
+    // In-memory reactive state caches for instant UI response (zero lag on stage)
     private val _villages = MutableStateFlow(SeedDataProvider.initialVillages)
     private val _patients = MutableStateFlow(SeedDataProvider.initialPatients)
     private val _ashaWorkers = MutableStateFlow(SeedDataProvider.initialAshaWorkers)
@@ -35,7 +36,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
     private val _schemes = MutableStateFlow(SeedDataProvider.initialSchemes)
 
     init {
-        // Seed Room DB asynchronously
+        // 1. Pre-seed local Room database on first launch
         scope.launch {
             try {
                 dao.insertVillages(SeedDataProvider.getVillageEntities())
@@ -49,22 +50,53 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 dao.insertNotices(SeedDataProvider.getNoticeEntities())
                 dao.insertSchemes(SeedDataProvider.getSchemeEntities())
             } catch (e: Exception) {
-                // Room seeding fallback to in-memory state
+                // Fallback to in-memory state
+            }
+        }
+
+        // 2. Start real-time Firestore listeners when online
+        scope.launch {
+            try {
+                firestoreDataSource.getConditionRecordsStream().collect { remoteRecords ->
+                    if (remoteRecords.isNotEmpty()) {
+                        _conditions.update { remoteRecords }
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline fallback
+            }
+        }
+
+        scope.launch {
+            try {
+                firestoreDataSource.getBroadcastNoticesStream().collect { remoteNotices ->
+                    if (remoteNotices.isNotEmpty()) {
+                        _notices.update { remoteNotices }
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline fallback
             }
         }
     }
 
+    // --- Villages ---
     override fun getVillages(): Flow<List<Village>> = _villages.asStateFlow()
 
     override suspend fun addVillage(village: Village) {
         _villages.update { it + village }
         scope.launch {
             dao.insertVillages(listOf(
-                VillageEntity(village.id, village.name, village.district, village.state, village.population, village.latitude, village.longitude, village.activeCases, village.highRiskCount)
+                VillageEntity(
+                    village.id, village.name, village.district, village.state,
+                    village.population, village.latitude, village.longitude,
+                    village.activeCases, village.highRiskCount
+                )
             ))
         }
     }
 
+    // --- Patients ---
     override fun getPatients(): Flow<List<Patient>> = _patients.asStateFlow()
 
     override fun getPatientById(id: String): Flow<Patient?> = _patients.map { list ->
@@ -76,6 +108,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
     }
 
     override suspend fun savePatient(patient: Patient) {
+        // 1. Instant local state update
         _patients.update { list ->
             val index = list.indexOfFirst { it.id == patient.id }
             if (index >= 0) {
@@ -84,6 +117,8 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 list + patient
             }
         }
+
+        // 2. Persist to Room SQLite
         scope.launch {
             dao.insertPatient(
                 PatientEntity(
@@ -94,30 +129,56 @@ class VitalSenseRepositoryImpl @Inject constructor(
                     patient.profilePhotoUrl
                 )
             )
+            // 3. Remote Cloud Firestore sync
+            try {
+                firestoreDataSource.uploadPatient(patient)
+            } catch (e: Exception) {
+                // Offline: remains saved locally in Room
+            }
         }
     }
 
+    // --- ASHA Workers ---
     override fun getAshaWorkers(): Flow<List<AshaWorker>> = _ashaWorkers.asStateFlow()
 
     override fun getAshaWorkerById(id: String): Flow<AshaWorker?> = _ashaWorkers.map { list ->
         list.find { it.id == id || it.ashaUniqueId == id }
     }
 
+    // --- Doctors ---
     override fun getDoctors(): Flow<List<Doctor>> = _doctors.asStateFlow()
 
     override fun getDoctorById(id: String): Flow<Doctor?> = _doctors.map { list ->
         list.find { it.id == id }
     }
 
+    // --- Condition Records ---
     override fun getConditionRecords(): Flow<List<ConditionRecord>> = _conditions.asStateFlow()
 
     override fun getConditionRecordsForPatient(patientId: String): Flow<List<ConditionRecord>> = _conditions.map { list ->
         list.filter { it.patientId == patientId }
     }
 
+    override fun getCasesForDoctor(doctorId: String, specialty: DoctorSpecialty): Flow<List<ConditionRecord>> = _conditions.map { list ->
+        list.filter { record ->
+            record.requestedDoctorType == specialty || record.assignedDoctorId == doctorId
+        }.sortedWith(
+            compareBy<ConditionRecord> { record ->
+                when (record.severity) {
+                    SeverityLevel.SEVERE -> 0
+                    SeverityLevel.HIGH -> 1
+                    SeverityLevel.MODERATE -> 2
+                    SeverityLevel.LOW -> 3
+                }
+            }.thenByDescending { it.timestamp }
+        )
+    }
+
     override suspend fun logCondition(record: ConditionRecord) {
+        // 1. Instant in-memory update
         _conditions.update { listOf(record) + it }
-        // Update patient current risk level & last condition
+
+        // Update patient's current risk level
         _patients.update { patients ->
             patients.map { p ->
                 if (p.id == record.patientId) {
@@ -129,7 +190,8 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 } else p
             }
         }
-        // Update village active cases if severe/high
+
+        // Update village outbreak count
         _villages.update { villages ->
             villages.map { v ->
                 if (v.id == record.villageId) {
@@ -140,39 +202,188 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 } else v
             }
         }
+
+        // 2. Persist to Room & Cloud Firestore
         scope.launch {
             dao.insertConditionRecord(
                 ConditionRecordEntity(
                     record.id, record.patientId, record.patientName, record.villageId,
                     record.villageName, record.category, record.severity,
                     record.requestedDoctorType, record.notes, record.timestamp,
-                    record.ashaProxyLogged, record.isPendingSync
+                    record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                    record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                    record.doctorResponseDoctorName, record.privateDoctorNotes,
+                    record.referredByDoctorId, record.referredByDoctorName,
+                    record.referralNotes, isPendingSync = true
                 )
             )
+
+            try {
+                firestoreDataSource.uploadConditionRecord(record)
+                dao.insertConditionRecord(
+                    ConditionRecordEntity(
+                        record.id, record.patientId, record.patientName, record.villageId,
+                        record.villageName, record.category, record.severity,
+                        record.requestedDoctorType, record.notes, record.timestamp,
+                        record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                        record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                        record.doctorResponseDoctorName, record.privateDoctorNotes,
+                        record.referredByDoctorId, record.referredByDoctorName,
+                        record.referralNotes, isPendingSync = false
+                    )
+                )
+            } catch (e: Exception) {
+                // Stays in Room with isPendingSync = true for background retry
+            }
         }
     }
 
+    override suspend fun respondToCase(
+        caseId: String,
+        doctorId: String,
+        doctorName: String,
+        responseText: String,
+        privateNotes: String?,
+        newStatus: CaseStatus
+    ) {
+        val now = System.currentTimeMillis()
+        var updatedRecord: ConditionRecord? = null
+
+        _conditions.update { list ->
+            list.map { record ->
+                if (record.id == caseId) {
+                    val updated = record.copy(
+                        status = newStatus,
+                        doctorResponse = responseText,
+                        doctorResponseTimestamp = now,
+                        doctorResponseDoctorName = doctorName,
+                        privateDoctorNotes = privateNotes ?: record.privateDoctorNotes,
+                        assignedDoctorId = doctorId,
+                        assignedDoctorName = doctorName
+                    )
+                    updatedRecord = updated
+                    updated
+                } else record
+            }
+        }
+
+        updatedRecord?.let { record ->
+            scope.launch {
+                dao.insertConditionRecord(
+                    ConditionRecordEntity(
+                        record.id, record.patientId, record.patientName, record.villageId,
+                        record.villageName, record.category, record.severity,
+                        record.requestedDoctorType, record.notes, record.timestamp,
+                        record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                        record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                        record.doctorResponseDoctorName, record.privateDoctorNotes,
+                        record.referredByDoctorId, record.referredByDoctorName,
+                        record.referralNotes, isPendingSync = false
+                    )
+                )
+                try {
+                    firestoreDataSource.uploadConditionRecord(record)
+                } catch (e: Exception) {
+                    // Stays in Room
+                }
+            }
+        }
+    }
+
+    override suspend fun referCaseToSpecialist(
+        caseId: String,
+        referringDoctor: Doctor,
+        targetSpecialty: DoctorSpecialty,
+        referralNotes: String
+    ) {
+        var updatedRecord: ConditionRecord? = null
+
+        _conditions.update { list ->
+            list.map { record ->
+                if (record.id == caseId) {
+                    val updated = record.copy(
+                        status = CaseStatus.REFERRED,
+                        requestedDoctorType = targetSpecialty,
+                        referredByDoctorId = referringDoctor.id,
+                        referredByDoctorName = referringDoctor.name,
+                        referralNotes = referralNotes,
+                        assignedDoctorId = null,
+                        assignedDoctorName = null
+                    )
+                    updatedRecord = updated
+                    updated
+                } else record
+            }
+        }
+
+        updatedRecord?.let { record ->
+            scope.launch {
+                dao.insertConditionRecord(
+                    ConditionRecordEntity(
+                        record.id, record.patientId, record.patientName, record.villageId,
+                        record.villageName, record.category, record.severity,
+                        record.requestedDoctorType, record.notes, record.timestamp,
+                        record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                        record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                        record.doctorResponseDoctorName, record.privateDoctorNotes,
+                        record.referredByDoctorId, record.referredByDoctorName,
+                        record.referralNotes, isPendingSync = false
+                    )
+                )
+                try {
+                    firestoreDataSource.uploadConditionRecord(record)
+                } catch (e: Exception) {
+                    // Stays in Room
+                }
+            }
+        }
+    }
+
+    // --- Prescriptions ---
     override fun getPrescriptions(): Flow<List<Prescription>> = _prescriptions.asStateFlow()
 
     override fun getPrescriptionsForPatient(patientId: String): Flow<List<Prescription>> = _prescriptions.map { list ->
         list.filter { it.patientId == patientId }
     }
 
+    override fun getPrescriptionsByCase(caseId: String): Flow<List<Prescription>> = _prescriptions.map { list ->
+        list.filter { it.caseId == caseId }
+    }
+
     override suspend fun savePrescription(prescription: Prescription) {
         _prescriptions.update { listOf(prescription) + it }
+
+        // Also mark the case as RESPONDED if tied to a case
+        if (prescription.caseId != null) {
+            _conditions.update { list ->
+                list.map { c ->
+                    if (c.id == prescription.caseId && c.status == CaseStatus.PENDING_REVIEW) {
+                        c.copy(status = CaseStatus.RESPONDED)
+                    } else c
+                }
+            }
+        }
+
         scope.launch {
             dao.insertPrescription(
                 PrescriptionEntity(
-                    prescription.id, prescription.patientId, prescription.patientName,
+                    prescription.id, prescription.caseId, prescription.patientId, prescription.patientName,
                     prescription.doctorId, prescription.doctorName, prescription.doctorSpecialty,
                     prescription.timestamp, prescription.dateFormatted,
                     gson.toJson(prescription.medicines), prescription.instructions,
                     prescription.isOcrExtracted
                 )
             )
+
+            try {
+                firestoreDataSource.uploadPrescription(prescription)
+            } catch (e: Exception) {
+                // Offline fallback
+            }
         }
     }
 
+    // --- Appointments ---
     override fun getAppointments(): Flow<List<Appointment>> = _appointments.asStateFlow()
 
     override fun getAppointmentsForPatient(patientId: String): Flow<List<Appointment>> = _appointments.map { list ->
@@ -185,7 +396,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
 
     override suspend fun scheduleAppointment(appointment: Appointment) {
         _appointments.update { listOf(appointment) + it }
-        // Update patient's next appointment date
+
         _patients.update { patients ->
             patients.map { p ->
                 if (p.id == appointment.patientId) {
@@ -193,22 +404,71 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 } else p
             }
         }
+
         scope.launch {
             dao.insertAppointment(
                 AppointmentEntity(
                     appointment.id, appointment.patientId, appointment.patientName,
                     appointment.doctorId, appointment.doctorName, appointment.doctorSpecialty,
                     appointment.dateFormatted, appointment.timeSlot, appointment.status,
-                    appointment.proposedBy
+                    appointment.proposedBy, appointment.outcomeNotes
                 )
             )
+
+            try {
+                firestoreDataSource.uploadAppointment(appointment)
+            } catch (e: Exception) {
+                // Stays in Room
+            }
         }
     }
 
+    override suspend fun updateAppointmentStatus(
+        appointmentId: String,
+        newStatus: String,
+        outcomeNotes: String?
+    ) {
+        var updatedAppointment: Appointment? = null
+
+        _appointments.update { list ->
+            list.map { appt ->
+                if (appt.id == appointmentId) {
+                    val updated = appt.copy(
+                        status = newStatus,
+                        outcomeNotes = outcomeNotes ?: appt.outcomeNotes
+                    )
+                    updatedAppointment = updated
+                    updated
+                } else appt
+            }
+        }
+
+        updatedAppointment?.let { appt ->
+            scope.launch {
+                dao.insertAppointment(
+                    AppointmentEntity(
+                        appt.id, appt.patientId, appt.patientName,
+                        appt.doctorId, appt.doctorName, appt.doctorSpecialty,
+                        appt.dateFormatted, appt.timeSlot, appt.status,
+                        appt.proposedBy, appt.outcomeNotes
+                    )
+                )
+                try {
+                    firestoreDataSource.uploadAppointment(appt)
+                } catch (e: Exception) {
+                    // Stays in Room
+                }
+            }
+        }
+    }
+
+    // --- Broadcast Notices ---
     override fun getNotices(): Flow<List<BroadcastNotice>> = _notices.asStateFlow()
 
     override suspend fun sendNotice(notice: BroadcastNotice) {
+        android.util.Log.d("VitalSenseFirebase", "📢 sendNotice triggered: ${notice.title}")
         _notices.update { listOf(notice) + it }
+
         scope.launch {
             dao.insertNotice(
                 BroadcastNoticeEntity(
@@ -217,19 +477,28 @@ class VitalSenseRepositoryImpl @Inject constructor(
                     notice.isUrgent
                 )
             )
+
+            try {
+                firestoreDataSource.uploadNotice(notice)
+            } catch (e: Exception) {
+                android.util.Log.e("VitalSenseFirebase", "❌ sendNotice Firestore upload error: ${e.message}", e)
+            }
         }
     }
 
+    // --- Dispensary Stock ---
     override fun getDispensaryStock(): Flow<List<DispensaryItem>> = _dispensary.asStateFlow()
 
+    // --- Government Schemes ---
     override fun getGovernmentSchemes(): Flow<List<GovernmentScheme>> = _schemes.asStateFlow()
 
+    // --- Emergency SOS ---
     override suspend fun triggerEmergencySos(
         patient: Patient,
         locationLat: Double?,
         locationLng: Double?
     ): Boolean {
-        // Create high-priority notice to ASHA & district admin
+        android.util.Log.d("VitalSenseFirebase", "🚨 triggerEmergencySos called for patient: ${patient.name}")
         val sosNotice = BroadcastNotice(
             id = "sos_${System.currentTimeMillis()}",
             senderRole = UserRole.PATIENT,

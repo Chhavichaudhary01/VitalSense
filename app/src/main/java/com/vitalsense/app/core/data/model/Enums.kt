@@ -43,3 +43,15 @@ enum class DoctorSpecialty(val displayName: String) {
     NEUROLOGIST("Neurologist"),
     CARDIOLOGIST("Cardiologist")
 }
+
+/**
+ * Lifecycle states for clinical cases (§4.2).
+ */
+enum class CaseStatus(val displayName: String, val colorHex: Long) {
+    PENDING_REVIEW("Pending Review", 0xFFFFD166), // Amber
+    IN_PROGRESS("In Progress", 0xFFA3AEFE),       // Lavender
+    RESPONDED("Responded", 0xFFC8F5D4),           // Mint Green
+    REFERRED("Referred to Specialist", 0xFFFFB8F0),// Blush Pink
+    CLOSED("Closed", 0xFFE0E0E0)                  // Grey
+}
+
