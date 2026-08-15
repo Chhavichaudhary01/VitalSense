@@ -38,6 +38,7 @@ fun CaseDetailScreen(
     onReferCase: (targetSpecialty: DoctorSpecialty, referralNotes: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var responseText by remember(record) { mutableStateOf(record.doctorResponse ?: "") }
     var privateNotes by remember(record) { mutableStateOf(record.privateDoctorNotes ?: "") }
     var showPrivateNotes by remember { mutableStateOf(record.privateDoctorNotes?.isNotBlank() == true) }
@@ -62,12 +63,12 @@ fun CaseDetailScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(WarmCreamBackground)
+            .background(GlumeBackground)
             .padding(horizontal = Spacing.md),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
         contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
-        // 1. Header & Back Bar
+        // 1. Minimal Header & Back Navigation Pill
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -77,9 +78,8 @@ fun CaseDetailScreen(
                 Surface(
                     onClick = onBack,
                     shape = PillShape,
-                    color = SurfaceWhite,
-                    border = BorderStroke(1.dp, CardBorderColor),
-                    shadowElevation = 1.dp,
+                    color = GlumeSurfaceCard,
+                    border = BorderStroke(1.dp, GlumeBorder),
                     modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
                     Row(
@@ -87,20 +87,24 @@ fun CaseDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
-                        Text(text = "←", style = MaterialTheme.typography.labelLarge)
-                        Text(text = "Case Queue", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                        Text(text = "←", style = MaterialTheme.typography.labelLarge, color = GlumeTextPrimary)
+                        Text(
+                            text = strings.caseQueue,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
+                        )
                     }
                 }
 
                 Surface(
                     shape = PillShape,
-                    color = Color(record.status.colorHex).copy(alpha = 0.35f)
+                    color = GlumeSurfaceElevated
                 ) {
                     Text(
                         text = record.status.displayName,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xxs),
-                        color = TextPrimaryNearBlack
+                        modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 4.dp),
+                        color = GlumeTextSecondary
                     )
                 }
             }
@@ -108,7 +112,10 @@ fun CaseDetailScreen(
 
         // 2. Patient & Condition Summary Card
         item {
-            VitalSenseCard(backgroundColor = SurfaceWhite, elevation = 2.dp) {
+            VitalSenseCard(
+                backgroundColor = GlumeSurfaceCard,
+                elevation = 0.dp
+            ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -118,31 +125,32 @@ fun CaseDetailScreen(
                         Column {
                             Text(
                                 text = record.patientName,
-                                style = MaterialTheme.typography.headlineMedium
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
                             )
                             Text(
-                                text = "Village: ${record.villageName} · Category: ${record.category.displayName}",
+                                text = "${strings.village}: ${record.villageName} · ${record.category.displayName}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondaryMuted
+                                color = GlumeTextSecondary
                             )
                         }
                         SeverityBadge(severity = record.severity)
                     }
 
-                    HorizontalDivider(color = DividerSubtle)
+                    HorizontalDivider(color = GlumeBorder)
 
                     Text(
-                        text = "Reported Symptoms & Notes:",
+                        text = strings.reportedSymptoms,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = TextSecondaryMuted
+                        color = GlumeTextSecondary
                     )
                     Text(
                         text = record.notes,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = TextPrimaryNearBlack
+                        color = GlumeTextPrimary
                     )
 
-                    HorizontalDivider(color = DividerSubtle)
+                    HorizontalDivider(color = GlumeBorder)
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -150,18 +158,21 @@ fun CaseDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (record.ashaProxyLogged) {
-                            Surface(shape = PillShape, color = LavenderSecondary.copy(alpha = 0.45f)) {
+                            Surface(shape = PillShape, color = GlumePrimaryPurpleContainer) {
                                 Text(
                                     text = "🤝 Submitted via ASHA Helper",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = GlumePrimaryPurpleLight
+                                    ),
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
                                 )
                             }
                         } else {
                             Text(
                                 text = "Direct Patient Submission",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondaryMuted
+                                color = GlumeTextSecondary
                             )
                         }
 
@@ -171,21 +182,21 @@ fun CaseDetailScreen(
                                 OutlinedButton(
                                     onClick = { showHistoryDialog = true },
                                     shape = PillShape,
-                                    border = BorderStroke(1.dp, CardBorderColor),
+                                    border = BorderStroke(1.dp, GlumeBorder),
                                     contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                                     modifier = Modifier.defaultMinSize(minHeight = 34.dp)
                                 ) {
-                                    Text(text = "📋 History & Rx", style = MaterialTheme.typography.labelSmall)
+                                    Text(text = "📋 History & Rx", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
                                 }
 
                                 OutlinedButton(
                                     onClick = { showHealthCardDialog = true },
                                     shape = PillShape,
-                                    border = BorderStroke(1.dp, CardBorderColor),
+                                    border = BorderStroke(1.dp, GlumeBorder),
                                     contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                                     modifier = Modifier.defaultMinSize(minHeight = 34.dp)
                                 ) {
-                                    Text(text = "🪪 Health Card", style = MaterialTheme.typography.labelSmall)
+                                    Text(text = "🪪 Health Card", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
                                 }
                             }
                         }
@@ -194,13 +205,13 @@ fun CaseDetailScreen(
             }
         }
 
-        // 3. Mental Health Origin Flag
+        // 3. Mental Health Flag Banner
         if (isMentalHealthCase) {
             item {
                 Surface(
-                    color = LavenderSecondary.copy(alpha = 0.35f),
+                    color = GlumePrimaryPurpleContainer,
                     shape = CardShape,
-                    border = BorderStroke(1.dp, LavenderSecondary.copy(alpha = 0.6f)),
+                    border = BorderStroke(1.dp, GlumePrimaryPurple.copy(alpha = 0.5f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -208,17 +219,17 @@ fun CaseDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
-                        Text(text = "🧠", style = MaterialTheme.typography.titleLarge)
+                        Text(text = "🧠", fontSize = 24.sp)
                         Column {
                             Text(
                                 text = "Mental Health Case Flag",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = TextPrimaryNearBlack
+                                color = GlumePrimaryPurpleLight
                             )
                             Text(
                                 text = "Patient logged psychological stress/anxiety symptoms. Approached with empathy and holistic care.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextPrimaryNearBlack
+                                color = GlumeTextPrimary
                             )
                         }
                     }
@@ -226,21 +237,24 @@ fun CaseDetailScreen(
             }
         }
 
-        // 4. Clinical Referral Badge (If already referred)
+        // 4. Clinical Referral Badge
         if (record.referredByDoctorId != null) {
             item {
-                VitalSenseCard(backgroundColor = BlushPinkTertiary.copy(alpha = 0.35f)) {
+                VitalSenseCard(
+                    backgroundColor = GlumeSurfaceElevated,
+                    border = BorderStroke(1.dp, GlumePrimaryPurple.copy(alpha = 0.4f))
+                ) {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
                             text = "↗ Referred by Dr. ${record.referredByDoctorName ?: "Colleague"}",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            color = GlumePrimaryPurpleLight
                         )
                         if (!record.referralNotes.isNullOrBlank()) {
                             Text(
                                 text = "Referral Notes: ${record.referralNotes}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextPrimaryNearBlack
+                                color = GlumeTextPrimary
                             )
                         }
                     }
@@ -251,9 +265,9 @@ fun CaseDetailScreen(
         // 5. Section: Doctor Medical Response Composer
         item {
             Text(
-                text = "Clinical Response & Advice",
+                text = strings.doctorAdviceTitle,
                 style = MaterialTheme.typography.headlineMedium,
-                color = TextPrimaryNearBlack
+                color = GlumeTextPrimary
             )
         }
 
@@ -261,9 +275,9 @@ fun CaseDetailScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Text(
-                    text = "Quick Template Responses:",
+                    text = strings.quickTemplates,
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondaryMuted
+                    color = GlumeTextSecondary
                 )
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -276,13 +290,13 @@ fun CaseDetailScreen(
                                 responseText = if (responseText.isBlank()) reply else "$responseText\n$reply"
                             },
                             shape = PillShape,
-                            color = SurfaceWhite,
-                            border = BorderStroke(1.dp, CardBorderColor)
+                            color = GlumeSurfaceCard,
+                            border = BorderStroke(1.dp, GlumeBorder)
                         ) {
                             Text(
                                 text = reply,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextPrimaryNearBlack,
+                                color = GlumeTextPrimary,
                                 modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                             )
                         }
@@ -291,9 +305,9 @@ fun CaseDetailScreen(
             }
         }
 
-        // 5.2 Response Text Input Box
+        // 5.2 Response Text Input Box (Glume Dark Style with Purple Focus)
         item {
-            VitalSenseCard(backgroundColor = SurfaceWhite) {
+            VitalSenseCard {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     VitalSenseTextField(
                         value = responseText,
@@ -313,14 +327,16 @@ fun CaseDetailScreen(
                         Text(
                             text = "🔒 Confidential Clinical Notes (Doctor-Only)",
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                         Switch(
                             checked = showPrivateNotes,
                             onCheckedChange = { showPrivateNotes = it },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = DarkCharcoal,
-                                checkedTrackColor = LimePrimary
+                                checkedThumbColor = GlumeTextPrimary,
+                                checkedTrackColor = GlumePrimaryPurple,
+                                uncheckedThumbColor = GlumeTextSecondary,
+                                uncheckedTrackColor = GlumeSurfaceElevated
                             )
                         )
                     }
@@ -336,9 +352,9 @@ fun CaseDetailScreen(
                         )
                     }
 
-                    // Submit Response Button
+                    // Single Full-Width Purple Submit Button
                     VitalSenseButton(
-                        text = if (record.doctorResponse != null) "Update Clinical Response ✓" else "Submit Medical Advice ✓",
+                        text = if (record.doctorResponse != null) strings.updateAdvice else strings.submitAdvice,
                         onClick = {
                             onSubmitResponse(
                                 responseText.trim(),
@@ -357,7 +373,7 @@ fun CaseDetailScreen(
             Text(
                 text = "Clinical Actions",
                 style = MaterialTheme.typography.headlineMedium,
-                color = TextPrimaryNearBlack
+                color = GlumeTextPrimary
             )
         }
 
@@ -367,19 +383,19 @@ fun CaseDetailScreen(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 VitalSenseButton(
-                    text = "💊 Issue Rx",
+                    text = strings.issueRx,
                     onClick = { showPrescriptionDialog = true },
                     modifier = Modifier.weight(1f),
                     style = ButtonStyle.DARK
                 )
                 VitalSenseButton(
-                    text = "📅 Propose Appt",
+                    text = strings.proposeAppt,
                     onClick = { showAppointmentDialog = true },
                     modifier = Modifier.weight(1f),
                     style = ButtonStyle.SECONDARY
                 )
                 VitalSenseButton(
-                    text = "↗ Refer",
+                    text = strings.refer,
                     onClick = { showReferDialog = true },
                     modifier = Modifier.weight(0.9f),
                     style = ButtonStyle.OUTLINED
@@ -393,7 +409,7 @@ fun CaseDetailScreen(
                 Text(
                     text = "Patient's Active Prescriptions (${priorPrescriptions.size})",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimaryNearBlack
+                    color = GlumeTextPrimary
                 )
             }
 
@@ -408,20 +424,24 @@ fun CaseDetailScreen(
                             Column {
                                 Text(
                                     text = "Issued by ${rx.doctorName} (${rx.doctorSpecialty})",
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumeTextPrimary
                                 )
                                 Text(
                                     text = "Date: ${rx.dateFormatted}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondaryMuted
+                                    color = GlumeTextSecondary
                                 )
                             }
                             if (rx.isOcrExtracted) {
-                                Surface(shape = PillShape, color = SoftMintSuccess.copy(alpha = 0.5f)) {
+                                Surface(shape = PillShape, color = GlumeSuccessContainer) {
                                     Text(
                                         text = "OCR Digitized",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = GlumeSuccessText
+                                        ),
+                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
                                     )
                                 }
                             }
@@ -434,12 +454,13 @@ fun CaseDetailScreen(
                             ) {
                                 Text(
                                     text = "• ${med.name} (${med.dosage})",
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = GlumeTextPrimary
                                 )
                                 Text(
                                     text = "${med.frequency} · ${med.duration}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondaryMuted
+                                    color = GlumeTextSecondary
                                 )
                             }
                         }
@@ -448,7 +469,7 @@ fun CaseDetailScreen(
                             Text(
                                 text = "Instructions: ${rx.instructions}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondaryMuted
+                                color = GlumeTextSecondary
                             )
                         }
                     }

@@ -1,5 +1,6 @@
 package com.vitalsense.app.feature.doctor.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,15 +31,16 @@ fun ScheduleAppointmentDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = CardShape,
-            color = WarmCreamBackground,
-            shadowElevation = 8.dp
+            shape = DialogShape,
+            color = GlumeSurfaceCard,
+            shadowElevation = 8.dp,
+            border = BorderStroke(1.dp, GlumeBorder)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -49,24 +51,26 @@ fun ScheduleAppointmentDialog(
                         Text(
                             text = "📅 Schedule New Appointment",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = "Propose consultation time to patient",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
-                    IconButton(onClick = onDismiss) {
-                        Text(text = "✕", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
+                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = GlumeTextSecondary)
                     }
                 }
+
+                HorizontalDivider(color = GlumeBorder)
 
                 // Select Patient Dropdown
                 Text(
                     text = "Select Patient:",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimaryNearBlack
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
                 )
 
                 ExposedDropdownMenuBox(
@@ -81,9 +85,14 @@ fun ScheduleAppointmentDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor(),
+                        shape = InputShape,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = SurfaceWhite,
-                            unfocusedContainerColor = SurfaceWhite
+                            focusedContainerColor = GlumeSurfaceElevated,
+                            unfocusedContainerColor = GlumeSurfaceCard,
+                            focusedBorderColor = GlumePrimaryPurple,
+                            unfocusedBorderColor = GlumeBorder,
+                            focusedTextColor = GlumeTextPrimary,
+                            unfocusedTextColor = GlumeTextPrimary
                         )
                     )
 
@@ -95,8 +104,8 @@ fun ScheduleAppointmentDialog(
                             DropdownMenuItem(
                                 text = {
                                     Column {
-                                        Text(text = pat.name, fontWeight = FontWeight.Bold)
-                                        Text(text = "${pat.villageName} · ${pat.phone}", style = MaterialTheme.typography.labelSmall, color = TextSecondaryMuted)
+                                        Text(text = pat.name, fontWeight = FontWeight.Bold, color = GlumeTextPrimary)
+                                        Text(text = "${pat.villageName} · ${pat.phone}", style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
                                     }
                                 },
                                 onClick = {
@@ -108,84 +117,96 @@ fun ScheduleAppointmentDialog(
                     }
                 }
 
-                // Select Date
+                // Date Picker Chips
                 Text(
                     text = "Select Date:",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimaryNearBlack
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
                 )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    sampleDates.take(3).forEach { date ->
+                    sampleDates.forEach { date ->
                         val isSelected = selectedDate == date
-                        FilterChip(
-                            selected = isSelected,
+                        Surface(
                             onClick = { selectedDate = date },
-                            label = { Text(date, fontSize = 11.sp) },
                             shape = PillShape,
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = DarkCharcoal,
-                                selectedLabelColor = LimePrimary
-                            )
-                        )
+                            color = if (isSelected) GlumePrimaryPurpleContainer else GlumeSurfaceElevated,
+                            border = if (isSelected) BorderStroke(1.5.dp, GlumePrimaryPurple) else BorderStroke(1.dp, GlumeBorder),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 8.dp)) {
+                                Text(
+                                    text = date.split(" ").take(2).joinToString(" "),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) GlumePrimaryPurpleLight else GlumeTextPrimary
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
 
-                // Select Time Slot
+                // Time Slots Chips
                 Text(
-                    text = "Select Time Slot:",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimaryNearBlack
+                    text = "Available Time Slot:",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
                 )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     sampleSlots.take(3).forEach { slot ->
                         val isSelected = selectedTimeSlot == slot
-                        FilterChip(
-                            selected = isSelected,
+                        Surface(
                             onClick = { selectedTimeSlot = slot },
-                            label = { Text(slot, fontSize = 11.sp) },
                             shape = PillShape,
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = DarkCharcoal,
-                                selectedLabelColor = LimePrimary
-                            )
-                        )
+                            color = if (isSelected) GlumePrimaryPurpleContainer else GlumeSurfaceElevated,
+                            border = if (isSelected) BorderStroke(1.5.dp, GlumePrimaryPurple) else BorderStroke(1.dp, GlumeBorder),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 8.dp)) {
+                                Text(
+                                    text = slot,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) GlumePrimaryPurpleLight else GlumeTextPrimary
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Spacing.xs))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                // Submit Proposal Button
+                Button(
+                    onClick = {
+                        selectedPatient?.let {
+                            onPropose(it.id, it.name, selectedDate, selectedTimeSlot)
+                            onDismiss()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = GlumePrimaryPurple,
+                        contentColor = GlumeTextPrimary
+                    ),
+                    enabled = selectedPatient != null
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        shape = PillShape
-                    ) {
-                        Text("Cancel")
-                    }
-
-                    Button(
-                        onClick = {
-                            selectedPatient?.let { pat ->
-                                onPropose(pat.id, pat.name, selectedDate, selectedTimeSlot)
-                                onDismiss()
-                            }
-                        },
-                        enabled = selectedPatient != null,
-                        modifier = Modifier.weight(1.4f),
-                        shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = LavenderSecondary, contentColor = TextPrimaryNearBlack)
-                    ) {
-                        Text("Propose Appt ✓", fontWeight = FontWeight.Bold)
-                    }
+                    Text(
+                        text = "Send Appointment Proposal ✓",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

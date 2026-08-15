@@ -43,9 +43,9 @@ fun PatientHistoryDialog(
                 .fillMaxWidth()
                 .wrapContentHeight(),
             shape = DialogShape,
-            color = WarmCreamBackground,
+            color = GlumeSurfaceCard,
             shadowElevation = 8.dp,
-            border = BorderStroke(1.dp, CardBorderColor)
+            border = BorderStroke(1.dp, GlumeBorder)
         ) {
             Column(
                 modifier = Modifier
@@ -62,24 +62,28 @@ fun PatientHistoryDialog(
                 ) {
                     Column {
                         Text(
-                            text = "📋 Medical History",
-                            style = MaterialTheme.typography.titleLarge
+                            text = "📋 Medical History & Records",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = "Patient: ${patient.name} (${patient.age}y / ${patient.gender})",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
-                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = TextSecondaryMuted)
+                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = GlumeTextSecondary)
                     }
                 }
 
-                HorizontalDivider(color = DividerSubtle)
+                HorizontalDivider(color = GlumeBorder)
 
                 // 2. Patient Demographics & Health Profile Card
-                VitalSenseCard(backgroundColor = SurfaceWhite) {
+                VitalSenseCard(
+                    backgroundColor = GlumeSurfaceElevated,
+                    border = BorderStroke(1.dp, GlumeBorder)
+                ) {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -88,7 +92,8 @@ fun PatientHistoryDialog(
                         ) {
                             Text(
                                 text = "Village: ${patient.villageName}",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
                             )
                             SeverityBadge(severity = patient.currentRiskLevel)
                         }
@@ -96,32 +101,85 @@ fun PatientHistoryDialog(
                         Text(
                             text = "Last Condition: ${patient.lastCondition} · Last Visit: ${patient.lastVisitDate}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextSecondary
                         )
-
                         Text(
-                            text = "Assigned ASHA: ${patient.ashaWorkerName} · Emergency Contact: ${patient.emergencyContact}",
+                            text = "Assigned ASHA: ${patient.ashaWorkerName} · Emergency: ${patient.emergencyContact}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumePrimaryPurpleLight
                         )
                     }
                 }
 
-                // 3. Past Prescriptions Section
+                // 3. Past Conditions Log
                 Text(
-                    text = "💊 Past Prescriptions (${patientPrescriptions.size})",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimaryNearBlack
+                    text = "Condition Submissions (${patientConditions.size})",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
+                )
+
+                if (patientConditions.isEmpty()) {
+                    Text(
+                        text = "No condition records logged for this patient yet.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GlumeTextSecondary
+                    )
+                } else {
+                    patientConditions.forEach { record ->
+                        VitalSenseCard {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "${record.category.displayName} (${dateFormat.format(Date(record.timestamp))})",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeTextPrimary
+                                    )
+                                    SeverityBadge(severity = record.severity)
+                                }
+
+                                Text(
+                                    text = "Symptoms: ${record.notes}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = GlumeTextPrimary
+                                )
+
+                                if (record.doctorResponse != null) {
+                                    Surface(
+                                        color = GlumePrimaryPurpleContainer,
+                                        shape = CardShape,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(Spacing.sm)) {
+                                            Text(
+                                                text = "Doctor Advice: ${record.doctorResponse}",
+                                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                                color = GlumePrimaryPurpleLight
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 4. Past Prescriptions Log
+                Text(
+                    text = "Prescriptions on File (${patientPrescriptions.size})",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
                 )
 
                 if (patientPrescriptions.isEmpty()) {
-                    VitalSenseCard(backgroundColor = SurfaceWhite) {
-                        Text(
-                            text = "No prior prescription history recorded for this patient.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
-                        )
-                    }
+                    Text(
+                        text = "No prior prescriptions uploaded or issued.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GlumeTextSecondary
+                    )
                 } else {
                     patientPrescriptions.forEach { rx ->
                         VitalSenseCard {
@@ -131,43 +189,35 @@ fun PatientHistoryDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column {
-                                        Text(
-                                            text = "Prescribed by ${rx.doctorName}",
-                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                                        )
-                                        Text(
-                                            text = "${rx.doctorSpecialty} · ${rx.dateFormatted}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = TextSecondaryMuted
-                                        )
-                                    }
+                                    Text(
+                                        text = "By ${rx.doctorName} (${rx.dateFormatted})",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeTextPrimary
+                                    )
                                     if (rx.isOcrExtracted) {
-                                        Surface(shape = PillShape, color = SoftMintSuccess.copy(alpha = 0.5f)) {
+                                        Surface(shape = PillShape, color = GlumeSuccessContainer) {
                                             Text(
-                                                text = "OCR Digitized",
-                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SoftMintText),
-                                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
+                                                text = "AI Digitized",
+                                                style = MaterialTheme.typography.labelSmall.copy(color = GlumeSuccessText, fontWeight = FontWeight.Bold),
+                                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
                                             )
                                         }
                                     }
                                 }
 
                                 rx.medicines.forEach { med ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(text = "• ${med.name} (${med.dosage})", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-                                        Text(text = "${med.frequency} · ${med.duration}", style = MaterialTheme.typography.bodySmall, color = TextSecondaryMuted)
-                                    }
+                                    Text(
+                                        text = "• ${med.name} (${med.dosage}) - ${med.frequency} for ${med.duration}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextPrimary
+                                    )
                                 }
 
                                 if (rx.instructions.isNotBlank()) {
                                     Text(
-                                        text = "Instructions: ${rx.instructions}",
+                                        text = "Note: ${rx.instructions}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = TextSecondaryMuted
+                                        color = GlumeTextSecondary
                                     )
                                 }
                             }
@@ -175,91 +225,12 @@ fun PatientHistoryDialog(
                     }
                 }
 
-                // 4. Past Condition & Symptom Log History
-                Text(
-                    text = "🩺 Past Symptom Records (${patientConditions.size})",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimaryNearBlack
-                )
-
-                if (patientConditions.isEmpty()) {
-                    VitalSenseCard(backgroundColor = SurfaceWhite) {
-                        Text(
-                            text = "No condition records found.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
-                        )
-                    }
-                } else {
-                    patientConditions.forEach { cond ->
-                        VitalSenseCard {
-                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = cond.category.displayName,
-                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                                        )
-                                        Text(
-                                            text = dateFormat.format(Date(cond.timestamp)),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = TextSecondaryMuted
-                                        )
-                                    }
-                                    SeverityBadge(severity = cond.severity)
-                                }
-
-                                Text(
-                                    text = "Symptoms: ${cond.notes}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = TextPrimaryNearBlack
-                                )
-
-                                if (cond.ashaProxyLogged) {
-                                    Surface(shape = PillShape, color = LavenderSecondary.copy(alpha = 0.4f)) {
-                                        Text(
-                                            text = "🤝 Logged via ASHA Proxy",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
-                                        )
-                                    }
-                                }
-
-                                if (cond.doctorResponse != null) {
-                                    Surface(
-                                        shape = CardShape,
-                                        color = SoftMintSuccess.copy(alpha = 0.25f),
-                                        border = BorderStroke(1.dp, SoftMintSuccess),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Column(modifier = Modifier.padding(Spacing.xs)) {
-                                            Text(
-                                                text = "Doctor Response (${cond.doctorResponseDoctorName ?: "Physician"}):",
-                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                            )
-                                            Text(
-                                                text = cond.doctorResponse,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = TextPrimaryNearBlack
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 5. Past & Upcoming Consultations
+                // 5. Past / Scheduled Appointments
                 if (patientAppointments.isNotEmpty()) {
                     Text(
-                        text = "📅 Consultation Schedule (${patientAppointments.size})",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = TextPrimaryNearBlack
+                        text = "Appointments History (${patientAppointments.size})",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = GlumeTextPrimary
                     )
 
                     patientAppointments.forEach { appt ->
@@ -272,19 +243,26 @@ fun PatientHistoryDialog(
                                 Column {
                                     Text(
                                         text = "${appt.dateFormatted} at ${appt.timeSlot}",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeTextPrimary
                                     )
                                     Text(
-                                        text = "With ${appt.doctorName} (${appt.doctorSpecialty})",
+                                        text = "Status: ${appt.status}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = TextSecondaryMuted
+                                        color = GlumeTextSecondary
                                     )
                                 }
-                                Surface(shape = PillShape, color = SurfaceCream, border = BorderStroke(1.dp, CardBorderColor)) {
+                                Surface(
+                                    shape = PillShape,
+                                    color = if (appt.status.contains("Pending", true)) GlumeWarningContainer else GlumeSuccessContainer
+                                ) {
                                     Text(
                                         text = appt.status,
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (appt.status.contains("Pending", true)) GlumeWarningAmber else GlumeSuccessText
+                                        ),
+                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
                                     )
                                 }
                             }
@@ -292,16 +270,12 @@ fun PatientHistoryDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(Spacing.xxs))
-
-                Button(
+                // Close Button
+                VitalSenseButton(
+                    text = "Close Medical History",
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp),
-                    shape = PillShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
-                ) {
-                    Text("Close History View", style = MaterialTheme.typography.labelLarge)
-                }
+                    style = com.vitalsense.app.core.ui.components.ButtonStyle.PRIMARY
+                )
             }
         }
     }

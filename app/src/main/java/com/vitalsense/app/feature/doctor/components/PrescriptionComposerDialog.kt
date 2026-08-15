@@ -1,5 +1,6 @@
 package com.vitalsense.app.feature.doctor.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -52,14 +53,15 @@ fun PrescriptionComposerDialog(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.92f),
-            shape = CardShape,
-            color = WarmCreamBackground,
-            shadowElevation = 8.dp
+            shape = DialogShape,
+            color = GlumeSurfaceCard,
+            shadowElevation = 8.dp,
+            border = BorderStroke(1.dp, GlumeBorder)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp)
+                    .padding(Spacing.lg)
             ) {
                 // Header
                 Row(
@@ -71,253 +73,239 @@ fun PrescriptionComposerDialog(
                         Text(
                             text = "💊 Issue Structured Prescription",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = "Patient: ${patient?.name ?: patientNameFallback} (${patient?.villageName ?: "Rural PHC"})",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
                     IconButton(onClick = onDismiss) {
-                        Text(text = "✕", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = GlumeTextSecondary)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = GlumeBorder, modifier = Modifier.padding(vertical = Spacing.xs))
 
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     // Current Medicines in this Prescription
                     item {
                         Text(
                             text = "Prescribed Medicines (${medicinesList.size})",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                     }
 
                     itemsIndexed(medicinesList) { index, med ->
-                        // Dispensary availability check
-                        val stockItem = dispensaryStock.find {
-                            it.medicineName.contains(med.name.split(" ").firstOrNull() ?: "", ignoreCase = true)
-                        }
-
-                        VitalSenseCard(backgroundColor = SurfaceWhite, elevation = 1.dp) {
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
+                        VitalSenseCard(
+                            backgroundColor = GlumeSurfaceElevated,
+                            border = BorderStroke(1.dp, GlumeBorder)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = med.name,
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = TextPrimaryNearBlack
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeTextPrimary
                                     )
-                                    IconButton(
-                                        onClick = { medicinesList.removeAt(index) },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Text(text = "🗑️", fontSize = 12.sp)
-                                    }
+                                    Text(
+                                        text = "${med.dosage} · ${med.frequency} for ${med.duration}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextSecondary
+                                    )
+                                    Text(
+                                        text = "Qty to dispense: ${med.quantity} units",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumePrimaryPurpleLight
+                                    )
                                 }
-
-                                Text(
-                                    text = "Dosage: ${med.dosage} · ${med.frequency}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextPrimaryNearBlack
-                                )
-                                Text(
-                                    text = "Duration: ${med.duration} · Qty: ${med.quantity}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondaryMuted
-                                )
-
-                                // Inventory Badge
-                                Row(
-                                    modifier = Modifier.padding(top = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    if (stockItem != null) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(6.dp)
-                                                .clip(CircleShape)
-                                                .background(if (stockItem.isLowStock) CoralAlert else SoftMintSuccess)
-                                        )
-                                        Text(
-                                            text = if (stockItem.isLowStock)
-                                                "Dispensary: Low Stock (${stockItem.availableQuantity} left)"
-                                            else "Dispensary: In Stock (${stockItem.availableQuantity} available)",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                            color = if (stockItem.isLowStock) CoralAlert else Color(0xFF2E7D32)
-                                        )
-                                    } else {
-                                        Text(
-                                            text = "Dispensary: External / Verified",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = TextSecondaryMuted
-                                        )
-                                    }
+                                IconButton(onClick = { medicinesList.removeAt(index) }) {
+                                    Text(text = "🗑️", fontSize = 16.sp)
                                 }
                             }
                         }
                     }
 
-                    // Add Another Medicine Form
+                    // Add Medicine Form
                     item {
-                        VitalSenseCard(backgroundColor = WarmCreamBackground) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        VitalSenseCard(
+                            backgroundColor = GlumeSurfaceElevated,
+                            border = BorderStroke(1.dp, GlumeBorder)
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                                 Text(
-                                    text = "➕ Add Medicine",
+                                    text = "+ Add Another Medicine",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = TextPrimaryNearBlack
+                                    color = GlumeTextPrimary
                                 )
 
                                 OutlinedTextField(
                                     value = newMedName,
                                     onValueChange = { newMedName = it },
-                                    label = { Text("Medicine Name (e.g. Cetirizine 10mg)") },
+                                    label = { Text("Medicine Name", color = GlumeTextSecondary) },
+                                    placeholder = { Text("e.g. Azithromycin 250mg", color = GlumeTextTertiary) },
                                     modifier = Modifier.fillMaxWidth(),
+                                    shape = InputShape,
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedContainerColor = SurfaceWhite,
-                                        unfocusedContainerColor = SurfaceWhite
+                                        focusedContainerColor = GlumeSurfaceCard,
+                                        unfocusedContainerColor = GlumeSurfaceCard,
+                                        focusedBorderColor = GlumePrimaryPurple,
+                                        unfocusedBorderColor = GlumeBorder,
+                                        focusedTextColor = GlumeTextPrimary,
+                                        unfocusedTextColor = GlumeTextPrimary
                                     )
                                 )
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                                 ) {
                                     OutlinedTextField(
                                         value = newMedDosage,
                                         onValueChange = { newMedDosage = it },
-                                        label = { Text("Dosage") },
+                                        label = { Text("Dosage", color = GlumeTextSecondary) },
                                         modifier = Modifier.weight(1f),
+                                        shape = InputShape,
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = SurfaceWhite,
-                                            unfocusedContainerColor = SurfaceWhite
+                                            focusedContainerColor = GlumeSurfaceCard,
+                                            unfocusedContainerColor = GlumeSurfaceCard,
+                                            focusedBorderColor = GlumePrimaryPurple,
+                                            unfocusedBorderColor = GlumeBorder,
+                                            focusedTextColor = GlumeTextPrimary,
+                                            unfocusedTextColor = GlumeTextPrimary
                                         )
                                     )
                                     OutlinedTextField(
                                         value = newMedQuantity,
                                         onValueChange = { newMedQuantity = it },
-                                        label = { Text("Qty") },
+                                        label = { Text("Qty", color = GlumeTextSecondary) },
                                         modifier = Modifier.weight(0.7f),
+                                        shape = InputShape,
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = SurfaceWhite,
-                                            unfocusedContainerColor = SurfaceWhite
+                                            focusedContainerColor = GlumeSurfaceCard,
+                                            unfocusedContainerColor = GlumeSurfaceCard,
+                                            focusedBorderColor = GlumePrimaryPurple,
+                                            unfocusedBorderColor = GlumeBorder,
+                                            focusedTextColor = GlumeTextPrimary,
+                                            unfocusedTextColor = GlumeTextPrimary
                                         )
                                     )
                                 }
 
-                                Row(
+                                OutlinedTextField(
+                                    value = newMedFrequency,
+                                    onValueChange = { newMedFrequency = it },
+                                    label = { Text("Frequency & Timing", color = GlumeTextSecondary) },
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedTextField(
-                                        value = newMedFrequency,
-                                        onValueChange = { newMedFrequency = it },
-                                        label = { Text("Frequency (e.g. Twice daily)") },
-                                        modifier = Modifier.weight(1.3f),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = SurfaceWhite,
-                                            unfocusedContainerColor = SurfaceWhite
-                                        )
+                                    shape = InputShape,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = GlumeSurfaceCard,
+                                        unfocusedContainerColor = GlumeSurfaceCard,
+                                        focusedBorderColor = GlumePrimaryPurple,
+                                        unfocusedBorderColor = GlumeBorder,
+                                        focusedTextColor = GlumeTextPrimary,
+                                        unfocusedTextColor = GlumeTextPrimary
                                     )
-                                    OutlinedTextField(
-                                        value = newMedDuration,
-                                        onValueChange = { newMedDuration = it },
-                                        label = { Text("Duration") },
-                                        modifier = Modifier.weight(0.9f),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = SurfaceWhite,
-                                            unfocusedContainerColor = SurfaceWhite
-                                        )
+                                )
+
+                                OutlinedTextField(
+                                    value = newMedDuration,
+                                    onValueChange = { newMedDuration = it },
+                                    label = { Text("Duration", color = GlumeTextSecondary) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = InputShape,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = GlumeSurfaceCard,
+                                        unfocusedContainerColor = GlumeSurfaceCard,
+                                        focusedBorderColor = GlumePrimaryPurple,
+                                        unfocusedBorderColor = GlumeBorder,
+                                        focusedTextColor = GlumeTextPrimary,
+                                        unfocusedTextColor = GlumeTextPrimary
                                     )
-                                }
+                                )
 
                                 Button(
                                     onClick = {
                                         if (newMedName.isNotBlank()) {
-                                            val qty = newMedQuantity.toIntOrNull() ?: 10
                                             medicinesList.add(
                                                 PrescribedMedicine(
                                                     name = newMedName.trim(),
                                                     dosage = newMedDosage.trim(),
                                                     frequency = newMedFrequency.trim(),
                                                     duration = newMedDuration.trim(),
-                                                    quantity = qty
+                                                    quantity = newMedQuantity.toIntOrNull() ?: 10
                                                 )
                                             )
                                             newMedName = ""
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth(),
                                     shape = PillShape,
-                                    colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal)
+                                    colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
+                                    modifier = Modifier.align(Alignment.End)
                                 ) {
-                                    Text(text = "Add to Prescription", color = LimePrimary, fontWeight = FontWeight.Bold)
+                                    Text("+ Add to Prescription", color = GlumeTextPrimary, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
                     }
 
-                    // Clinical Instructions
+                    // Special Instructions
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                text = "Clinical Instructions & Diet Advice",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = TextPrimaryNearBlack
+                        Text(
+                            text = "Dietary & Follow-Up Instructions",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
+                        )
+                        OutlinedTextField(
+                            value = instructions,
+                            onValueChange = { instructions = it },
+                            label = { Text("Instructions for Patient & ASHA", color = GlumeTextSecondary) },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3,
+                            shape = InputShape,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = GlumeSurfaceElevated,
+                                unfocusedContainerColor = GlumeSurfaceCard,
+                                focusedBorderColor = GlumePrimaryPurple,
+                                unfocusedBorderColor = GlumeBorder,
+                                focusedTextColor = GlumeTextPrimary,
+                                unfocusedTextColor = GlumeTextPrimary
                             )
-                            OutlinedTextField(
-                                value = instructions,
-                                onValueChange = { instructions = it },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(90.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = SurfaceWhite,
-                                    unfocusedContainerColor = SurfaceWhite
-                                )
-                            )
-                        }
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
 
-                // Action Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                // Issue Button
+                Button(
+                    onClick = {
+                        onIssuePrescription(medicinesList.toList(), instructions)
+                        onDismiss()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = GlumePrimaryPurple,
+                        contentColor = GlumeTextPrimary
+                    ),
+                    enabled = medicinesList.isNotEmpty()
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        shape = PillShape
-                    ) {
-                        Text(text = "Cancel")
-                    }
-
-                    Button(
-                        onClick = {
-                            if (medicinesList.isNotEmpty()) {
-                                onIssuePrescription(medicinesList.toList(), instructions)
-                                onDismiss()
-                            }
-                        },
-                        modifier = Modifier.weight(1.5f),
-                        shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = LimePrimary, contentColor = TextPrimaryNearBlack)
-                    ) {
-                        Text(text = "Save & Issue (Rx) ✓", fontWeight = FontWeight.Bold)
-                    }
+                    Text(
+                        text = "Issue Prescription to Patient & Dispensary ✓",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

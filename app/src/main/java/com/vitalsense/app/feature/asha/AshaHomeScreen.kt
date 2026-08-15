@@ -33,73 +33,166 @@ fun AshaHomeScreen(
     val strings = LocalAppStrings.current
     var ocrTargetPatient by remember { mutableStateOf<Patient?>(null) }
 
+    val totalPatients = patients.size
+    val highRiskPatients = patients.count { it.currentRiskLevel == SeverityLevel.HIGH || it.currentRiskLevel == SeverityLevel.SEVERE }
+    val visitedPatients = patients.count { it.lastVisitDate.isNotBlank() && it.lastVisitDate != "Never" }
+    val followUpFraction = if (totalPatients > 0) visitedPatients.toFloat() / totalPatients else 1.0f
+
+    val emergencySosAlerts = notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT }
+    val adminAdvisories = notices.filter { it.senderRole == UserRole.ADMIN }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(WarmCreamBackground)
+            .background(GlumeBackground)
             .padding(horizontal = Spacing.md),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
         contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
-        // 1. Header with Greeting & ASHA ID Card
+        // 1. Header with Glume Greeting
         item {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Text(
-                    text = "${strings.namaste}, ${asha.name}",
-                    style = MaterialTheme.typography.displayMedium,
-                    color = TextPrimaryNearBlack
+                    text = "Hi, ${asha.name}!",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp
+                    ),
+                    color = GlumeTextPrimary
                 )
                 Text(
                     text = "${strings.assignedVillages} ${asha.assignedVillages.joinToString(", ")}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondaryMuted
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = GlumeTextSecondary
                 )
             }
         }
 
-        // 2. ASHA Unique ID Card
+        // 2. Glume Hero Completion Ring Card: Community Care Progress
         item {
             VitalSenseCard(
-                backgroundColor = LavenderSecondary.copy(alpha = 0.45f),
-                elevation = 2.dp
+                backgroundColor = GlumeSurfaceCard,
+                elevation = 0.dp
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
+                    ) {
+                        Text(
+                            text = "COMMUNITY CASELOAD PROGRESS",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = GlumeTextSecondary
+                        )
+                        Text(
+                            text = "$visitedPatients of $totalPatients Patients Monitored",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
+                        )
+                        Text(
+                            text = if (highRiskPatients > 0) "$highRiskPatients patients need home checkup" else "All village caseloads stable",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (highRiskPatients > 0) GlumeAlertCoral else GlumeSuccessText
+                        )
+                    }
+
+                    GlumeProgressRing(
+                        progressFraction = followUpFraction,
+                        size = 72.dp,
+                        strokeWidth = 7.dp,
+                        ringColor = GlumePrimaryPurple,
+                        trackColor = GlumeSurfaceElevated
+                    )
+                }
+            }
+        }
+
+        // 3. Glume Stat Display Pattern (3-Column Grid)
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
+                GlumeStatCard(
+                    label = "Caseload",
+                    value = "$totalPatients",
+                    icon = "👥",
+                    modifier = Modifier.weight(1f),
+                    badgeText = "Total",
+                    badgeColor = GlumePrimaryPurple
+                )
+                GlumeStatCard(
+                    label = "High Risk",
+                    value = "$highRiskPatients",
+                    icon = "⚠️",
+                    modifier = Modifier.weight(1f),
+                    badgeText = if (highRiskPatients > 0) "Alert" else "None",
+                    badgeColor = if (highRiskPatients > 0) GlumeAlertCoral else GlumeSuccessMint
+                )
+                GlumeStatCard(
+                    label = "Villages",
+                    value = "${asha.assignedVillages.size}",
+                    icon = "🏡",
+                    modifier = Modifier.weight(1f),
+                    badgeText = "Active",
+                    badgeColor = GlumeSuccessMint
+                )
+            }
+        }
+
+        // 4. ASHA Unique ID Card (Glume Dark Elevated Style)
+        item {
+            VitalSenseCard(
+                backgroundColor = GlumeSurfaceElevated,
+                border = BorderStroke(1.dp, GlumePrimaryPurple.copy(alpha = 0.4f))
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
                             text = strings.uniqueAshaCardTitle,
-                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.5.sp),
-                            color = TextSecondaryMuted
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = GlumePrimaryPurpleLight
                         )
                         Text(
                             text = asha.ashaUniqueId,
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = TextPrimaryNearBlack
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = strings.shareAshaIdDesc,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
 
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(46.dp)
                             .clip(CircleShape)
-                            .background(SurfaceWhite),
+                            .background(GlumePrimaryPurpleContainer),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "🆔", style = MaterialTheme.typography.titleLarge)
+                        Text(text = "🆔", fontSize = 22.sp)
                     }
                 }
             }
         }
 
-        // 3. Quick Action Buttons
+        // 5. Quick Action Buttons (Glume Primary & Secondary Pill Buttons)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -109,18 +202,18 @@ fun AshaHomeScreen(
                     text = strings.newPatient,
                     onClick = onRegisterPatientClick,
                     modifier = Modifier.weight(1f),
-                    style = ButtonStyle.DARK
+                    style = ButtonStyle.PRIMARY
                 )
                 VitalSenseButton(
                     text = strings.sendNotice,
                     onClick = onSendNoticeClick,
                     modifier = Modifier.weight(1f),
-                    style = ButtonStyle.SECONDARY
+                    style = ButtonStyle.DARK
                 )
             }
         }
 
-        // 4. Caseload Summary Banner
+        // 6. Caseload Summary Banner
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -130,35 +223,47 @@ fun AshaHomeScreen(
                 Text(
                     text = "${strings.villageCaseload} (${patients.size})",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimaryNearBlack
+                    color = GlumeTextPrimary
                 )
                 if (asha.alertCount > 0) {
-                    Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.25f)) {
+                    Surface(shape = PillShape, color = GlumeAlertContainer) {
                         Text(
                             text = "${asha.alertCount} ${strings.highRisk}",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlertDark),
-                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = GlumeAlertCoral
+                            ),
+                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
                         )
                     }
                 }
             }
         }
 
-        // 5. Patient Caseload Cards
+        // 7. Patient Caseload Cards (Glume Dark Slate Card Style)
         if (patients.isEmpty()) {
             item {
-                VitalSenseCard(backgroundColor = SurfaceWhite) {
+                VitalSenseCard {
                     Column(
                         modifier = Modifier.padding(Spacing.sm),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = strings.noPatientsYet, style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = strings.noPatientsYet,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = GlumeTextSecondary
+                        )
                     }
                 }
             }
         } else {
             items(patients) { patient ->
-                VitalSenseCard {
+                val isHighRisk = patient.currentRiskLevel == SeverityLevel.HIGH || patient.currentRiskLevel == SeverityLevel.SEVERE
+
+                VitalSenseCard(
+                    backgroundColor = if (isHighRisk) GlumeAlertContainer else GlumeSurfaceCard,
+                    border = BorderStroke(1.dp, if (isHighRisk) GlumeAlertCoral.copy(alpha = 0.4f) else GlumeBorder)
+                ) {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                         // Patient name & Risk badge
                         Row(
@@ -169,12 +274,13 @@ fun AshaHomeScreen(
                             Column {
                                 Text(
                                     text = patient.name,
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumeTextPrimary
                                 )
                                 Text(
                                     text = "Age: ${patient.age} (${patient.gender}) · ${patient.villageName}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondaryMuted
+                                    color = GlumeTextSecondary
                                 )
                             }
                             SeverityBadge(severity = patient.currentRiskLevel)
@@ -184,16 +290,16 @@ fun AshaHomeScreen(
                         Text(
                             text = "Condition: ${patient.lastCondition}",
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
 
                         Text(
                             text = "Last Visit: ${patient.lastVisitDate} · Next: ${patient.nextAppointmentDate ?: strings.noneScheduled}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
 
-                        HorizontalDivider(color = DividerSubtle, thickness = 1.dp)
+                        HorizontalDivider(color = GlumeBorder, thickness = 1.dp)
 
                         // Action Buttons: Proxy Mode & Scan Rx
                         Row(
@@ -204,9 +310,9 @@ fun AshaHomeScreen(
                                 onClick = { ocrTargetPatient = patient },
                                 modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp),
                                 shape = PillShape,
-                                border = BorderStroke(1.dp, CardBorderColor)
+                                border = BorderStroke(1.dp, GlumeBorder)
                             ) {
-                                Text(text = strings.scanRx, style = MaterialTheme.typography.labelSmall)
+                                Text(text = strings.scanRx, style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
                             }
 
                             Button(
@@ -214,11 +320,14 @@ fun AshaHomeScreen(
                                 modifier = Modifier.weight(1.3f).defaultMinSize(minHeight = 40.dp),
                                 shape = PillShape,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = DarkCharcoal,
-                                    contentColor = LimePrimary
+                                    containerColor = GlumePrimaryPurple,
+                                    contentColor = GlumeTextPrimary
                                 )
                             ) {
-                                Text(text = strings.proxyMode, style = MaterialTheme.typography.labelSmall)
+                                Text(
+                                    text = strings.proxyMode,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                )
                             }
                         }
                     }
@@ -226,23 +335,20 @@ fun AshaHomeScreen(
             }
         }
 
-        val emergencySosAlerts = notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT }
-        val adminAdvisories = notices.filter { it.senderRole == UserRole.ADMIN }
-
-        // 6. Emergency Patient SOS Alerts
+        // 8. Emergency Patient SOS Alerts (With Subtle Coral Glow)
         if (emergencySosAlerts.isNotEmpty()) {
             item {
                 Text(
                     text = "${strings.emergencyPatientAlerts} (${emergencySosAlerts.size})",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = CoralAlertDark
+                    color = GlumeAlertCoral
                 )
             }
 
             items(emergencySosAlerts) { sos ->
                 VitalSenseCard(
-                    backgroundColor = CoralAlert.copy(alpha = 0.12f),
-                    elevation = 2.dp
+                    backgroundColor = GlumeAlertContainer,
+                    border = BorderStroke(1.dp, GlumeAlertCoral.copy(alpha = 0.5f))
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                         Row(
@@ -253,60 +359,61 @@ fun AshaHomeScreen(
                             Text(
                                 text = sos.title,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = CoralAlertDark
+                                color = GlumeAlertText
                             )
-                            Surface(shape = PillShape, color = CoralAlert) {
+                            Surface(shape = PillShape, color = GlumeAlertCoral) {
                                 Text(
                                     text = strings.highPriority,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SurfaceWhite),
-                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = GlumeTextPrimary
+                                    ),
+                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
                                 )
                             }
                         }
                         Text(
                             text = sos.message,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = "From: ${sos.senderName} · Village: ${sos.targetVillage ?: "General"}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
                 }
             }
         }
 
-        // 7. District Health Advisories
+        // 9. District Health Advisories
         if (adminAdvisories.isNotEmpty()) {
             item {
                 Text(
                     text = strings.districtAdvisories,
                     style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimaryNearBlack
+                    color = GlumeTextPrimary
                 )
             }
 
             items(adminAdvisories) { notice ->
-                VitalSenseCard(
-                    backgroundColor = if (notice.isUrgent) CoralAlert.copy(alpha = 0.12f) else SurfaceWhite
-                ) {
+                VitalSenseCard {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
                             text = notice.title,
                             style = MaterialTheme.typography.titleMedium,
-                            color = if (notice.isUrgent) CoralAlertDark else TextPrimaryNearBlack
+                            color = if (notice.isUrgent) GlumeAlertText else GlumeTextPrimary
                         )
                         Text(
                             text = notice.message,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = "${strings.issuedBy} ${notice.senderName} (${notice.senderRole.name})",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
                 }
