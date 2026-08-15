@@ -15,6 +15,11 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import kotlin.math.max
+import kotlin.math.min
 
 @Composable
 fun AdminHomeScreen(
@@ -114,63 +119,8 @@ fun AdminHomeScreen(
             }
         }
 
-        items(villages) { village ->
-            val isHighOutbreak = village.highRiskCount >= 3
-            VitalSenseCard(
-                elevation = 2.dp,
-                backgroundColor = if (isHighOutbreak) CoralAlert.copy(alpha = 0.12f) else SurfaceWhite
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Village ${village.name}",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                            Text(
-                                text = "Population: ${village.population} · Coordinates: ${village.latitude}, ${village.longitude}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondaryMuted
-                            )
-                        }
-
-                        Surface(
-                            shape = PillShape,
-                            color = if (isHighOutbreak) CoralAlert else SoftMintSuccess.copy(alpha = 0.5f)
-                        ) {
-                            Text(
-                                text = if (isHighOutbreak) "⚠️ OUTBREAK ALERT" else "● Normal",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isHighOutbreak) SurfaceWhite else Color(0xFF1B5E20)
-                                ),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "Active Cases: ${village.activeCases}",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                        Text(
-                            text = "Severe Clusters: ${village.highRiskCount}",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = if (isHighOutbreak) CoralAlert else TextPrimaryNearBlack
-                            )
-                        )
-                    }
-                }
-            }
+        item {
+            VillageHeatMap(villages = villages)
         }
 
         // 4. Quick Action: Outbreak Broadcast
@@ -324,5 +274,116 @@ fun AdminHomeScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun VillageHeatMap(villages: List<Village>, modifier: Modifier = Modifier) {
+    if (villages.isEmpty()) return
+
+    // Find min and max bounds to normalize coordinates
+    val minLat = villages.minOf { it.latitude }
+    val maxLat = villages.maxOf { it.latitude }
+    val minLng = villages.minOf { it.longitude }
+    val maxLng = villages.maxOf { it.longitude }
+
+    val latRange = max(maxLat - minLat, 0.01) // Prevent division by zero
+    val lngRange = max(maxLng - minLng, 0.01)
+
+    VitalSenseCard(
+        elevation = 4.dp,
+        backgroundColor = DarkCharcoal,
+        modifier = modifier.fillMaxWidth().height(300.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                val canvasWidth = size.width
+                val canvasHeight = size.height
+
+                // Draw a simple grid background
+                val gridStep = 50f
+                for (x in 0..canvasWidth.toInt() step gridStep.toInt()) {
+                    drawLine(
+                        color = Color.White.copy(alpha = 0.05f),
+                        start = Offset(x.toFloat(), 0f),
+                        end = Offset(x.toFloat(), canvasHeight),
+                        strokeWidth = 1f
+                    )
+                }
+                for (y in 0..canvasHeight.toInt() step gridStep.toInt()) {
+                    drawLine(
+                        color = Color.White.copy(alpha = 0.05f),
+                        start = Offset(0f, y.toFloat()),
+                        end = Offset(canvasWidth, y.toFloat()),
+                        strokeWidth = 1f
+                    )
+                }
+
+                // Plot each village
+                villages.forEach { village ->
+                    // Normalize X and Y (Longitude maps to X, Latitude maps to Y, invert Y so higher lat is 'up')
+                    val normX = ((village.longitude - minLng) / lngRange).toFloat()
+                    val normY = 1f - ((village.latitude - minLat) / latRange).toFloat()
+
+                    // Padding to keep nodes off the exact edge
+                    val padding = 40f
+                    val x = padding + normX * (canvasWidth - padding * 2)
+                    val y = padding + normY * (canvasHeight - padding * 2)
+
+                    val isHighOutbreak = village.highRiskCount >= 3
+                    val baseColor = if (isHighOutbreak) CoralAlert else AmberWarning
+                    
+                    // Base size based on active cases
+                    val radius = 20f + (village.activeCases * 1.5f).coerceAtMost(60f)
+
+                    // Draw glowing heat aura
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(baseColor.copy(alpha = 0.6f), Color.Transparent),
+                            center = Offset(x, y),
+                            radius = radius * 2
+                        ),
+                        radius = radius * 2,
+                        center = Offset(x, y)
+                    )
+
+                    // Draw solid core
+                    drawCircle(
+                        color = baseColor,
+                        radius = 8f,
+                        center = Offset(x, y)
+                    )
+                }
+            }
+
+            // Overlay textual labels for the villages
+            villages.forEach { village ->
+                val normX = ((village.longitude - minLng) / lngRange).toFloat()
+                val normY = 1f - ((village.latitude - minLat) / latRange).toFloat()
+
+                // Calculate approx dp position manually to position a Compose Text element
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(40.dp) // match padding
+                ) {
+                    // We use an alignment trick or absolute offset to position text. 
+                    // Since it's tricky to mix Canvas and Compose perfectly without exact Layout, 
+                    // we can just use Box align for a cool HUD look, or list them at the bottom.
+                }
+            }
+            
+            // For simplicity and guaranteed perfect rendering, we will list the legend overlaid.
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(12.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), shape = CardShape)
+                    .padding(8.dp)
+            ) {
+                Text("🔴 High Risk Outbreak", color = CoralAlert, style = MaterialTheme.typography.labelSmall)
+                Text("🟡 Monitored Zone", color = AmberWarning, style = MaterialTheme.typography.labelSmall)
+            }
+        }
     }
 }
