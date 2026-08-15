@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -26,6 +27,7 @@ import com.vitalsense.app.core.ui.theme.*
 @Composable
 fun PatientHomeScreen(
     patient: Patient,
+    notices: List<BroadcastNotice> = emptyList(),
     onCategoryClick: (ConditionCategory) -> Unit = {},
     onViewHealthCard: () -> Unit = {},
     onTriggerSos: () -> Unit = {},
@@ -33,6 +35,10 @@ fun PatientHomeScreen(
 ) {
     var showSosConfirmation by remember { mutableStateOf(false) }
     var sosSentSuccess by remember { mutableStateOf(false) }
+
+    val adminAdvisories = notices.filter {
+        it.senderRole == UserRole.ADMIN || it.targetRole == "ALL" || it.targetRole == "PATIENT"
+    }
 
     LazyColumn(
         modifier = modifier
@@ -228,6 +234,59 @@ fun PatientHomeScreen(
                 VitalSenseButton("Government Schemes", onClick = { }, modifier = Modifier.fillMaxWidth())
                 VitalSenseButton("Upload Prescription (OCR)", onClick = { }, modifier = Modifier.fillMaxWidth())
                 VitalSenseButton("Help / Manual", onClick = { }, modifier = Modifier.fillMaxWidth())
+            }
+        }
+
+        // 5. District Health Advisories (Admin Broadcasts)
+        if (adminAdvisories.isNotEmpty()) {
+            item {
+                Text(
+                    text = "📢 District Health Advisories",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = TextPrimaryNearBlack
+                )
+            }
+
+            items(adminAdvisories) { advisory ->
+                VitalSenseCard(
+                    backgroundColor = if (advisory.isUrgent) CoralAlert.copy(alpha = 0.15f) else SurfaceWhite
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = advisory.title,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = if (advisory.isUrgent) CoralAlert else TextPrimaryNearBlack
+                            )
+                            if (advisory.isUrgent) {
+                                Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.2f)) {
+                                    Text(
+                                        text = "URGENT",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlert),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Text(
+                            text = advisory.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimaryNearBlack
+                        )
+                        Text(
+                            text = "Issued by: ${advisory.senderName} (${advisory.senderRole.name})",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondaryMuted
+                        )
+                    }
+                }
             }
         }
 

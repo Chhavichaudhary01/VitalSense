@@ -562,7 +562,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
             id = "sos_${System.currentTimeMillis()}",
             senderRole = UserRole.PATIENT,
             senderName = "${patient.name} (SOS ALERT)",
-            targetRole = "ASHA",
+            targetRole = "ASHA_DOCTOR",
             targetVillage = patient.villageName,
             title = "🚨 EMERGENCY SOS: ${patient.name}",
             message = "Patient ${patient.name} (${patient.villageName}, Age ${patient.age}) triggered an Emergency SOS! Contact: ${patient.phone}. Location: Lat ${locationLat ?: 26.8467}, Lng ${locationLng ?: 80.9462}.",

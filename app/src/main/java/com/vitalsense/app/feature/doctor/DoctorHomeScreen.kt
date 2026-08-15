@@ -26,6 +26,7 @@ fun DoctorHomeScreen(
     appointments: List<Appointment>,
     dispensaryStock: List<DispensaryItem>,
     patients: List<Patient> = emptyList(),
+    notices: List<BroadcastNotice> = emptyList(),
     onSelectCase: (ConditionRecord) -> Unit,
     onAcceptAppointment: (String) -> Unit = {},
     onDeclineAppointment: (String) -> Unit = {},
@@ -37,6 +38,9 @@ fun DoctorHomeScreen(
     val pendingCases = cases.filter { it.status == CaseStatus.PENDING_REVIEW || it.status == CaseStatus.IN_PROGRESS }
     val severeCount = cases.count { it.severity == SeverityLevel.SEVERE || it.severity == SeverityLevel.HIGH }
     val lowStockCount = dispensaryStock.count { it.isLowStock }
+
+    val emergencySosAlerts = notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT }
+    val adminDirectives = notices.filter { it.senderRole == UserRole.ADMIN }
 
     LazyColumn(
         modifier = modifier
@@ -59,6 +63,66 @@ fun DoctorHomeScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondaryMuted
                 )
+            }
+        }
+
+        // 1.5 Emergency Patient SOS Alerts (Visible to Doctor & ASHA only)
+        if (emergencySosAlerts.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🚨 Patient Emergency SOS Alerts (${emergencySosAlerts.size})",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = CoralAlert
+                        )
+                    )
+                }
+            }
+
+            items(emergencySosAlerts) { sos ->
+                VitalSenseCard(
+                    backgroundColor = CoralAlert.copy(alpha = 0.15f),
+                    elevation = 3.dp
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = sos.title,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = CoralAlert
+                                )
+                            )
+                            Surface(shape = PillShape, color = CoralAlert) {
+                                Text(
+                                    text = "HIGH PRIORITY",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SurfaceWhite),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = sos.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimaryNearBlack
+                        )
+                        Text(
+                            text = "Village: ${sos.targetVillage ?: "General"} · Patient Alert",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondaryMuted
+                        )
+                    }
+                }
             }
         }
 
@@ -369,44 +433,54 @@ fun DoctorHomeScreen(
             }
         }
 
-        items(dispensaryStock) { item ->
-            VitalSenseCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+        // 6. District Health Directives (Admin Broadcasts)
+        if (adminDirectives.isNotEmpty()) {
+            item {
+                Text(
+                    text = "📢 District Health Directives",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = TextPrimaryNearBlack
+                )
+            }
+
+            items(adminDirectives) { directive ->
+                VitalSenseCard(
+                    backgroundColor = if (directive.isUrgent) CoralAlert.copy(alpha = 0.15f) else SurfaceWhite
                 ) {
-                    Column {
-                        Text(
-                            text = item.medicineName,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = item.category,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "${item.availableQuantity} ${item.unit}",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = if (item.isLowStock) CoralAlert else TextPrimaryNearBlack
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = directive.title,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = if (directive.isUrgent) CoralAlert else TextPrimaryNearBlack
                             )
-                        )
-                        if (item.isLowStock) {
-                            Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.2f)) {
-                                Text(
-                                    text = "LOW",
-                                    style = MaterialTheme.typography.labelSmall.copy(color = CoralAlert, fontWeight = FontWeight.Bold),
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                            if (directive.isUrgent) {
+                                Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.2f)) {
+                                    Text(
+                                        text = "DIRECTIVE",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlert),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
                             }
                         }
+                        Text(
+                            text = directive.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimaryNearBlack
+                        )
+                        Text(
+                            text = "From: ${directive.senderName} (${directive.senderRole.name})",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondaryMuted
+                        )
                     }
                 }
             }

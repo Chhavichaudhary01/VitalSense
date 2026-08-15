@@ -35,6 +35,9 @@ fun AdminHomeScreen(
     var selectedVillageName by remember { mutableStateOf("All Villages") }
     var isFormError by remember { mutableStateOf(false) }
 
+    // Admin view strictly filters out Patient SOS alerts (visible to ASHA & Doctor only)
+    val adminIssuedDirectives = notices.filter { it.senderRole == UserRole.ADMIN }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -130,6 +133,55 @@ fun AdminHomeScreen(
                 onClick = { showBroadcastDialog = true },
                 style = ButtonStyle.DARK
             )
+        }
+
+        // 4.1 Admin Issued Directives Log (Excludes Patient SOS)
+        if (adminIssuedDirectives.isNotEmpty()) {
+            item {
+                Text(
+                    text = "📋 Dispatched Directives (${adminIssuedDirectives.size})",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = TextPrimaryNearBlack
+                )
+            }
+
+            items(adminIssuedDirectives) { directive ->
+                VitalSenseCard(backgroundColor = SurfaceWhite) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = directive.title,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = TextPrimaryNearBlack
+                            )
+                            Surface(shape = PillShape, color = SoftMintSuccess.copy(alpha = 0.5f)) {
+                                Text(
+                                    text = "ACTIVE",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = directive.message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextPrimaryNearBlack
+                        )
+                        Text(
+                            text = "Target: ${directive.targetVillage ?: "All Monitored Villages"}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondaryMuted
+                        )
+                    }
+                }
+            }
         }
 
         // 4.5 District Dispensary Inventory (PRD Mock Requirement)
