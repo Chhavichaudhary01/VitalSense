@@ -1,9 +1,6 @@
 package com.vitalsense.app.core.di
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestoreSettings
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,12 +14,6 @@ object FirebaseModule {
     @Provides
     @Singleton
     fun provideFirestore(): FirebaseFirestore {
-        val firestore = Firebase.firestore
-        val settings = firestoreSettings {
-            // Enable Firestore's internal offline cache
-            isPersistenceEnabled = true
-        }
-        firestore.firestoreSettings = settings
-        return firestore
+        return FirebaseFirestore.getInstance()
     }
 }
