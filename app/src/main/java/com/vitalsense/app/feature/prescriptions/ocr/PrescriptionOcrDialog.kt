@@ -3,6 +3,7 @@ package com.vitalsense.app.feature.prescriptions.ocr
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,7 +24,8 @@ import com.vitalsense.app.core.data.model.Prescription
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun PrescriptionOcrDialog(
@@ -70,16 +73,17 @@ fun PrescriptionOcrDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.88f),
-            shape = CardShape,
-            color = WarmCreamBackground,
-            shadowElevation = 8.dp
+            shape = DialogShape,
+            color = GlumeSurfaceCard,
+            shadowElevation = 8.dp,
+            border = BorderStroke(1.dp, GlumeBorder)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(18.dp)
+                    .padding(Spacing.lg)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 // Header
                 Row(
@@ -91,115 +95,120 @@ fun PrescriptionOcrDialog(
                         Text(
                             text = "📷 AI Prescription Digitizer",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = "On-Device ML Kit OCR for ${patient.name}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
-                    IconButton(onClick = onDismiss) {
-                        Text(text = "✕", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
+                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = GlumeTextSecondary)
                     }
                 }
 
-                // Instructions Banner
+                HorizontalDivider(color = GlumeBorder)
+
+                // Instruction Callout
                 Surface(
+                    color = GlumePrimaryPurpleContainer,
                     shape = CardShape,
-                    color = SoftMintSuccess.copy(alpha = 0.35f),
-                    modifier = Modifier.fillMaxWidth()
+                    border = BorderStroke(1.dp, GlumePrimaryPurple.copy(alpha = 0.4f))
                 ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(text = "⚡", fontSize = 18.sp)
+                    Column(modifier = Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
-                            text = "Works 100% offline. Scans physical doctor handwriting and extracts medicine names & dosages.",
+                            text = "⚡ Zero-Cloud Offline Inference",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = GlumePrimaryPurpleLight
+                        )
+                        Text(
+                            text = "Select a prescription photo to extract clinical entities locally on device without network latency.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                     }
                 }
 
-                // Sample Scans Trigger
+                // Sample Prescription Buttons
                 Text(
-                    text = "Select Prescription to Scan:",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimaryNearBlack
+                    text = "Simulate Camera Capture / Rx Scan:",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Button(
-                        onClick = { processSamplePrescription("General") },
-                        modifier = Modifier.weight(1f),
-                        shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
-                    ) {
-                        Text("General Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    }
                     Button(
                         onClick = { processSamplePrescription("Fever") },
                         modifier = Modifier.weight(1f),
                         shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
+                        colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple)
                     ) {
-                        Text("Fever/Cold", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("🌡️ Fever Rx", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
                     }
                     Button(
                         onClick = { processSamplePrescription("Maternal") },
                         modifier = Modifier.weight(1f),
                         shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
+                        colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple)
                     ) {
-                        Text("Maternal Rx", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("🤰 Maternal", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                    }
+                    Button(
+                        onClick = { processSamplePrescription("Infection") },
+                        modifier = Modifier.weight(1f),
+                        shape = PillShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple)
+                    ) {
+                        Text("💊 Infection", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
                     }
                 }
 
+                // Processing Indicator
                 if (isProcessing) {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(Spacing.lg),
+                        contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = DarkCharcoal)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "ML Kit recognizing text on-device...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
-                        )
+                        CircularProgressIndicator(color = GlumePrimaryPurple)
                     }
                 }
 
+                // OCR Output & Medicine Extraction
                 if (recognizedRawText.isNotBlank()) {
-                    // OCR Raw Output preview
-                    VitalSenseCard(backgroundColor = SurfaceWhite) {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Extracted Clinical Entities:",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = GlumeTextPrimary
+                    )
+
+                    VitalSenseCard(
+                        backgroundColor = GlumeSurfaceElevated,
+                        border = BorderStroke(1.dp, GlumeBorder)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                             Text(
-                                text = "Extracted OCR Text:",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                color = TextPrimaryNearBlack
+                                text = "RAW OCR TEXT STREAM",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = GlumePrimaryPurpleLight
                             )
                             Text(
                                 text = recognizedRawText,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondaryMuted
+                                color = GlumeTextPrimary
                             )
                         }
                     }
 
-                    // Structured Medicines
                     Text(
-                        text = "Parsed Medicines (${extractedMedicines.size}):",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = TextPrimaryNearBlack
+                        text = "Parsed Medicine Schedule (${extractedMedicines.size} Detected):",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = GlumeTextPrimary
                     )
 
                     extractedMedicines.forEach { med ->
@@ -212,52 +221,58 @@ fun PrescriptionOcrDialog(
                                 Column {
                                     Text(
                                         text = med.name,
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeTextPrimary
                                     )
                                     Text(
-                                        text = "${med.dosage} · ${med.frequency} · ${med.duration}",
+                                        text = "Dosage: ${med.dosage} · ${med.frequency}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = TextSecondaryMuted
+                                        color = GlumeTextSecondary
                                     )
                                 }
                                 Surface(
                                     shape = PillShape,
-                                    color = SoftMintSuccess.copy(alpha = 0.5f)
+                                    color = GlumeSuccessContainer
                                 ) {
                                     Text(
-                                        text = "AI Verified",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                        text = med.duration,
+                                        style = MaterialTheme.typography.labelSmall.copy(color = GlumeSuccessText, fontWeight = FontWeight.Bold),
+                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
                                     )
                                 }
                             }
                         }
                     }
 
+                    // Doctor Instructions Input
                     OutlinedTextField(
                         value = instructionsText,
                         onValueChange = { instructionsText = it },
-                        label = { Text("Special Instructions / Notes") },
+                        label = { Text("Clinical Instructions & Notes", color = GlumeTextSecondary) },
                         modifier = Modifier.fillMaxWidth(),
+                        shape = InputShape,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = SurfaceWhite,
-                            unfocusedContainerColor = SurfaceWhite
+                            focusedContainerColor = GlumeSurfaceElevated,
+                            unfocusedContainerColor = GlumeSurfaceCard,
+                            focusedBorderColor = GlumePrimaryPurple,
+                            unfocusedBorderColor = GlumeBorder,
+                            focusedTextColor = GlumeTextPrimary,
+                            unfocusedTextColor = GlumeTextPrimary
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
+                    // Confirm and Save Button
                     Button(
                         onClick = {
                             val newPrescription = Prescription(
-                                id = "rx_ocr_${UUID.randomUUID().toString().take(6)}",
+                                id = "rx_${UUID.randomUUID()}",
                                 patientId = patient.id,
                                 patientName = patient.name,
-                                doctorId = "dr_phc_ocr",
-                                doctorName = "PHC Attending (Digitized)",
-                                doctorSpecialty = "General Physician",
+                                doctorId = "doc_attending",
+                                doctorName = "Attending Medical Officer (OCR)",
+                                doctorSpecialty = "General Medicine",
                                 timestamp = System.currentTimeMillis(),
-                                dateFormatted = "18 Aug 2026",
+                                dateFormatted = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date()),
                                 medicines = extractedMedicines,
                                 instructions = instructionsText,
                                 isOcrExtracted = true
@@ -265,14 +280,18 @@ fun PrescriptionOcrDialog(
                             onSavePrescription(newPrescription)
                             onDismiss()
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
                         shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = LimePrimary, contentColor = TextPrimaryNearBlack)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GlumePrimaryPurple,
+                            contentColor = GlumeTextPrimary
+                        )
                     ) {
                         Text(
-                            text = "Save to Patient Record ✓",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            text = "Save to Patient's Medical Record ✓",
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
                 }

@@ -1,5 +1,6 @@
 package com.vitalsense.app.feature.doctor.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,15 +31,16 @@ fun ReferCaseDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = CardShape,
-            color = WarmCreamBackground,
-            shadowElevation = 8.dp
+            shape = DialogShape,
+            color = GlumeSurfaceCard,
+            shadowElevation = 8.dp,
+            border = BorderStroke(1.dp, GlumeBorder)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -49,38 +51,41 @@ fun ReferCaseDialog(
                         Text(
                             text = "🔄 Refer Case to Specialist",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                            color = GlumeTextPrimary
                         )
                         Text(
                             text = "Patient: $patientName (§4.3 Escalation)",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
-                    IconButton(onClick = onDismiss) {
-                        Text(text = "✕", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
+                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = GlumeTextSecondary)
                     }
                 }
 
+                HorizontalDivider(color = GlumeBorder)
+
                 Text(
                     text = "Select Target Medical Specialty:",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimaryNearBlack
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     DoctorSpecialty.values().filter { it != currentSpecialty }.forEach { specialty ->
                         val isSelected = selectedSpecialty == specialty
                         Surface(
                             shape = CardShape,
-                            color = if (isSelected) LavenderSecondary.copy(alpha = 0.5f) else SurfaceWhite,
+                            color = if (isSelected) GlumePrimaryPurpleContainer else GlumeSurfaceElevated,
+                            border = if (isSelected) BorderStroke(1.5.dp, GlumePrimaryPurple) else BorderStroke(1.dp, GlumeBorder),
                             onClick = { selectedSpecialty = specialty },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -89,11 +94,15 @@ fun ReferCaseDialog(
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     ),
-                                    color = TextPrimaryNearBlack
+                                    color = if (isSelected) GlumePrimaryPurpleLight else GlumeTextPrimary
                                 )
                                 RadioButton(
                                     selected = isSelected,
-                                    onClick = { selectedSpecialty = specialty }
+                                    onClick = { selectedSpecialty = specialty },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = GlumePrimaryPurple,
+                                        unselectedColor = GlumeTextSecondary
+                                    )
                                 )
                             }
                         }
@@ -102,8 +111,8 @@ fun ReferCaseDialog(
 
                 Text(
                     text = "Clinical Referral Notes:",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimaryNearBlack
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
                 )
 
                 OutlinedTextField(
@@ -111,23 +120,29 @@ fun ReferCaseDialog(
                     onValueChange = { referralNotes = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp),
+                        .height(88.dp),
+                    shape = InputShape,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = SurfaceWhite,
-                        unfocusedContainerColor = SurfaceWhite
+                        focusedContainerColor = GlumeSurfaceElevated,
+                        unfocusedContainerColor = GlumeSurfaceCard,
+                        focusedBorderColor = GlumePrimaryPurple,
+                        unfocusedBorderColor = GlumeBorder,
+                        focusedTextColor = GlumeTextPrimary,
+                        unfocusedTextColor = GlumeTextPrimary
                     )
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        shape = PillShape
+                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
+                        shape = PillShape,
+                        border = BorderStroke(1.dp, GlumeBorder)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel", color = GlumeTextSecondary)
                     }
 
                     Button(
@@ -135,11 +150,11 @@ fun ReferCaseDialog(
                             onRefer(selectedSpecialty, referralNotes)
                             onDismiss()
                         },
-                        modifier = Modifier.weight(1.3f),
+                        modifier = Modifier.weight(1.3f).defaultMinSize(minHeight = 44.dp),
                         shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = BlushPinkTertiary, contentColor = TextPrimaryNearBlack)
+                        colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple, contentColor = GlumeTextPrimary)
                     ) {
-                        Text("Transfer Case →", fontWeight = FontWeight.Bold)
+                        Text("Transfer Case →", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                     }
                 }
             }

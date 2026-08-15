@@ -92,9 +92,9 @@ fun PrescriptionUploadDialog(
                 .fillMaxWidth()
                 .wrapContentHeight(),
             shape = DialogShape,
-            color = WarmCreamBackground,
+            color = GlumeSurfaceCard,
             shadowElevation = 8.dp,
-            border = BorderStroke(1.dp, CardBorderColor)
+            border = BorderStroke(1.dp, GlumeBorder)
         ) {
             Column(
                 modifier = Modifier
@@ -111,344 +111,312 @@ fun PrescriptionUploadDialog(
                 ) {
                     Column {
                         Text(
-                            text = if (isAshaProxy) "🤝 Upload Prescription" else "💊 Upload Prescription",
-                            style = MaterialTheme.typography.titleLarge
+                            text = if (isAshaProxy) "Upload Prescription (for ${patient.name})" else "Add Prescription",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
                         )
                         Text(
-                            text = "Patient: ${patient.name} (${patient.villageName})",
+                            text = "Digitize paper prescription via camera OCR or manual entry",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondaryMuted
+                            color = GlumeTextSecondary
                         )
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
-                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = TextSecondaryMuted)
+                        Text(text = "✕", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = GlumeTextSecondary)
                     }
                 }
 
-                HorizontalDivider(color = DividerSubtle)
-
-                // Custom Styled Tab Selector
+                // Glume Segmented Pill Tabs
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Surface(
-                        onClick = { selectedTab = 0 },
-                        shape = PillShape,
-                        color = if (selectedTab == 0) LimePrimary else SurfaceWhite,
-                        border = BorderStroke(1.dp, if (selectedTab == 0) DarkCharcoal else CardBorderColor),
-                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                    val tabs = listOf("📷 Camera / AI Scan", "✍️ Write Down")
+                    tabs.forEachIndexed { index, title ->
+                        val isSelected = selectedTab == index
+                        Surface(
+                            onClick = { selectedTab = index },
+                            shape = PillShape,
+                            color = if (isSelected) GlumePrimaryPurpleContainer else GlumeSurfaceElevated,
+                            border = if (isSelected) BorderStroke(1.5.dp, GlumePrimaryPurple) else BorderStroke(1.dp, GlumeBorder),
+                            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp)
                         ) {
-                            Text(text = "📷 Camera / AI Scan", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                        }
-                    }
-
-                    Surface(
-                        onClick = { selectedTab = 1 },
-                        shape = PillShape,
-                        color = if (selectedTab == 1) LimePrimary else SurfaceWhite,
-                        border = BorderStroke(1.dp, if (selectedTab == 1) DarkCharcoal else CardBorderColor),
-                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "✍️ Write Down", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 8.dp)) {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) GlumePrimaryPurpleLight else GlumeTextPrimary
+                                    )
+                                )
+                            }
                         }
                     }
                 }
 
-                // TAB 0: CAMERA / ON-DEVICE OCR
+                HorizontalDivider(color = GlumeBorder)
+
+                // Tab 0: Camera / AI Scan
                 if (selectedTab == 0) {
-                    Surface(
-                        shape = CardShape,
-                        color = SoftMintSuccess.copy(alpha = 0.35f),
-                        border = BorderStroke(1.dp, SoftMintSuccess),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        Text(
+                            text = "📸 Simulate Camera Scan / Capture Rx",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
+                        )
+                        Text(
+                            text = "Point camera at doctor's handwritten or printed prescription. On-device ML Kit will extract dosage and medicines automatically.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = GlumeTextSecondary
+                        )
+
+                        // Sample Rx Presets for Demonstration
                         Row(
-                            modifier = Modifier.padding(Spacing.sm),
-                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
-                            Text(text = "⚡", style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                text = "On-Device AI: Scans doctor slips offline with zero internet.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextPrimaryNearBlack
-                            )
-                        }
-                    }
-
-                    Text(
-                        text = "Select Document Sample:",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = TextPrimaryNearBlack
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                    ) {
-                        Button(
-                            onClick = { runSampleOcr("General") },
-                            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 36.dp),
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
-                        ) {
-                            Text("General", style = MaterialTheme.typography.labelSmall)
-                        }
-                        Button(
-                            onClick = { runSampleOcr("Fever") },
-                            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 36.dp),
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
-                        ) {
-                            Text("Fever/Cold", style = MaterialTheme.typography.labelSmall)
-                        }
-                        Button(
-                            onClick = { runSampleOcr("Maternal") },
-                            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 36.dp),
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
-                        ) {
-                            Text("Maternal", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-
-                    if (isProcessingOcr) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(Spacing.md),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator(color = DarkCharcoal, modifier = Modifier.size(32.dp))
-                            Spacer(modifier = Modifier.height(Spacing.xs))
-                            Text("Extracting handwritten text on-device...", style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-
-                    if (recognizedOcrText.isNotBlank()) {
-                        VitalSenseCard(backgroundColor = SurfaceWhite) {
-                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-                                Text(
-                                    text = "Extracted Raw Text:",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                )
-                                Text(text = recognizedOcrText, style = MaterialTheme.typography.bodySmall, color = TextSecondaryMuted)
-                            }
-                        }
-
-                        Text(
-                            text = "Parsed Medicines (${ocrMedicines.size}):",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
-                        )
-
-                        ocrMedicines.forEach { med ->
-                            VitalSenseCard {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                            listOf("Fever", "Maternal", "Antibiotic").forEach { preset ->
+                                OutlinedButton(
+                                    onClick = { runSampleOcr(preset) },
+                                    modifier = Modifier.weight(1f),
+                                    shape = PillShape,
+                                    border = BorderStroke(1.dp, GlumeBorder)
                                 ) {
-                                    Column {
-                                        Text(text = med.name, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-                                        Text(text = "${med.dosage} · ${med.frequency} · ${med.duration}", style = MaterialTheme.typography.bodySmall, color = TextSecondaryMuted)
-                                    }
-                                    Surface(shape = PillShape, color = SoftMintSuccess.copy(alpha = 0.5f)) {
-                                        Text("AI Parsed", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SoftMintText), modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs))
-                                    }
+                                    Text("Rx: $preset", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
                                 }
                             }
                         }
 
-                        VitalSenseTextField(
-                            value = ocrDoctorName,
-                            onValueChange = { ocrDoctorName = it },
-                            label = "Prescribing Doctor / Hospital"
-                        )
+                        if (isProcessingOcr) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(Spacing.md),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = GlumePrimaryPurple)
+                            }
+                        } else if (recognizedOcrText.isNotBlank()) {
+                            VitalSenseCard(
+                                backgroundColor = GlumeSurfaceElevated,
+                                border = BorderStroke(1.dp, GlumeBorder)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Extracted OCR Telemetry",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = GlumePrimaryPurpleLight
+                                        )
+                                        Surface(shape = PillShape, color = GlumeSuccessContainer) {
+                                            Text(
+                                                text = "Parsed ${ocrMedicines.size} items",
+                                                style = MaterialTheme.typography.labelSmall.copy(color = GlumeSuccessText, fontWeight = FontWeight.Bold),
+                                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = recognizedOcrText,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextPrimary
+                                    )
+                                }
+                            }
 
-                        VitalSenseTextField(
-                            value = ocrInstructions,
-                            onValueChange = { ocrInstructions = it },
-                            label = "Instructions / Diet Notes",
-                            singleLine = false,
-                            maxLines = 3
-                        )
+                            VitalSenseTextField(
+                                value = ocrDoctorName,
+                                onValueChange = { ocrDoctorName = it },
+                                label = "Prescribing Doctor / Clinic"
+                            )
 
-                        Button(
-                            onClick = {
-                                val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                                val rx = Prescription(
-                                    id = "rx_ocr_${UUID.randomUUID().toString().take(6)}",
-                                    patientId = patient.id,
-                                    patientName = patient.name,
-                                    doctorId = "dr_ocr",
-                                    doctorName = ocrDoctorName.ifBlank { "PHC Doctor" },
-                                    doctorSpecialty = "General Medicine",
-                                    timestamp = System.currentTimeMillis(),
-                                    dateFormatted = dateFormat.format(Date()),
-                                    medicines = ocrMedicines,
-                                    instructions = ocrInstructions,
-                                    isOcrExtracted = true
-                                )
-                                onSavePrescription(rx)
-                                onDismiss()
-                            },
-                            modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp),
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = LimePrimary, contentColor = TextPrimaryNearBlack)
-                        ) {
-                            Text("Save Digitized Prescription ✓", style = MaterialTheme.typography.labelLarge)
+                            VitalSenseTextField(
+                                value = ocrInstructions,
+                                onValueChange = { ocrInstructions = it },
+                                label = "Instructions / Diet Notes"
+                            )
+
+                            VitalSenseButton(
+                                text = "Save & Attach Prescription",
+                                onClick = {
+                                    val newRx = Prescription(
+                                        id = "rx_${System.currentTimeMillis()}",
+                                        patientId = patient.id,
+                                        patientName = patient.name,
+                                        doctorId = "doc_attending",
+                                        doctorName = ocrDoctorName.ifBlank { "PHC Attending (Digitized)" },
+                                        doctorSpecialty = "General Physician",
+                                        timestamp = System.currentTimeMillis(),
+                                        dateFormatted = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date()),
+                                        medicines = if (ocrMedicines.isNotEmpty()) ocrMedicines else listOf(
+                                            PrescribedMedicine("Paracetamol", "500 mg", "Twice daily", "3 Days", 10)
+                                        ),
+                                        instructions = ocrInstructions,
+                                        isOcrExtracted = true
+                                    )
+                                    onSavePrescription(newRx)
+                                    onDismiss()
+                                },
+                                style = com.vitalsense.app.core.ui.components.ButtonStyle.PRIMARY
+                            )
                         }
                     }
                 }
 
-                // TAB 1: WRITE DOWN (MANUAL PRESCRIPTION ENTRY)
+                // Tab 1: Write Down (Manual Entry)
                 if (selectedTab == 1) {
-                    VitalSenseTextField(
-                        value = manualDoctorName,
-                        onValueChange = { manualDoctorName = it },
-                        label = "Doctor Name / Clinic Name",
-                        placeholder = "e.g. Dr. Rajesh Sharma (District Hospital)"
-                    )
-
-                    // Add Medicine Form Box
-                    VitalSenseCard(backgroundColor = SurfaceWhite) {
-                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                            Text(
-                                text = "➕ Add Prescribed Medicine:",
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = TextPrimaryNearBlack
-                            )
-
-                            VitalSenseTextField(
-                                value = currentMedName,
-                                onValueChange = { currentMedName = it },
-                                label = "Medicine Name",
-                                placeholder = "e.g. Paracetamol / Amoxicillin"
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                            ) {
-                                VitalSenseTextField(
-                                    value = currentDosage,
-                                    onValueChange = { currentDosage = it },
-                                    label = "Dosage",
-                                    modifier = Modifier.weight(1f)
-                                )
-                                VitalSenseTextField(
-                                    value = currentDuration,
-                                    onValueChange = { currentDuration = it },
-                                    label = "Duration",
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-
-                            VitalSenseTextField(
-                                value = currentFrequency,
-                                onValueChange = { currentFrequency = it },
-                                label = "Frequency / Timing"
-                            )
-
-                            Button(
-                                onClick = {
-                                    if (currentMedName.isNotBlank()) {
-                                        manualMedicines.add(
-                                            PrescribedMedicine(
-                                                name = currentMedName.trim(),
-                                                dosage = currentDosage.trim(),
-                                                frequency = currentFrequency.trim(),
-                                                duration = currentDuration.trim(),
-                                                quantity = 10
-                                            )
-                                        )
-                                        currentMedName = ""
-                                        currentDosage = "500 mg"
-                                        currentDuration = "5 Days"
-                                        currentFrequency = "Twice daily (after meals)"
-                                    }
-                                },
-                                enabled = currentMedName.isNotBlank(),
-                                modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 40.dp),
-                                shape = PillShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal, contentColor = LimePrimary)
-                            ) {
-                                Text("+ Add to Medicine List", style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                    }
-
-                    // Added Medicines List
-                    if (manualMedicines.isNotEmpty()) {
-                        Text(
-                            text = "Prescription Medicines (${manualMedicines.size}):",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimaryNearBlack
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        VitalSenseTextField(
+                            value = manualDoctorName,
+                            onValueChange = { manualDoctorName = it },
+                            label = "Doctor Name",
+                            placeholder = "e.g. Dr. A. Sharma"
                         )
 
-                        manualMedicines.forEachIndexed { idx, med ->
-                            VitalSenseCard {
+                        VitalSenseTextField(
+                            value = manualSpecialty,
+                            onValueChange = { manualSpecialty = it },
+                            label = "Specialty / Clinic",
+                            placeholder = "e.g. General Physician / District Hospital"
+                        )
+
+                        Text(
+                            text = "Add Prescribed Medicines",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
+                        )
+
+                        VitalSenseCard(
+                            backgroundColor = GlumeSurfaceElevated,
+                            border = BorderStroke(1.dp, GlumeBorder)
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                VitalSenseTextField(
+                                    value = currentMedName,
+                                    onValueChange = { currentMedName = it },
+                                    label = "Medicine Name",
+                                    placeholder = "e.g. Amoxicillin / Paracetamol"
+                                )
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                                 ) {
-                                    Column {
-                                        Text(text = "${idx + 1}. ${med.name}", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-                                        Text(text = "${med.dosage} · ${med.frequency} · ${med.duration}", style = MaterialTheme.typography.bodySmall, color = TextSecondaryMuted)
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        VitalSenseTextField(
+                                            value = currentDosage,
+                                            onValueChange = { currentDosage = it },
+                                            label = "Dosage",
+                                            placeholder = "500 mg"
+                                        )
                                     }
-                                    IconButton(onClick = { manualMedicines.removeAt(idx) }, modifier = Modifier.size(32.dp)) {
-                                        Text("🗑️", style = MaterialTheme.typography.bodySmall)
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        VitalSenseTextField(
+                                            value = currentDuration,
+                                            onValueChange = { currentDuration = it },
+                                            label = "Duration",
+                                            placeholder = "5 Days"
+                                        )
+                                    }
+                                }
+
+                                VitalSenseTextField(
+                                    value = currentFrequency,
+                                    onValueChange = { currentFrequency = it },
+                                    label = "Frequency",
+                                    placeholder = "Twice daily after meals"
+                                )
+
+                                Button(
+                                    onClick = {
+                                        if (currentMedName.isNotBlank()) {
+                                            manualMedicines.add(
+                                                PrescribedMedicine(
+                                                    name = currentMedName.trim(),
+                                                    dosage = currentDosage.trim(),
+                                                    frequency = currentFrequency.trim(),
+                                                    duration = currentDuration.trim(),
+                                                    quantity = 10
+                                                )
+                                            )
+                                            currentMedName = ""
+                                        }
+                                    },
+                                    shape = PillShape,
+                                    colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
+                                    modifier = Modifier.align(Alignment.End),
+                                    enabled = currentMedName.isNotBlank()
+                                ) {
+                                    Text("+ Add Medicine", color = GlumeTextPrimary, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+
+                        // Added Medicines List
+                        if (manualMedicines.isNotEmpty()) {
+                            Text(
+                                text = "Medicines to Include (${manualMedicines.size})",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
+                            )
+                            manualMedicines.forEachIndexed { index, med ->
+                                Surface(
+                                    shape = PillShape,
+                                    color = GlumeSurfaceElevated,
+                                    border = BorderStroke(1.dp, GlumeBorder),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${med.name} (${med.dosage}) - ${med.frequency} · ${med.duration}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = GlumeTextPrimary
+                                        )
+                                        IconButton(onClick = { manualMedicines.removeAt(index) }, modifier = Modifier.size(24.dp)) {
+                                            Text(text = "✕", color = GlumeAlertCoral, fontSize = 12.sp)
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    VitalSenseTextField(
-                        value = manualInstructions,
-                        onValueChange = { manualInstructions = it },
-                        label = "Instructions / Precautions",
-                        placeholder = "e.g. Drink plenty of water, avoid cold foods",
-                        singleLine = false,
-                        maxLines = 2
-                    )
+                        VitalSenseTextField(
+                            value = manualInstructions,
+                            onValueChange = { manualInstructions = it },
+                            label = "Additional Notes / Precautions",
+                            placeholder = "e.g. Drink plenty of warm water and avoid oily food",
+                            singleLine = false,
+                            maxLines = 2
+                        )
 
-                    Button(
-                        onClick = {
-                            val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                            val rx = Prescription(
-                                id = "rx_manual_${UUID.randomUUID().toString().take(6)}",
-                                patientId = patient.id,
-                                patientName = patient.name,
-                                doctorId = "dr_manual",
-                                doctorName = manualDoctorName.ifBlank { "Attending Physician" },
-                                doctorSpecialty = manualSpecialty,
-                                timestamp = System.currentTimeMillis(),
-                                dateFormatted = dateFormat.format(Date()),
-                                medicines = manualMedicines.toList(),
-                                instructions = manualInstructions.ifBlank { "Take as prescribed." },
-                                isOcrExtracted = false
-                            )
-                            onSavePrescription(rx)
-                            onDismiss()
-                        },
-                        enabled = manualMedicines.isNotEmpty() || currentMedName.isNotBlank(),
-                        modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp),
-                        shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = LimePrimary, contentColor = TextPrimaryNearBlack)
-                    ) {
-                        Text("Save Prescription Record ✓", style = MaterialTheme.typography.labelLarge)
+                        VitalSenseButton(
+                            text = "Save Prescription Record",
+                            onClick = {
+                                val newRx = Prescription(
+                                    id = "rx_${System.currentTimeMillis()}",
+                                    patientId = patient.id,
+                                    patientName = patient.name,
+                                    doctorId = "doc_attending",
+                                    doctorName = manualDoctorName.ifBlank { "Attending Medical Officer" },
+                                    doctorSpecialty = manualSpecialty.ifBlank { "General Physician" },
+                                    timestamp = System.currentTimeMillis(),
+                                    dateFormatted = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date()),
+                                    medicines = manualMedicines.toList(),
+                                    instructions = manualInstructions,
+                                    isOcrExtracted = false
+                                )
+                                onSavePrescription(newRx)
+                                onDismiss()
+                            },
+                            style = com.vitalsense.app.core.ui.components.ButtonStyle.PRIMARY,
+                            enabled = manualMedicines.isNotEmpty()
+                        )
                     }
                 }
             }
