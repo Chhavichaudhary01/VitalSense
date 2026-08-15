@@ -22,14 +22,16 @@ import com.vitalsense.app.core.ui.theme.*
 
 @Composable
 fun LoginScreen(
+    currentLanguage: AppLanguage,
+    onToggleLanguage: () -> Unit,
     onPatientLogin: (Patient) -> Unit,
     onAshaLogin: (AshaWorker) -> Unit,
     onDoctorLogin: (Doctor) -> Unit,
     onAdminLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var selectedRole by remember { mutableStateOf(UserRole.PATIENT) }
-    var selectedLanguage by remember { mutableStateOf("English") }
 
     // Form inputs
     var phoneInput by remember { mutableStateOf("") }
@@ -51,7 +53,7 @@ fun LoginScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
         contentPadding = PaddingValues(top = Spacing.lg, bottom = Spacing.xxl)
     ) {
-        // 1. App Header & Language Switcher
+        // 1. App Header & Reactive Language Switcher
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -77,27 +79,26 @@ fun LoginScreen(
                     }
                     Column {
                         Text(
-                            text = "VitalSense",
+                            text = strings.appName,
                             style = MaterialTheme.typography.displayMedium,
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "SehatSetu — Rural Health Bridge",
+                            text = strings.tagline,
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
                     }
                 }
 
-                // Language toggle pill
+                // Working Language Toggle Pill
                 Surface(
-                    onClick = {
-                        selectedLanguage = if (selectedLanguage == "English") "हिंदी (Hindi)" else "English"
-                    },
+                    onClick = onToggleLanguage,
                     shape = PillShape,
                     color = SurfaceWhite,
-                    border = BorderStroke(1.dp, CardBorderColor),
-                    shadowElevation = 1.dp
+                    border = BorderStroke(1.5.dp, DarkCharcoal),
+                    shadowElevation = 2.dp,
+                    modifier = Modifier.defaultMinSize(minHeight = 40.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
@@ -106,7 +107,7 @@ fun LoginScreen(
                     ) {
                         Text(text = "🌐", style = MaterialTheme.typography.labelSmall)
                         Text(
-                            text = selectedLanguage,
+                            text = currentLanguage.displayName,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimaryNearBlack
                         )
@@ -119,12 +120,12 @@ fun LoginScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Text(
-                    text = "Who is using the app?",
+                    text = strings.whoIsUsing,
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
                 Text(
-                    text = "Select your role to access your dedicated healthcare portal:",
+                    text = strings.selectRoleDesc,
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondaryMuted
                 )
@@ -140,8 +141,8 @@ fun LoginScreen(
                 ) {
                     RoleCard(
                         role = UserRole.PATIENT,
-                        title = "Patient",
-                        desc = "Health card & SOS",
+                        title = strings.rolePatient,
+                        desc = strings.rolePatientDesc,
                         icon = "👤",
                         color = LimePrimary,
                         isSelected = selectedRole == UserRole.PATIENT,
@@ -150,8 +151,8 @@ fun LoginScreen(
                     )
                     RoleCard(
                         role = UserRole.ASHA,
-                        title = "ASHA Worker",
-                        desc = "Caseload & Proxy",
+                        title = strings.roleAsha,
+                        desc = strings.roleAshaDesc,
                         icon = "🤝",
                         color = LavenderSecondary,
                         isSelected = selectedRole == UserRole.ASHA,
@@ -165,8 +166,8 @@ fun LoginScreen(
                 ) {
                     RoleCard(
                         role = UserRole.DOCTOR,
-                        title = "Doctor",
-                        desc = "Review & Prescribe",
+                        title = strings.roleDoctor,
+                        desc = strings.roleDoctorDesc,
                         icon = "🩺",
                         color = BlushPinkTertiary,
                         isSelected = selectedRole == UserRole.DOCTOR,
@@ -175,8 +176,8 @@ fun LoginScreen(
                     )
                     RoleCard(
                         role = UserRole.ADMIN,
-                        title = "Admin",
-                        desc = "Outbreak Trends",
+                        title = strings.roleAdmin,
+                        desc = strings.roleAdminDesc,
                         icon = "🛡️",
                         color = AmberWarning,
                         isSelected = selectedRole == UserRole.ADMIN,
@@ -196,10 +197,10 @@ fun LoginScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
                         text = when (selectedRole) {
-                            UserRole.PATIENT -> "👤 Patient Sign-In"
-                            UserRole.ASHA -> "🤝 ASHA Worker Sign-In"
-                            UserRole.DOCTOR -> "🩺 Doctor Clinical Portal"
-                            UserRole.ADMIN -> "🛡️ District Health Admin"
+                            UserRole.PATIENT -> strings.patientSignIn
+                            UserRole.ASHA -> strings.ashaSignIn
+                            UserRole.DOCTOR -> strings.doctorSignIn
+                            UserRole.ADMIN -> strings.adminSignIn
                         },
                         style = MaterialTheme.typography.titleLarge,
                         color = TextPrimaryNearBlack
@@ -210,24 +211,24 @@ fun LoginScreen(
                             VitalSenseTextField(
                                 value = phoneInput,
                                 onValueChange = { phoneInput = it },
-                                label = "Mobile Number",
+                                label = strings.mobileNumber,
                                 placeholder = "+91 98111 22334"
                             )
                             VitalSenseTextField(
                                 value = ashaIdInput,
                                 onValueChange = { ashaIdInput = it },
-                                label = "ASHA Helper ID (Optional)",
+                                label = strings.ashaHelperIdOptional,
                                 placeholder = "e.g. ASHA-7701"
                             )
                             VitalSenseButton(
-                                text = "Log In as Patient →",
+                                text = strings.logInAsPatient,
                                 onClick = { onPatientLogin(samplePatients.first()) },
                                 style = ButtonStyle.PRIMARY
                             )
 
                             // 1-Tap Demo Logins for Evaluators
                             Text(
-                                text = "⚡ Quick 1-Tap Demo Login:",
+                                text = strings.quickDemoLogin,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondaryMuted
                             )
@@ -259,24 +260,24 @@ fun LoginScreen(
                             VitalSenseTextField(
                                 value = ashaIdInput,
                                 onValueChange = { ashaIdInput = it },
-                                label = "Unique ASHA ID",
+                                label = strings.uniqueAshaId,
                                 placeholder = "e.g. ASHA-7701"
                             )
                             VitalSenseTextField(
                                 value = pinInput,
                                 onValueChange = { pinInput = it },
-                                label = "4-Digit Security PIN",
+                                label = strings.securityPin,
                                 placeholder = "••••",
                                 visualTransformation = PasswordVisualTransformation()
                             )
                             VitalSenseButton(
-                                text = "Log In to ASHA Caseload →",
+                                text = strings.logInAsAsha,
                                 onClick = { onAshaLogin(sampleAshas.first()) },
                                 style = ButtonStyle.DARK
                             )
 
                             Text(
-                                text = "⚡ Quick 1-Tap Demo Login:",
+                                text = strings.quickDemoLogin,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondaryMuted
                             )
@@ -312,24 +313,24 @@ fun LoginScreen(
                             VitalSenseTextField(
                                 value = doctorEmailInput,
                                 onValueChange = { doctorEmailInput = it },
-                                label = "Medical Registration / Email",
+                                label = strings.doctorEmail,
                                 placeholder = "dr.rajesh@vitalsense.org"
                             )
                             VitalSenseTextField(
                                 value = doctorPasswordInput,
                                 onValueChange = { doctorPasswordInput = it },
-                                label = "Password",
+                                label = strings.password,
                                 placeholder = "••••••••",
                                 visualTransformation = PasswordVisualTransformation()
                             )
                             VitalSenseButton(
-                                text = "Log In to Clinical Portal →",
+                                text = strings.logInAsDoctor,
                                 onClick = { onDoctorLogin(sampleDoctors.first()) },
                                 style = ButtonStyle.PRIMARY
                             )
 
                             Text(
-                                text = "⚡ Quick 1-Tap Demo Login:",
+                                text = strings.quickDemoLogin,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondaryMuted
                             )
@@ -365,18 +366,18 @@ fun LoginScreen(
                             VitalSenseTextField(
                                 value = adminPasscodeInput,
                                 onValueChange = { adminPasscodeInput = it },
-                                label = "District Admin Passcode",
+                                label = strings.adminPasscode,
                                 placeholder = "ADMIN-RAMPUR-2026",
                                 visualTransformation = PasswordVisualTransformation()
                             )
                             VitalSenseButton(
-                                text = "Enter District Health Command →",
+                                text = strings.logInAsAdmin,
                                 onClick = onAdminLogin,
                                 style = ButtonStyle.DARK
                             )
 
                             Text(
-                                text = "⚡ Quick 1-Tap Demo Login:",
+                                text = strings.quickDemoLogin,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondaryMuted
                             )
@@ -418,7 +419,7 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "📶 Offline-First: Health Card & Core Tools Work With Zero Internet",
+                    text = strings.offlineBanner,
                     style = MaterialTheme.typography.labelSmall,
                     color = TextSecondaryMuted
                 )

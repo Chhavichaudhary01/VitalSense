@@ -25,9 +25,13 @@ fun TopRoleSwitcherBar(
     onExitProxy: () -> Unit = {},
     isOffline: Boolean = false,
     onToggleOffline: () -> Unit = {},
+    currentLanguage: AppLanguage = AppLanguage.ENGLISH,
+    onToggleLanguage: () -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -73,17 +77,17 @@ fun TopRoleSwitcherBar(
                 }
                 Column {
                     Text(
-                        text = if (activeUserName.isNotBlank()) activeUserName else "VitalSense",
+                        text = if (activeUserName.isNotBlank()) activeUserName else strings.appName,
                         style = MaterialTheme.typography.titleMedium,
                         color = TextPrimaryNearBlack,
                         maxLines = 1
                     )
                     Text(
                         text = when (currentRole) {
-                            UserRole.PATIENT -> "Patient Portal"
-                            UserRole.ASHA -> "ASHA Worker Caseload"
-                            UserRole.DOCTOR -> "Clinical Review Portal"
-                            UserRole.ADMIN -> "District Outbreak Command"
+                            UserRole.PATIENT -> strings.patientPortal
+                            UserRole.ASHA -> strings.ashaPortal
+                            UserRole.DOCTOR -> strings.doctorPortal
+                            UserRole.ADMIN -> strings.adminPortal
                         },
                         style = MaterialTheme.typography.labelSmall,
                         color = TextSecondaryMuted
@@ -91,11 +95,34 @@ fun TopRoleSwitcherBar(
                 }
             }
 
-            // Right Actions: Connectivity Pill & Logout (Enforcing accessible 48dp touch bounds)
+            // Right Actions: Language Toggle, Connectivity Pill & Logout
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
+                // Global Language Switcher Pill
+                Surface(
+                    onClick = onToggleLanguage,
+                    shape = PillShape,
+                    color = SurfaceWhite,
+                    border = BorderStroke(1.dp, CardBorderColor),
+                    shadowElevation = 1.dp,
+                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
+                    ) {
+                        Text(text = "🌐", style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            text = if (currentLanguage == AppLanguage.ENGLISH) "हिंदी" else "EN",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = TextPrimaryNearBlack
+                        )
+                    }
+                }
+
                 // Connectivity Mode Pill
                 Surface(
                     onClick = onToggleOffline,
@@ -105,7 +132,7 @@ fun TopRoleSwitcherBar(
                     modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
@@ -116,7 +143,7 @@ fun TopRoleSwitcherBar(
                                 .background(if (isOffline) Color.Gray else SoftMintText)
                         )
                         Text(
-                            text = if (isOffline) "Offline" else "Online",
+                            text = if (isOffline) strings.offline else strings.online,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = if (isOffline) TextSecondaryMuted else SoftMintText
                         )
@@ -133,13 +160,13 @@ fun TopRoleSwitcherBar(
                     modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
                         Text(text = "🚪", style = MaterialTheme.typography.labelSmall)
                         Text(
-                            text = "Exit",
+                            text = strings.exit,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimaryNearBlack
                         )
@@ -178,7 +205,7 @@ fun TopRoleSwitcherBar(
                             Text(text = "🤝", style = MaterialTheme.typography.titleMedium)
                             Column {
                                 Text(
-                                    text = "Acting as Proxy for Patient:",
+                                    text = strings.actingAsProxy,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = TextPrimaryNearBlack
                                 )
@@ -199,7 +226,7 @@ fun TopRoleSwitcherBar(
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             modifier = Modifier.height(34.dp)
                         ) {
-                            Text(text = "Exit Proxy", style = MaterialTheme.typography.labelSmall)
+                            Text(text = strings.exitProxy, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

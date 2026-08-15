@@ -59,6 +59,8 @@ fun VitalSenseNavGraph(
     val allConditions by repository.getConditionRecords().collectAsStateWithLifecycle(initialValue = emptyList())
     val allAppointments by repository.getAppointments().collectAsStateWithLifecycle(initialValue = emptyList())
 
+    val currentLanguage by appStateHolder.currentLanguage.collectAsStateWithLifecycle()
+
     // The effective patient (either direct or proxy managed by ASHA)
     val effectivePatient = activeProxyPatient ?: activePatient
 
@@ -78,6 +80,8 @@ fun VitalSenseNavGraph(
     ) { loggedIn ->
         if (!loggedIn) {
             LoginScreen(
+                currentLanguage = currentLanguage,
+                onToggleLanguage = { appStateHolder.toggleLanguage() },
                 onPatientLogin = { selectedPatient ->
                     appStateHolder.loginAsPatient(selectedPatient)
                 },
@@ -106,6 +110,10 @@ fun VitalSenseNavGraph(
                         isOffline = isOffline,
                         onToggleOffline = {
                             appStateHolder.toggleOffline()
+                        },
+                        currentLanguage = currentLanguage,
+                        onToggleLanguage = {
+                            appStateHolder.toggleLanguage()
                         },
                         onLogout = {
                             doctorViewModel.clearSelectedCase()

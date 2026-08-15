@@ -1,6 +1,5 @@
 package com.vitalsense.app.core.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -36,17 +35,18 @@ private val VitalSenseColorScheme = lightColorScheme(
     errorContainer = CoralAlert.copy(alpha = 0.15f),
     onErrorContainer = CoralAlert,
 
-    outline = Color(0xFFE5DECE),
-    outlineVariant = Color(0xFFF0EAE0)
+    outline = CardBorderColor,
+    outlineVariant = CardBorderSubtle
 )
 
 @Composable
 fun VitalSenseTheme(
-    darkTheme: Boolean = false, // Rural high-contrast light theme as per design doc §2.2
+    language: AppLanguage = AppLanguage.ENGLISH,
     content: @Composable () -> Unit
 ) {
     CompositionLocalProvider(
-        LocalSpacing provides VitalSenseSpacing()
+        LocalSpacing provides VitalSenseSpacing(),
+        LocalAppStrings provides AppLanguageManager.getStrings(language)
     ) {
         MaterialTheme(
             colorScheme = VitalSenseColorScheme,

@@ -30,6 +30,7 @@ fun PatientHomeScreen(
     onSavePrescription: (Prescription) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var showSosConfirmation by remember { mutableStateOf(false) }
     var sosSentSuccess by remember { mutableStateOf(false) }
     var showPrescriptionUploadDialog by remember { mutableStateOf(false) }
@@ -58,12 +59,12 @@ fun PatientHomeScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Namaste, ${patient.name.split(" ").first()}",
+                            text = "${strings.namaste}, ${patient.name.split(" ").first()}",
                             style = MaterialTheme.typography.displayMedium,
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "Village: ${patient.villageName} · ASHA: ${patient.ashaWorkerName}",
+                            text = "${strings.village}: ${patient.villageName} · ${strings.ashaAssigned}: ${patient.ashaWorkerName}",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
@@ -76,8 +77,8 @@ fun PatientHomeScreen(
         // 2. Inline Dismissible Page Guide
         item {
             InlineHelpBanner(
-                title = "Your Rural Health Portal",
-                message = "Tap any health category below to log symptoms, check prescriptions, or connect with your ASHA helper."
+                title = strings.patientGuideTitle,
+                message = strings.patientGuideMsg
             )
         }
 
@@ -100,7 +101,7 @@ fun PatientHomeScreen(
                         ) {
                             Text(text = "🪪", style = MaterialTheme.typography.titleMedium)
                             Text(
-                                text = "OFFLINE HEALTH CARD",
+                                text = strings.offlineHealthCard,
                                 style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.5.sp),
                                 color = DarkCharcoal
                             )
@@ -110,7 +111,7 @@ fun PatientHomeScreen(
                             color = DarkCharcoal
                         ) {
                             Text(
-                                text = "View Card →",
+                                text = strings.viewCard,
                                 style = MaterialTheme.typography.labelSmall.copy(color = LimePrimary, fontWeight = FontWeight.Bold),
                                 modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                             )
@@ -118,7 +119,7 @@ fun PatientHomeScreen(
                     }
 
                     Text(
-                        text = "Active Condition: ${patient.lastCondition}",
+                        text = "${strings.activeCondition} ${patient.lastCondition}",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = TextPrimaryNearBlack
                     )
@@ -129,12 +130,12 @@ fun PatientHomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Next Checkup: ${patient.nextAppointmentDate ?: "None Scheduled"}",
+                            text = "${strings.nextCheckup} ${patient.nextAppointmentDate ?: strings.noneScheduled}",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextPrimaryNearBlack.copy(alpha = 0.8f)
                         )
                         Text(
-                            text = "Cached Offline ✓",
+                            text = strings.cachedOffline,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SoftMintText)
                         )
                     }
@@ -146,12 +147,12 @@ fun PatientHomeScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Text(
-                    text = "How can we help you today?",
+                    text = strings.howCanWeHelp,
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
                 Text(
-                    text = "Tap a service to report health condition or consult a doctor:",
+                    text = strings.tapServiceDesc,
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondaryMuted
                 )
@@ -198,7 +199,7 @@ fun PatientHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "💊 My Prescriptions (${prescriptions.size})",
+                    text = "${strings.myPrescriptions} (${prescriptions.size})",
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
@@ -210,7 +211,7 @@ fun PatientHomeScreen(
                     contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                     modifier = Modifier.defaultMinSize(minHeight = 34.dp)
                 ) {
-                    Text("➕ Upload Rx", style = MaterialTheme.typography.labelSmall)
+                    Text(strings.uploadRx, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -225,11 +226,11 @@ fun PatientHomeScreen(
                     ) {
                         Column {
                             Text(
-                                text = "No prescriptions recorded yet",
+                                text = strings.noPrescriptions,
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Text(
-                                text = "Scan paper slip or write down medicines",
+                                text = strings.scanOrWrite,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondaryMuted
                             )
@@ -238,7 +239,7 @@ fun PatientHomeScreen(
                             onClick = { showPrescriptionUploadDialog = true },
                             shape = PillShape
                         ) {
-                            Text("Upload", style = MaterialTheme.typography.labelSmall)
+                            Text(strings.uploadRx, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -307,7 +308,7 @@ fun PatientHomeScreen(
         if (adminAdvisories.isNotEmpty()) {
             item {
                 Text(
-                    text = "📢 District Health Advisories",
+                    text = strings.districtAdvisories,
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
@@ -331,7 +332,7 @@ fun PatientHomeScreen(
                             if (advisory.isUrgent) {
                                 Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.25f)) {
                                     Text(
-                                        text = "URGENT",
+                                        text = strings.urgent,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlertDark),
                                         modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                                     )
@@ -344,7 +345,7 @@ fun PatientHomeScreen(
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "Issued by: ${advisory.senderName} (${advisory.senderRole.name})",
+                            text = "${strings.issuedBy} ${advisory.senderName} (${advisory.senderRole.name})",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
@@ -385,14 +386,14 @@ fun PatientHomeScreen(
                         }
                         Column {
                             Text(
-                                text = "EMERGENCY SOS",
+                                text = strings.emergencySos,
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = SurfaceWhite
                                 )
                             )
                             Text(
-                                text = "Alert ASHA & Doctor (Works via SMS)",
+                                text = strings.emergencySosDesc,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = SurfaceWhite.copy(alpha = 0.95f)
                                 )
@@ -404,7 +405,7 @@ fun PatientHomeScreen(
                         color = SurfaceWhite
                     ) {
                         Text(
-                            text = "TRIGGER",
+                            text = strings.trigger,
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = CoralAlertDark
@@ -423,7 +424,7 @@ fun PatientHomeScreen(
     if (showSosConfirmation) {
         VitalSenseDialog(
             onDismissRequest = { showSosConfirmation = false },
-            title = "Confirm Emergency SOS",
+            title = strings.confirmSosTitle,
             icon = { Text("🚨", style = MaterialTheme.typography.titleLarge) },
             confirmButton = {
                 Button(
@@ -436,7 +437,7 @@ fun PatientHomeScreen(
                     shape = PillShape,
                     modifier = Modifier.defaultMinSize(minHeight = 44.dp)
                 ) {
-                    Text("Yes, Send Emergency Alert", color = SurfaceWhite, style = MaterialTheme.typography.labelLarge)
+                    Text(strings.yesSendAlert, color = SurfaceWhite, style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
@@ -445,17 +446,17 @@ fun PatientHomeScreen(
                     shape = PillShape,
                     modifier = Modifier.defaultMinSize(minHeight = 44.dp)
                 ) {
-                    Text("Cancel", style = MaterialTheme.typography.labelLarge)
+                    Text(strings.cancel, style = MaterialTheme.typography.labelLarge)
                 }
             }
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(
-                    text = "This will immediately send an Emergency SOS alert with your location to:",
+                    text = strings.confirmSosMsg,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "• ASHA Helper: ${patient.ashaWorkerName}\n• Available PHC Doctors\n• Emergency SMS to ${patient.emergencyContact}",
+                    text = "• ${strings.ashaAssigned}: ${patient.ashaWorkerName}\n• Available Doctors\n• Emergency SMS: ${patient.emergencyContact}",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = TextPrimaryNearBlack
                 )
@@ -467,7 +468,7 @@ fun PatientHomeScreen(
     if (sosSentSuccess) {
         VitalSenseDialog(
             onDismissRequest = { sosSentSuccess = false },
-            title = "Emergency SOS Dispatched",
+            title = strings.sosDispatchedTitle,
             icon = { Text("🚨", style = MaterialTheme.typography.titleLarge) },
             confirmButton = {
                 Button(
@@ -476,20 +477,20 @@ fun PatientHomeScreen(
                     shape = PillShape,
                     modifier = Modifier.defaultMinSize(minHeight = 44.dp)
                 ) {
-                    Text("Done", color = LimePrimary, style = MaterialTheme.typography.labelLarge)
+                    Text(strings.done, color = LimePrimary, style = MaterialTheme.typography.labelLarge)
                 }
             }
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 Text(
-                    text = "Emergency broadcast sent with your location to ${patient.ashaWorkerName} and health monitoring.",
+                    text = strings.sosDispatchedMsg,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 HorizontalDivider(color = DividerSubtle)
 
                 Text(
-                    text = "Zero Internet Fallbacks:",
+                    text = strings.zeroInternetFallbacks,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                     color = TextPrimaryNearBlack
                 )
@@ -509,7 +510,7 @@ fun PatientHomeScreen(
                         modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
                         shape = PillShape
                     ) {
-                        Text("💬 SMS ASHA", style = MaterialTheme.typography.labelSmall)
+                        Text(strings.smsAsha, style = MaterialTheme.typography.labelSmall)
                     }
 
                     Button(
@@ -523,7 +524,7 @@ fun PatientHomeScreen(
                         shape = PillShape,
                         colors = ButtonDefaults.buttonColors(containerColor = CoralAlert)
                     ) {
-                        Text("📞 Call 108", color = SurfaceWhite, style = MaterialTheme.typography.labelSmall)
+                        Text(strings.call108, color = SurfaceWhite, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

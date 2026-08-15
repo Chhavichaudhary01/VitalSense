@@ -30,6 +30,7 @@ fun AshaHomeScreen(
     onSavePrescription: (Prescription) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var ocrTargetPatient by remember { mutableStateOf<Patient?>(null) }
 
     LazyColumn(
@@ -44,12 +45,12 @@ fun AshaHomeScreen(
         item {
             Column {
                 Text(
-                    text = "Namaste, ${asha.name}",
+                    text = "${strings.namaste}, ${asha.name}",
                     style = MaterialTheme.typography.displayMedium,
                     color = TextPrimaryNearBlack
                 )
                 Text(
-                    text = "Assigned Villages: ${asha.assignedVillages.joinToString(", ")}",
+                    text = "${strings.assignedVillages} ${asha.assignedVillages.joinToString(", ")}",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondaryMuted
                 )
@@ -69,7 +70,7 @@ fun AshaHomeScreen(
                 ) {
                     Column {
                         Text(
-                            text = "UNIQUE ASHA HELPER ID",
+                            text = strings.uniqueAshaCardTitle,
                             style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.5.sp),
                             color = TextSecondaryMuted
                         )
@@ -79,7 +80,7 @@ fun AshaHomeScreen(
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "Share this ID with patients to link you as helper",
+                            text = strings.shareAshaIdDesc,
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
@@ -105,13 +106,13 @@ fun AshaHomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 VitalSenseButton(
-                    text = "+ New Patient",
+                    text = strings.newPatient,
                     onClick = onRegisterPatientClick,
                     modifier = Modifier.weight(1f),
                     style = ButtonStyle.DARK
                 )
                 VitalSenseButton(
-                    text = "📢 Send Notice",
+                    text = strings.sendNotice,
                     onClick = onSendNoticeClick,
                     modifier = Modifier.weight(1f),
                     style = ButtonStyle.SECONDARY
@@ -127,14 +128,14 @@ fun AshaHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Village Caseload (${patients.size})",
+                    text = "${strings.villageCaseload} (${patients.size})",
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
                 if (asha.alertCount > 0) {
                     Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.25f)) {
                         Text(
-                            text = "${asha.alertCount} High Risk",
+                            text = "${asha.alertCount} ${strings.highRisk}",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = CoralAlertDark),
                             modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                         )
@@ -151,7 +152,7 @@ fun AshaHomeScreen(
                         modifier = Modifier.padding(Spacing.sm),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "No patients registered yet in this village.", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = strings.noPatientsYet, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
@@ -187,14 +188,14 @@ fun AshaHomeScreen(
                         )
 
                         Text(
-                            text = "Last Visit: ${patient.lastVisitDate} · Next: ${patient.nextAppointmentDate ?: "None Scheduled"}",
+                            text = "Last Visit: ${patient.lastVisitDate} · Next: ${patient.nextAppointmentDate ?: strings.noneScheduled}",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
 
                         HorizontalDivider(color = DividerSubtle, thickness = 1.dp)
 
-                        // Action Buttons: Proxy Mode & Scan Rx (Accessible heights)
+                        // Action Buttons: Proxy Mode & Scan Rx
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -205,7 +206,7 @@ fun AshaHomeScreen(
                                 shape = PillShape,
                                 border = BorderStroke(1.dp, CardBorderColor)
                             ) {
-                                Text(text = "📷 Scan Rx", style = MaterialTheme.typography.labelSmall)
+                                Text(text = strings.scanRx, style = MaterialTheme.typography.labelSmall)
                             }
 
                             Button(
@@ -217,7 +218,7 @@ fun AshaHomeScreen(
                                     contentColor = LimePrimary
                                 )
                             ) {
-                                Text(text = "🤝 Proxy Mode", style = MaterialTheme.typography.labelSmall)
+                                Text(text = strings.proxyMode, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -232,7 +233,7 @@ fun AshaHomeScreen(
         if (emergencySosAlerts.isNotEmpty()) {
             item {
                 Text(
-                    text = "🚨 Emergency Patient SOS Alerts (${emergencySosAlerts.size})",
+                    text = "${strings.emergencyPatientAlerts} (${emergencySosAlerts.size})",
                     style = MaterialTheme.typography.headlineMedium,
                     color = CoralAlertDark
                 )
@@ -256,7 +257,7 @@ fun AshaHomeScreen(
                             )
                             Surface(shape = PillShape, color = CoralAlert) {
                                 Text(
-                                    text = "HIGH PRIORITY",
+                                    text = strings.highPriority,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SurfaceWhite),
                                     modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                                 )
@@ -277,11 +278,11 @@ fun AshaHomeScreen(
             }
         }
 
-        // 7. District Health Advisories (Admin Broadcasts)
+        // 7. District Health Advisories
         if (adminAdvisories.isNotEmpty()) {
             item {
                 Text(
-                    text = "📢 District Health Advisories",
+                    text = strings.districtAdvisories,
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
@@ -303,7 +304,7 @@ fun AshaHomeScreen(
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "Issued by: ${notice.senderName} (${notice.senderRole.name})",
+                            text = "${strings.issuedBy} ${notice.senderName} (${notice.senderRole.name})",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
