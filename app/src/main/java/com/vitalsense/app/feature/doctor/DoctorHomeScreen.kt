@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.feature.doctor.components.ScheduleAppointmentDialog
 
 @Composable
 fun DoctorHomeScreen(
@@ -24,11 +25,15 @@ fun DoctorHomeScreen(
     cases: List<ConditionRecord>,
     appointments: List<Appointment>,
     dispensaryStock: List<DispensaryItem>,
+    patients: List<Patient> = emptyList(),
     onSelectCase: (ConditionRecord) -> Unit,
     onAcceptAppointment: (String) -> Unit = {},
     onDeclineAppointment: (String) -> Unit = {},
+    onProposeAppointment: (patientId: String, patientName: String, date: String, timeSlot: String) -> Unit = { _, _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
+    var showScheduleDialog by remember { mutableStateOf(false) }
+
     val pendingCases = cases.filter { it.status == CaseStatus.PENDING_REVIEW || it.status == CaseStatus.IN_PROGRESS }
     val severeCount = cases.count { it.severity == SeverityLevel.SEVERE || it.severity == SeverityLevel.HIGH }
     val lowStockCount = dispensaryStock.count { it.isLowStock }
@@ -239,14 +244,31 @@ fun DoctorHomeScreen(
 
         // 4. Section: Upcoming Appointments (§2.4)
         item {
-            Text(
-                text = "Scheduled Appointments (${appointments.size})",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = TextPrimaryNearBlack
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Scheduled Appointments (${appointments.size})",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = TextPrimaryNearBlack
+                )
+
+                // Prominent Propose / Schedule Appointment Button
+                Button(
+                    onClick = { showScheduleDialog = true },
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = LavenderSecondary, contentColor = TextPrimaryNearBlack),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(30.dp)
+                ) {
+                    Text(text = "➕ Propose Appt", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
 
         if (appointments.isEmpty()) {
@@ -389,5 +411,15 @@ fun DoctorHomeScreen(
                 }
             }
         }
+    }
+
+    if (showScheduleDialog) {
+        ScheduleAppointmentDialog(
+            patients = patients,
+            onDismiss = { showScheduleDialog = false },
+            onPropose = { patientId, patientName, date, timeSlot ->
+                onProposeAppointment(patientId, patientName, date, timeSlot)
+            }
+        )
     }
 }

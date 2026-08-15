@@ -1,5 +1,6 @@
 package com.vitalsense.app.feature.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -118,6 +119,11 @@ fun VitalSenseNavGraph(
                             var showMentalWellness by remember { mutableStateOf(false) }
 
                             if (showMentalWellness) {
+                                // Intercept system back button to return to Patient Home
+                                BackHandler {
+                                    showMentalWellness = false
+                                }
+
                                 com.vitalsense.app.feature.patient.mentalhealth.MentalWellnessScreen(
                                     patient = effectivePatient,
                                     onLogMood = { notes, severity ->
@@ -131,6 +137,19 @@ fun VitalSenseNavGraph(
                                     onBack = { showMentalWellness = false }
                                 )
                             } else {
+                                // If at Patient root and in Proxy mode, back button returns to ASHA Caseload
+                                if (activeProxyPatient != null) {
+                                    BackHandler {
+                                        appStateHolder.clearProxy()
+                                        appStateHolder.switchRole(UserRole.ASHA)
+                                    }
+                                } else {
+                                    // If at Patient root, back button returns to Login Screen
+                                    BackHandler {
+                                        appStateHolder.logout()
+                                    }
+                                }
+
                                 PatientHomeScreen(
                                     patient = effectivePatient,
                                     onCategoryClick = { category ->
@@ -151,6 +170,11 @@ fun VitalSenseNavGraph(
                         }
 
                         UserRole.ASHA -> {
+                            // If at ASHA root, back button returns to Login Screen
+                            BackHandler {
+                                appStateHolder.logout()
+                            }
+
                             AshaHomeScreen(
                                 asha = activeAsha,
                                 patients = patients.filter { it.ashaWorkerId == activeAsha.id },
@@ -172,6 +196,11 @@ fun VitalSenseNavGraph(
                         UserRole.DOCTOR -> {
                             val activeCase = selectedDoctorCase
                             if (activeCase != null) {
+                                // Intercept system back button to return to Doctor Home Case Queue
+                                BackHandler {
+                                    doctorViewModel.clearSelectedCase()
+                                }
+
                                 CaseDetailScreen(
                                     record = activeCase,
                                     patient = patientProfile,
@@ -212,11 +241,17 @@ fun VitalSenseNavGraph(
                                     }
                                 )
                             } else {
+                                // If at Doctor root, back button returns to Login Screen
+                                BackHandler {
+                                    appStateHolder.logout()
+                                }
+
                                 DoctorHomeScreen(
                                     doctor = activeDoctor,
                                     cases = doctorCases,
                                     appointments = doctorAppointments,
                                     dispensaryStock = doctorDispensaryStock,
+                                    patients = patients,
                                     onSelectCase = { record ->
                                         doctorViewModel.selectCase(record)
                                     },
@@ -225,12 +260,25 @@ fun VitalSenseNavGraph(
                                     },
                                     onDeclineAppointment = { apptId ->
                                         doctorViewModel.declineAppointment(apptId)
+                                    },
+                                    onProposeAppointment = { patId, patName, date, slot ->
+                                        doctorViewModel.proposeAppointment(
+                                            patientId = patId,
+                                            patientName = patName,
+                                            dateFormatted = date,
+                                            timeSlot = slot
+                                        )
                                     }
                                 )
                             }
                         }
 
                         UserRole.ADMIN -> {
+                            // If at Admin root, back button returns to Login Screen
+                            BackHandler {
+                                appStateHolder.logout()
+                            }
+
                             AdminHomeScreen(
                                 villages = villages,
                                 notices = notices,
