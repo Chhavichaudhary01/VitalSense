@@ -1,55 +1,89 @@
 package com.vitalsense.app.core.ui.theme
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.graphics.Color
 
-private val VitalSenseColorScheme = lightColorScheme(
-    primary = LimePrimary,
-    onPrimary = TextPrimaryNearBlack,
-    primaryContainer = LimePrimary.copy(alpha = 0.3f),
-    onPrimaryContainer = TextPrimaryNearBlack,
+// --- Glume Dark Color Scheme (Default for Doctor, ASHA, Admin) ---
+private val GlumeDarkColorScheme = darkColorScheme(
+    primary = GlumePrimaryPurple,
+    onPrimary = GlumeTextPrimary,
+    primaryContainer = GlumePrimaryPurpleContainer,
+    onPrimaryContainer = GlumePrimaryPurpleLight,
 
-    secondary = LavenderSecondary,
-    onSecondary = TextPrimaryNearBlack,
-    secondaryContainer = LavenderSecondary.copy(alpha = 0.3f),
-    onSecondaryContainer = TextPrimaryNearBlack,
+    secondary = GlumeSurfaceElevated,
+    onSecondary = GlumeTextPrimary,
+    secondaryContainer = GlumeSurfaceSubtle,
+    onSecondaryContainer = GlumeTextSecondary,
 
-    tertiary = BlushPinkTertiary,
-    onTertiary = TextPrimaryNearBlack,
-    tertiaryContainer = BlushPinkTertiary.copy(alpha = 0.3f),
-    onTertiaryContainer = TextPrimaryNearBlack,
+    tertiary = GlumeSuccessMint,
+    onTertiary = GlumeTextPrimary,
+    tertiaryContainer = GlumeSuccessContainer,
+    onTertiaryContainer = GlumeSuccessText,
 
-    background = WarmCreamBackground,
-    onBackground = TextPrimaryNearBlack,
+    background = GlumeBackground,
+    onBackground = GlumeTextPrimary,
 
-    surface = SurfaceWhite,
-    onSurface = TextPrimaryNearBlack,
-    surfaceVariant = SurfaceCream,
-    onSurfaceVariant = TextSecondaryMuted,
+    surface = GlumeSurfaceCard,
+    onSurface = GlumeTextPrimary,
+    surfaceVariant = GlumeSurfaceElevated,
+    onSurfaceVariant = GlumeTextSecondary,
 
-    error = CoralAlert,
-    onError = SurfaceWhite,
-    errorContainer = CoralAlert.copy(alpha = 0.15f),
-    onErrorContainer = CoralAlert,
+    error = GlumeAlertCoral,
+    onError = GlumeTextPrimary,
+    errorContainer = GlumeAlertContainer,
+    onErrorContainer = GlumeAlertText,
 
-    outline = CardBorderColor,
-    outlineVariant = CardBorderSubtle
+    outline = GlumeBorder,
+    outlineVariant = GlumeBorderSubtle
+)
+
+// --- Patient High-Contrast Light Color Scheme (Optional Sunlight Mode) ---
+private val PatientLightColorScheme = lightColorScheme(
+    primary = GlumePrimaryPurple,
+    onPrimary = GlumeTextPrimary,
+    primaryContainer = GlumePrimaryPurpleContainer,
+    onPrimaryContainer = GlumePrimaryPurple,
+
+    secondary = PatientLightCardElevated,
+    onSecondary = PatientLightTextPrimary,
+    secondaryContainer = PatientLightCardElevated,
+    onSecondaryContainer = PatientLightTextSecondary,
+
+    tertiary = GlumeSuccessMint,
+    onTertiary = PatientLightTextPrimary,
+
+    background = PatientLightBackground,
+    onBackground = PatientLightTextPrimary,
+
+    surface = PatientLightCard,
+    onSurface = PatientLightTextPrimary,
+    surfaceVariant = PatientLightCardElevated,
+    onSurfaceVariant = PatientLightTextSecondary,
+
+    error = GlumeAlertCoral,
+    onError = GlumeTextPrimary,
+
+    outline = PatientLightBorder,
+    outlineVariant = PatientLightBorder
 )
 
 @Composable
 fun VitalSenseTheme(
     language: AppLanguage = AppLanguage.ENGLISH,
+    usePatientLightMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val colorScheme = if (usePatientLightMode) PatientLightColorScheme else GlumeDarkColorScheme
+
     CompositionLocalProvider(
         LocalSpacing provides VitalSenseSpacing(),
         LocalAppStrings provides AppLanguageManager.getStrings(language)
     ) {
         MaterialTheme(
-            colorScheme = VitalSenseColorScheme,
+            colorScheme = colorScheme,
             typography = VitalSenseTypography,
             shapes = VitalSenseShapes,
             content = content

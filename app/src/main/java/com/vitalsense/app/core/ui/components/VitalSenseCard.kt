@@ -10,17 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.vitalsense.app.core.ui.theme.CardBorderColor
-import com.vitalsense.app.core.ui.theme.CardShape
-import com.vitalsense.app.core.ui.theme.Spacing
-import com.vitalsense.app.core.ui.theme.SurfaceWhite
+import com.vitalsense.app.core.ui.theme.*
 
 @Composable
 fun VitalSenseCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = SurfaceWhite,
-    elevation: Dp = 1.dp,
-    border: BorderStroke? = BorderStroke(1.dp, CardBorderColor),
+    backgroundColor: Color = GlumeSurfaceCard,
+    elevation: Dp = 0.dp,
+    border: BorderStroke? = BorderStroke(1.dp, GlumeBorder),
     contentPadding: Dp = Spacing.md,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit

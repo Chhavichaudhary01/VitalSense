@@ -7,16 +7,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vitalsense.app.core.ui.theme.*
 
 enum class ButtonStyle {
-    PRIMARY,   // Lime background with near-black text
-    DARK,      // Charcoal pill with Lime text
-    SECONDARY, // Lavender background
-    DANGER,    // Coral / SOS
+    PRIMARY,   // Glume Single Primary Purple (#7C5CFC) with white text
+    DARK,      // Glume Elevated Slate (#22222F)
+    SECONDARY, // Glume Surface Subtle (#2C2C3C)
+    DANGER,    // Glume Alert Coral (#FF5C5C)
     OUTLINED   // Transparent with subtle border
 }
 
@@ -31,23 +30,23 @@ fun VitalSenseButton(
     enabled: Boolean = true
 ) {
     val containerColor = when (style) {
-        ButtonStyle.PRIMARY -> LimePrimary
-        ButtonStyle.DARK -> DarkCharcoal
-        ButtonStyle.SECONDARY -> LavenderSecondary
-        ButtonStyle.DANGER -> CoralAlert
+        ButtonStyle.PRIMARY -> GlumePrimaryPurple
+        ButtonStyle.DARK -> GlumeSurfaceElevated
+        ButtonStyle.SECONDARY -> GlumeSurfaceSubtle
+        ButtonStyle.DANGER -> GlumeAlertCoral
         ButtonStyle.OUTLINED -> Color.Transparent
     }
 
     val contentColor = when (style) {
-        ButtonStyle.PRIMARY -> TextPrimaryNearBlack
-        ButtonStyle.DARK -> LimePrimary
-        ButtonStyle.SECONDARY -> TextPrimaryNearBlack
-        ButtonStyle.DANGER -> SurfaceWhite
-        ButtonStyle.OUTLINED -> TextPrimaryNearBlack
+        ButtonStyle.PRIMARY -> GlumeTextPrimary
+        ButtonStyle.DARK -> GlumeTextPrimary
+        ButtonStyle.SECONDARY -> GlumeTextPrimary
+        ButtonStyle.DANGER -> GlumeTextPrimary
+        ButtonStyle.OUTLINED -> GlumeTextPrimary
     }
 
     val border = if (style == ButtonStyle.OUTLINED) {
-        BorderStroke(1.5.dp, DarkCharcoal)
+        BorderStroke(1.dp, GlumeBorder)
     } else null
 
     Button(
@@ -60,8 +59,8 @@ fun VitalSenseButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
-            disabledContainerColor = Color(0xFFE4DFD5),
-            disabledContentColor = TextSecondaryMuted
+            disabledContainerColor = GlumeSurfaceElevated.copy(alpha = 0.5f),
+            disabledContentColor = GlumeTextTertiary
         ),
         border = border,
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
