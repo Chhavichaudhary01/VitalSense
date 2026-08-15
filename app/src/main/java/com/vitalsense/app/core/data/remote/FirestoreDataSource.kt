@@ -57,6 +57,16 @@ class FirestoreDataSource @Inject constructor(
                 "notes" to record.notes,
                 "timestamp" to record.timestamp,
                 "ashaProxyLogged" to record.ashaProxyLogged,
+                "status" to record.status.name,
+                "assignedDoctorId" to (record.assignedDoctorId ?: ""),
+                "assignedDoctorName" to (record.assignedDoctorName ?: ""),
+                "doctorResponse" to (record.doctorResponse ?: ""),
+                "doctorResponseTimestamp" to (record.doctorResponseTimestamp ?: 0L),
+                "doctorResponseDoctorName" to (record.doctorResponseDoctorName ?: ""),
+                "privateDoctorNotes" to (record.privateDoctorNotes ?: ""),
+                "referredByDoctorId" to (record.referredByDoctorId ?: ""),
+                "referredByDoctorName" to (record.referredByDoctorName ?: ""),
+                "referralNotes" to (record.referralNotes ?: ""),
                 "isPendingSync" to false
             )
             conditionsCollection.document(record.id).set(data).await()
@@ -71,6 +81,7 @@ class FirestoreDataSource @Inject constructor(
         try {
             val data = hashMapOf(
                 "id" to prescription.id,
+                "caseId" to (prescription.caseId ?: ""),
                 "patientId" to prescription.patientId,
                 "patientName" to prescription.patientName,
                 "doctorId" to prescription.doctorId,
@@ -110,7 +121,8 @@ class FirestoreDataSource @Inject constructor(
                 "dateFormatted" to appointment.dateFormatted,
                 "timeSlot" to appointment.timeSlot,
                 "status" to appointment.status,
-                "proposedBy" to appointment.proposedBy.name
+                "proposedBy" to appointment.proposedBy.name,
+                "outcomeNotes" to (appointment.outcomeNotes ?: "")
             )
             appointmentsCollection.document(appointment.id).set(data).await()
             Log.d(TAG, "✅ Successfully uploaded appointment: ${appointment.id}")
@@ -180,6 +192,8 @@ class FirestoreDataSource @Inject constructor(
             if (snapshot != null) {
                 val list = snapshot.documents.mapNotNull { doc ->
                     try {
+                        val statusStr = doc.getString("status") ?: CaseStatus.PENDING_REVIEW.name
+                        val status = runCatching { CaseStatus.valueOf(statusStr) }.getOrDefault(CaseStatus.PENDING_REVIEW)
                         ConditionRecord(
                             id = doc.getString("id") ?: doc.id,
                             patientId = doc.getString("patientId") ?: "",
@@ -192,6 +206,16 @@ class FirestoreDataSource @Inject constructor(
                             notes = doc.getString("notes") ?: "",
                             timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis(),
                             ashaProxyLogged = doc.getBoolean("ashaProxyLogged") ?: false,
+                            status = status,
+                            assignedDoctorId = doc.getString("assignedDoctorId")?.takeIf { it.isNotBlank() },
+                            assignedDoctorName = doc.getString("assignedDoctorName")?.takeIf { it.isNotBlank() },
+                            doctorResponse = doc.getString("doctorResponse")?.takeIf { it.isNotBlank() },
+                            doctorResponseTimestamp = doc.getLong("doctorResponseTimestamp")?.takeIf { it > 0 },
+                            doctorResponseDoctorName = doc.getString("doctorResponseDoctorName")?.takeIf { it.isNotBlank() },
+                            privateDoctorNotes = doc.getString("privateDoctorNotes")?.takeIf { it.isNotBlank() },
+                            referredByDoctorId = doc.getString("referredByDoctorId")?.takeIf { it.isNotBlank() },
+                            referredByDoctorName = doc.getString("referredByDoctorName")?.takeIf { it.isNotBlank() },
+                            referralNotes = doc.getString("referralNotes")?.takeIf { it.isNotBlank() },
                             isPendingSync = false
                         )
                     } catch (e: Exception) {

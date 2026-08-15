@@ -29,11 +29,15 @@ interface VitalSenseRepository {
     // --- Condition Records ---
     fun getConditionRecords(): Flow<List<ConditionRecord>>
     fun getConditionRecordsForPatient(patientId: String): Flow<List<ConditionRecord>>
+    fun getCasesForDoctor(doctorId: String, specialty: DoctorSpecialty): Flow<List<ConditionRecord>>
     suspend fun logCondition(record: ConditionRecord)
+    suspend fun respondToCase(caseId: String, doctorId: String, doctorName: String, responseText: String, privateNotes: String?, newStatus: CaseStatus = CaseStatus.RESPONDED)
+    suspend fun referCaseToSpecialist(caseId: String, referringDoctor: Doctor, targetSpecialty: DoctorSpecialty, referralNotes: String)
 
     // --- Prescriptions ---
     fun getPrescriptions(): Flow<List<Prescription>>
     fun getPrescriptionsForPatient(patientId: String): Flow<List<Prescription>>
+    fun getPrescriptionsByCase(caseId: String): Flow<List<Prescription>>
     suspend fun savePrescription(prescription: Prescription)
 
     // --- Appointments ---
@@ -41,6 +45,7 @@ interface VitalSenseRepository {
     fun getAppointmentsForPatient(patientId: String): Flow<List<Appointment>>
     fun getAppointmentsForDoctor(doctorId: String): Flow<List<Appointment>>
     suspend fun scheduleAppointment(appointment: Appointment)
+    suspend fun updateAppointmentStatus(appointmentId: String, newStatus: String, outcomeNotes: String? = null)
 
     // --- Broadcast Notices ---
     fun getNotices(): Flow<List<BroadcastNotice>>

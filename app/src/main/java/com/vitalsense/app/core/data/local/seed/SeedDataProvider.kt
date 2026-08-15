@@ -389,15 +389,30 @@ object SeedDataProvider {
     }
 
     fun getConditionEntities(): List<ConditionRecordEntity> = initialConditionRecords.map {
-        ConditionRecordEntity(it.id, it.patientId, it.patientName, it.villageId, it.villageName, it.category, it.severity, it.requestedDoctorType, it.notes, it.timestamp, it.ashaProxyLogged, it.isPendingSync)
+        ConditionRecordEntity(
+            it.id, it.patientId, it.patientName, it.villageId, it.villageName,
+            it.category, it.severity, it.requestedDoctorType, it.notes, it.timestamp,
+            it.ashaProxyLogged, it.status, it.assignedDoctorId, it.assignedDoctorName,
+            it.doctorResponse, it.doctorResponseTimestamp, it.doctorResponseDoctorName,
+            it.privateDoctorNotes, it.referredByDoctorId, it.referredByDoctorName,
+            it.referralNotes, it.isPendingSync
+        )
     }
 
     fun getPrescriptionEntities(): List<PrescriptionEntity> = initialPrescriptions.map {
-        PrescriptionEntity(it.id, it.patientId, it.patientName, it.doctorId, it.doctorName, it.doctorSpecialty, it.timestamp, it.dateFormatted, gson.toJson(it.medicines), it.instructions, it.isOcrExtracted)
+        PrescriptionEntity(
+            it.id, it.caseId, it.patientId, it.patientName, it.doctorId, it.doctorName,
+            it.doctorSpecialty, it.timestamp, it.dateFormatted, gson.toJson(it.medicines),
+            it.instructions, it.isOcrExtracted
+        )
     }
 
     fun getAppointmentEntities(): List<AppointmentEntity> = initialAppointments.map {
-        AppointmentEntity(it.id, it.patientId, it.patientName, it.doctorId, it.doctorName, it.doctorSpecialty, it.dateFormatted, it.timeSlot, it.status, it.proposedBy)
+        AppointmentEntity(
+            it.id, it.patientId, it.patientName, it.doctorId, it.doctorName,
+            it.doctorSpecialty, it.dateFormatted, it.timeSlot, it.status, it.proposedBy,
+            it.outcomeNotes
+        )
     }
 
     fun getDispensaryEntities(): List<DispensaryEntity> = initialDispensaryItems.map {
