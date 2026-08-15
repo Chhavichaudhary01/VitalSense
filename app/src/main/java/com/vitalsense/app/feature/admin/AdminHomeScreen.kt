@@ -20,6 +20,7 @@ import com.vitalsense.app.core.ui.theme.*
 fun AdminHomeScreen(
     villages: List<Village>,
     notices: List<BroadcastNotice>,
+    dispensaryStock: List<DispensaryItem> = emptyList(),
     onSendBroadcast: (title: String, message: String, village: String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -27,6 +28,7 @@ fun AdminHomeScreen(
     var broadcastTitle by remember { mutableStateOf("") }
     var broadcastMessage by remember { mutableStateOf("") }
     var selectedVillageName by remember { mutableStateOf("All Villages") }
+    var isFormError by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -180,6 +182,59 @@ fun AdminHomeScreen(
             )
         }
 
+        // 4.5 District Dispensary Inventory (PRD Mock Requirement)
+        item {
+            Text(
+                text = "🏥 District Dispensary Inventory",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                color = TextPrimaryNearBlack
+            )
+        }
+
+        items(dispensaryStock) { item ->
+            val isLowStock = item.availableQuantity <= item.reorderThreshold
+            VitalSenseCard(
+                backgroundColor = if (isLowStock) CoralAlert.copy(alpha = 0.1f) else SurfaceWhite
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = item.medicineName,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = "Category: ${item.category}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondaryMuted
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "${item.availableQuantity} ${item.unit}",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = if (isLowStock) CoralAlert else TextPrimaryNearBlack
+                            )
+                        )
+                        if (isLowStock) {
+                            Text(
+                                text = "LOW STOCK",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = CoralAlert
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // 5. Active Directives Sent
         item {
             Text(
@@ -215,35 +270,47 @@ fun AdminHomeScreen(
 
     if (showBroadcastDialog) {
         AlertDialog(
-            onDismissRequest = { showBroadcastDialog = false },
+            onDismissRequest = { showBroadcastDialog = false; isFormError = false },
             title = { Text("📢 Send Outbreak Directive", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         value = broadcastTitle,
-                        onValueChange = { broadcastTitle = it },
+                        onValueChange = { broadcastTitle = it; isFormError = false },
                         label = { Text("Directive Title") },
                         placeholder = { Text("e.g. ⚠️ Dengue Outbreak Alert") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = isFormError && broadcastTitle.isBlank()
                     )
                     OutlinedTextField(
                         value = broadcastMessage,
-                        onValueChange = { broadcastMessage = it },
+                        onValueChange = { broadcastMessage = it; isFormError = false },
                         label = { Text("Directive Details / Action Instructions") },
                         placeholder = { Text("Conduct door-to-door testing...") },
                         modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
+                        minLines = 3,
+                        isError = isFormError && broadcastMessage.isBlank()
                     )
+                    if (isFormError) {
+                        Text(
+                            text = "Title and message cannot be empty",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
                         if (broadcastTitle.isNotBlank() && broadcastMessage.isNotBlank()) {
-                            onSendBroadcast(broadcastTitle, broadcastMessage, null)
+                            onSendBroadcast(broadcastTitle.trim(), broadcastMessage.trim(), null)
                             broadcastTitle = ""
                             broadcastMessage = ""
+                            isFormError = false
                             showBroadcastDialog = false
+                        } else {
+                            isFormError = true
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal)
@@ -252,7 +319,7 @@ fun AdminHomeScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showBroadcastDialog = false }) {
+                TextButton(onClick = { showBroadcastDialog = false; isFormError = false }) {
                     Text("Cancel", color = TextPrimaryNearBlack)
                 }
             }
