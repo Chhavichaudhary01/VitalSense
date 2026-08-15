@@ -54,6 +54,9 @@ fun VitalSenseNavGraph(
     val villages by repository.getVillages().collectAsStateWithLifecycle(initialValue = emptyList())
     val patients by repository.getPatients().collectAsStateWithLifecycle(initialValue = emptyList())
     val notices by repository.getNotices().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allPrescriptions by repository.getPrescriptions().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allConditions by repository.getConditionRecords().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allAppointments by repository.getAppointments().collectAsStateWithLifecycle(initialValue = emptyList())
 
     // The effective patient (either direct or proxy managed by ASHA)
     val effectivePatient = activeProxyPatient ?: activePatient
@@ -153,6 +156,7 @@ fun VitalSenseNavGraph(
                                 PatientHomeScreen(
                                     patient = effectivePatient,
                                     notices = notices,
+                                    prescriptions = allPrescriptions.filter { it.patientId == effectivePatient.id },
                                     onCategoryClick = { category ->
                                         if (category == ConditionCategory.MENTAL_HEALTH) {
                                             showMentalWellness = true
@@ -164,6 +168,11 @@ fun VitalSenseNavGraph(
                                     onTriggerSos = {
                                         coroutineScope.launch {
                                             repository.triggerEmergencySos(effectivePatient, null, null)
+                                        }
+                                    },
+                                    onSavePrescription = { rx ->
+                                        coroutineScope.launch {
+                                            repository.savePrescription(rx)
                                         }
                                     }
                                 )
@@ -213,6 +222,8 @@ fun VitalSenseNavGraph(
                                     priorPrescriptions = patientPrescriptions,
                                     dispensaryStock = doctorDispensaryStock,
                                     currentDoctor = activeDoctor,
+                                    allConditions = allConditions.filter { it.patientId == activeCase.patientId },
+                                    allAppointments = allAppointments.filter { it.patientId == activeCase.patientId },
                                     onBack = { doctorViewModel.clearSelectedCase() },
                                     onSubmitResponse = { responseText, privateNotes ->
                                         doctorViewModel.submitMedicalResponse(
@@ -259,6 +270,8 @@ fun VitalSenseNavGraph(
                                     dispensaryStock = doctorDispensaryStock,
                                     patients = patients,
                                     notices = notices,
+                                    allConditions = allConditions,
+                                    allPrescriptions = allPrescriptions,
                                     onSelectCase = { record ->
                                         doctorViewModel.selectCase(record)
                                     },

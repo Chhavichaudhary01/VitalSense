@@ -330,8 +330,9 @@ fun AshaHomeScreen(
     }
 
     ocrTargetPatient?.let { targetPatient ->
-        com.vitalsense.app.feature.prescriptions.ocr.PrescriptionOcrDialog(
+        com.vitalsense.app.feature.prescriptions.PrescriptionUploadDialog(
             patient = targetPatient,
+            isAshaProxy = true,
             onDismiss = { ocrTargetPatient = null },
             onSavePrescription = { rx ->
                 onSavePrescription(rx)
