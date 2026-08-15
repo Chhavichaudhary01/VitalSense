@@ -3,9 +3,7 @@ package com.vitalsense.app.core.ui.components
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,7 +21,7 @@ import com.vitalsense.app.core.ui.theme.*
 @Composable
 fun TopRoleSwitcherBar(
     currentRole: UserRole,
-    onRoleSelected: (UserRole) -> Unit,
+    activeUserName: String = "",
     activeProxyPatient: Patient? = null,
     onExitProxy: () -> Unit = {},
     isOffline: Boolean = false,
@@ -36,44 +34,64 @@ fun TopRoleSwitcherBar(
             .fillMaxWidth()
             .background(WarmCreamBackground)
     ) {
-        // Main App Header + Quick Switcher Row
+        // Main App Header Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // App Logo & Role Title
+            // App Logo & Role Scoped User Info
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(38.dp)
                         .clip(CircleShape)
-                        .background(LimePrimary),
+                        .background(
+                            when (currentRole) {
+                                UserRole.PATIENT -> LimePrimary
+                                UserRole.ASHA -> LavenderSecondary
+                                UserRole.DOCTOR -> BlushPinkTertiary
+                                UserRole.ADMIN -> AmberWarning
+                            }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "V",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = TextPrimaryNearBlack
+                        text = when (currentRole) {
+                            UserRole.PATIENT -> "👤"
+                            UserRole.ASHA -> "🤝"
+                            UserRole.DOCTOR -> "🩺"
+                            UserRole.ADMIN -> "🛡️"
+                        },
+                        fontSize = 18.sp
                     )
                 }
                 Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = if (activeUserName.isNotBlank()) activeUserName else "VitalSense",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            ),
+                            color = TextPrimaryNearBlack
+                        )
+                    }
                     Text(
-                        text = "VitalSense",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 17.sp
-                        ),
-                        color = TextPrimaryNearBlack
-                    )
-                    Text(
-                        text = currentRole.subtitle,
+                        text = when (currentRole) {
+                            UserRole.PATIENT -> "Patient Portal"
+                            UserRole.ASHA -> "ASHA Worker Caseload"
+                            UserRole.DOCTOR -> "Clinical Review Portal"
+                            UserRole.ADMIN -> "District Outbreak Command"
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         color = TextSecondaryMuted
                     )
@@ -110,7 +128,7 @@ fun TopRoleSwitcherBar(
                     }
                 }
 
-                // Logout Button
+                // Logout / Exit Button
                 Surface(
                     shape = PillShape,
                     color = SurfaceWhite,
@@ -118,13 +136,13 @@ fun TopRoleSwitcherBar(
                     modifier = Modifier.clickable { onLogout() }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
                         Text(text = "🚪", fontSize = 11.sp)
                         Text(
-                            text = "Exit",
+                            text = "Logout",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimaryNearBlack
                         )
@@ -133,50 +151,7 @@ fun TopRoleSwitcherBar(
             }
         }
 
-        // Horizontal Role Switcher Pills (Admin, ASHA, Doctor, Patient)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            UserRole.values().forEach { role ->
-                val isSelected = currentRole == role
-                Surface(
-                    shape = PillShape,
-                    color = if (isSelected) DarkCharcoal else SurfaceWhite,
-                    shadowElevation = if (isSelected) 2.dp else 1.dp,
-                    modifier = Modifier.clickable { onRoleSelected(role) }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = when (role) {
-                                UserRole.PATIENT -> "👤"
-                                UserRole.ASHA -> "🤝"
-                                UserRole.DOCTOR -> "🩺"
-                                UserRole.ADMIN -> "🛡️"
-                            },
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            text = role.label,
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 13.sp
-                            ),
-                            color = if (isSelected) LimePrimary else TextPrimaryNearBlack
-                        )
-                    }
-                }
-            }
-        }
-
-        // ASHA Proxy Indicator Banner
+        // ASHA Proxy Indicator Banner (Only shown when ASHA is acting as proxy for a patient)
         AnimatedVisibility(
             visible = activeProxyPatient != null,
             enter = expandVertically() + fadeIn(),
@@ -187,7 +162,7 @@ fun TopRoleSwitcherBar(
                     color = AmberWarning.copy(alpha = 0.25f),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
                     shape = CardShape
                 ) {
                     Row(
@@ -236,7 +211,7 @@ fun TopRoleSwitcherBar(
         HorizontalDivider(
             thickness = 1.dp,
             color = Color(0xFFF0EAE0),
-            modifier = Modifier.padding(top = 4.dp)
+            modifier = Modifier.padding(top = 2.dp)
         )
     }
 }

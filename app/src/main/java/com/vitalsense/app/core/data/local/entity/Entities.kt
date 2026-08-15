@@ -72,12 +72,23 @@ data class ConditionRecordEntity(
     val notes: String,
     val timestamp: Long,
     val ashaProxyLogged: Boolean = false,
+    val status: CaseStatus = CaseStatus.PENDING_REVIEW,
+    val assignedDoctorId: String? = null,
+    val assignedDoctorName: String? = null,
+    val doctorResponse: String? = null,
+    val doctorResponseTimestamp: Long? = null,
+    val doctorResponseDoctorName: String? = null,
+    val privateDoctorNotes: String? = null,
+    val referredByDoctorId: String? = null,
+    val referredByDoctorName: String? = null,
+    val referralNotes: String? = null,
     val isPendingSync: Boolean = false
 )
 
 @Entity(tableName = "prescriptions")
 data class PrescriptionEntity(
     @PrimaryKey val id: String,
+    val caseId: String? = null,
     val patientId: String,
     val patientName: String,
     val doctorId: String,
@@ -101,7 +112,8 @@ data class AppointmentEntity(
     val dateFormatted: String,
     val timeSlot: String,
     val status: String,
-    val proposedBy: UserRole
+    val proposedBy: UserRole,
+    val outcomeNotes: String? = null
 )
 
 @Entity(tableName = "broadcast_notices")
