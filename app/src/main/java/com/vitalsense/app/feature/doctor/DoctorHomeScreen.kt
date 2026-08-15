@@ -37,6 +37,7 @@ fun DoctorHomeScreen(
     onProposeAppointment: (patientId: String, patientName: String, date: String, timeSlot: String) -> Unit = { _, _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var showScheduleDialog by remember { mutableStateOf(false) }
     var selectedPatientForHistory by remember { mutableStateOf<Patient?>(null) }
     var searchQuery by remember { mutableStateOf("") }
@@ -76,7 +77,7 @@ fun DoctorHomeScreen(
         if (emergencySosAlerts.isNotEmpty()) {
             item {
                 Text(
-                    text = "🚨 Patient Emergency SOS Alerts (${emergencySosAlerts.size})",
+                    text = "${strings.emergencyPatientAlerts} (${emergencySosAlerts.size})",
                     style = MaterialTheme.typography.headlineMedium,
                     color = CoralAlertDark
                 )
@@ -100,7 +101,7 @@ fun DoctorHomeScreen(
                             )
                             Surface(shape = PillShape, color = CoralAlert) {
                                 Text(
-                                    text = "HIGH PRIORITY",
+                                    text = strings.highPriority,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SurfaceWhite),
                                     modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                                 )
@@ -112,7 +113,7 @@ fun DoctorHomeScreen(
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "Village: ${sos.targetVillage ?: "General"} · Patient Alert",
+                            text = "${strings.village}: ${sos.targetVillage ?: "General"}",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
@@ -135,7 +136,7 @@ fun DoctorHomeScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
-                            text = "Pending",
+                            text = strings.pendingCases,
                             style = MaterialTheme.typography.labelSmall,
                             color = TextSecondaryMuted
                         )
@@ -145,7 +146,7 @@ fun DoctorHomeScreen(
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "Active in Queue",
+                            text = strings.activeInQueue,
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
@@ -160,7 +161,7 @@ fun DoctorHomeScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
-                            text = "Critical Cases",
+                            text = strings.criticalCases,
                             style = MaterialTheme.typography.labelSmall,
                             color = if (severeCount > 0) CoralAlertDark else TextSecondaryMuted
                         )
@@ -185,7 +186,7 @@ fun DoctorHomeScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(
-                            text = "Appointments",
+                            text = strings.scheduledAppts,
                             style = MaterialTheme.typography.labelSmall,
                             color = TextSecondaryMuted
                         )
@@ -212,7 +213,7 @@ fun DoctorHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Specialist Triage Queue (${cases.size})",
+                    text = "${strings.specialistQueue} (${cases.size})",
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
@@ -234,7 +235,7 @@ fun DoctorHomeScreen(
                     ) {
                         Text(text = "🎉", style = MaterialTheme.typography.titleLarge)
                         Text(
-                            text = "No pending patient cases in your triage queue.",
+                            text = strings.noPendingCases,
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextPrimaryNearBlack
                         )
@@ -261,7 +262,7 @@ fun DoctorHomeScreen(
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = "Village: ${record.villageName} · ${record.category.displayName}",
+                                    text = "${strings.village}: ${record.villageName} · ${record.category.displayName}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = TextSecondaryMuted
                                 )
@@ -287,7 +288,7 @@ fun DoctorHomeScreen(
                         }
 
                         Text(
-                            text = "Symptoms: ${record.notes}",
+                            text = "${strings.symptoms} ${record.notes}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextPrimaryNearBlack
                         )
@@ -336,7 +337,7 @@ fun DoctorHomeScreen(
                                     contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                                     modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                                 ) {
-                                    Text(text = "📋 History", style = MaterialTheme.typography.labelSmall)
+                                    Text(text = strings.history, style = MaterialTheme.typography.labelSmall)
                                 }
 
                                 Button(
@@ -346,7 +347,7 @@ fun DoctorHomeScreen(
                                     contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                                     modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                                 ) {
-                                    Text(text = "Review →", color = LimePrimary, style = MaterialTheme.typography.labelSmall)
+                                    Text(text = strings.review, color = LimePrimary, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -363,7 +364,7 @@ fun DoctorHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Scheduled Appointments (${appointments.size})",
+                    text = "${strings.upcomingConsultations} (${appointments.size})",
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
@@ -375,7 +376,7 @@ fun DoctorHomeScreen(
                     contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                     modifier = Modifier.defaultMinSize(minHeight = 34.dp)
                 ) {
-                    Text(text = "➕ Propose Appt", style = MaterialTheme.typography.labelSmall)
+                    Text(text = strings.proposeAppt, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -384,7 +385,7 @@ fun DoctorHomeScreen(
             item {
                 VitalSenseCard(backgroundColor = SurfaceWhite) {
                     Text(
-                        text = "No appointments scheduled. Tap 'Propose Appt' to schedule a patient consultation.",
+                        text = "No appointments scheduled.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondaryMuted
                     )
@@ -462,14 +463,14 @@ fun DoctorHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Dispensary Stock Check",
+                    text = strings.dispensaryStock,
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
                 if (lowStockCount > 0) {
                     Surface(shape = PillShape, color = CoralAlert.copy(alpha = 0.25f)) {
                         Text(
-                            text = "$lowStockCount LOW STOCK",
+                            text = "$lowStockCount ${strings.lowStock}",
                             style = MaterialTheme.typography.labelSmall.copy(color = CoralAlertDark, fontWeight = FontWeight.Bold),
                             modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                         )
@@ -521,7 +522,7 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 6. District Health Directives (Admin Broadcasts)
+        // 6. District Health Directives
         if (adminDirectives.isNotEmpty()) {
             item {
                 Text(
@@ -562,7 +563,7 @@ fun DoctorHomeScreen(
                             color = TextPrimaryNearBlack
                         )
                         Text(
-                            text = "From: ${directive.senderName} (${directive.senderRole.name})",
+                            text = "${strings.issuedBy} ${directive.senderName} (${directive.senderRole.name})",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryMuted
                         )
@@ -571,11 +572,11 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 7. Patient Medical History & Prescriptions Directory
+        // 7. Patient Medical History Directory
         if (patients.isNotEmpty()) {
             item {
                 Text(
-                    text = "🔍 Patient Records Directory",
+                    text = strings.patientDirectory,
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimaryNearBlack
                 )
@@ -585,8 +586,8 @@ fun DoctorHomeScreen(
                 VitalSenseTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = "Search Patient",
-                    placeholder = "Search by name or village..."
+                    label = strings.searchPatient,
+                    placeholder = strings.searchPlaceholder
                 )
             }
 
@@ -608,7 +609,7 @@ fun DoctorHomeScreen(
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Text(
-                                text = "${pat.villageName} · Age: ${pat.age} (${pat.gender}) · ASHA: ${pat.ashaWorkerName}",
+                                text = "${pat.villageName} · Age: ${pat.age} (${pat.gender}) · ${strings.ashaAssigned}: ${pat.ashaWorkerName}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondaryMuted
                             )
@@ -620,7 +621,7 @@ fun DoctorHomeScreen(
                             contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                             modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                         ) {
-                            Text("📋 History", style = MaterialTheme.typography.labelSmall)
+                            Text(strings.history, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

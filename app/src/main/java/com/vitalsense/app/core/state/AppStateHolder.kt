@@ -2,6 +2,7 @@ package com.vitalsense.app.core.state
 
 import com.vitalsense.app.core.data.local.seed.SeedDataProvider
 import com.vitalsense.app.core.data.model.*
+import com.vitalsense.app.core.ui.theme.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,9 @@ class AppStateHolder @Inject constructor() {
 
     private val _currentRole = MutableStateFlow(UserRole.PATIENT)
     val currentRole: StateFlow<UserRole> = _currentRole.asStateFlow()
+
+    private val _currentLanguage = MutableStateFlow(AppLanguage.ENGLISH)
+    val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
 
     private val _activePatient = MutableStateFlow(SeedDataProvider.initialPatients.first())
     val activePatient: StateFlow<Patient> = _activePatient.asStateFlow()
@@ -67,6 +71,14 @@ class AppStateHolder @Inject constructor() {
 
     fun switchRole(newRole: UserRole) {
         _currentRole.value = newRole
+    }
+
+    fun setLanguage(language: AppLanguage) {
+        _currentLanguage.value = language
+    }
+
+    fun toggleLanguage() {
+        _currentLanguage.value = if (_currentLanguage.value == AppLanguage.ENGLISH) AppLanguage.HINDI else AppLanguage.ENGLISH
     }
 
     fun selectPatient(patient: Patient) {

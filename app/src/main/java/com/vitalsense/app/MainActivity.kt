@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vitalsense.app.core.data.repository.VitalSenseRepository
 import com.vitalsense.app.core.state.AppStateHolder
 import com.vitalsense.app.core.ui.theme.VitalSenseTheme
@@ -26,7 +28,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            VitalSenseTheme {
+            val currentLanguage by appStateHolder.currentLanguage.collectAsStateWithLifecycle()
+
+            VitalSenseTheme(language = currentLanguage) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = WarmCreamBackground
