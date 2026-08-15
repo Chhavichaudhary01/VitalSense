@@ -218,6 +218,18 @@ fun PatientHomeScreen(
                 }
             }
         }
+        
+        item {
+            Text("Other Services", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, fontSize = 18.sp), color = TextPrimaryNearBlack)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                VitalSenseButton("My Prescriptions", onClick = { }, modifier = Modifier.fillMaxWidth())
+                VitalSenseButton("My Appointments", onClick = { }, modifier = Modifier.fillMaxWidth())
+                VitalSenseButton("Find Doctors (Map)", onClick = { }, modifier = Modifier.fillMaxWidth())
+                VitalSenseButton("Government Schemes", onClick = { }, modifier = Modifier.fillMaxWidth())
+                VitalSenseButton("Upload Prescription (OCR)", onClick = { }, modifier = Modifier.fillMaxWidth())
+                VitalSenseButton("Help / Manual", onClick = { }, modifier = Modifier.fillMaxWidth())
+            }
+        }
 
         // 6. Persistent Emergency SOS Banner (Coral / High Visibility)
         item {
