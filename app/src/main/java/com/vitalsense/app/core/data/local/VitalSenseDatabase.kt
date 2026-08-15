@@ -20,7 +20,8 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         AppointmentEntity::class,
         BroadcastNoticeEntity::class,
         DispensaryEntity::class,
-        GovernmentSchemeEntity::class
+        GovernmentSchemeEntity::class,
+        OutboxEntity::class
     ],
     version = 1,
     exportSchema = false

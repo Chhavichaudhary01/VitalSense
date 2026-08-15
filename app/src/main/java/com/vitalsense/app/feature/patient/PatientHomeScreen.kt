@@ -285,6 +285,8 @@ fun PatientHomeScreen(
         }
     }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     // SOS Confirmation Bottom Sheet / Dialog
     if (showSosConfirmation) {
         AlertDialog(
@@ -306,7 +308,7 @@ fun PatientHomeScreen(
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Text(
-                        text = "📡 Falls back to cellular SMS if mobile internet is unavailable.",
+                        text = "📡 Falls back to cellular SMS with GPS location if mobile internet is unavailable.",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF2E7D32)
                     )
@@ -321,7 +323,7 @@ fun PatientHomeScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = CoralAlert)
                 ) {
-                    Text("Send SOS Now", color = SurfaceWhite, fontWeight = FontWeight.Bold)
+                    Text("Broadcast SOS Alert", color = SurfaceWhite, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -333,23 +335,67 @@ fun PatientHomeScreen(
     }
 
     if (sosSentSuccess) {
+        val sosMsg = com.vitalsense.app.core.util.EmergencySosHelper.createSosMessage(patient)
         AlertDialog(
             onDismissRequest = { sosSentSuccess = false },
             title = {
-                Text("✅ SOS Alert Broadcasted", fontWeight = FontWeight.Bold)
+                Text("🚨 SOS Alert Active", fontWeight = FontWeight.Bold)
             },
             text = {
-                Text(
-                    "Emergency alert with your GPS coordinates has been transmitted to ${patient.ashaWorkerName}. Keep your phone nearby.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        "Emergency broadcast sent with your GPS location to ${patient.ashaWorkerName} and health monitoring.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Divider()
+
+                    Text(
+                        text = "Zero Internet Fallbacks:",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextPrimaryNearBlack
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                com.vitalsense.app.core.util.EmergencySosHelper.sendCellularSmsFallback(
+                                    context = context,
+                                    recipientPhone = patient.emergencyContact,
+                                    message = sosMsg
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = PillShape
+                        ) {
+                            Text("💬 SMS ASHA", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(
+                                    context = context,
+                                    phoneNumber = "108"
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = PillShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = CoralAlert)
+                        ) {
+                            Text("📞 Call 108", color = SurfaceWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             },
             confirmButton = {
                 Button(
                     onClick = { sosSentSuccess = false },
                     colors = ButtonDefaults.buttonColors(containerColor = DarkCharcoal)
                 ) {
-                    Text("Understood", color = LimePrimary)
+                    Text("Done", color = LimePrimary)
                 }
             }
         )

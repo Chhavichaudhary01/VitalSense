@@ -122,4 +122,18 @@ interface VitalSenseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchemes(schemes: List<GovernmentSchemeEntity>)
+
+    // --- Outbox Queue (Offline-First Sync) ---
+    @Query("SELECT * FROM outbox_records ORDER BY timestamp ASC")
+    suspend fun getPendingOutboxRecords(): List<OutboxEntity>
+
+    @Query("SELECT COUNT(*) FROM outbox_records")
+    fun getPendingOutboxCount(): Flow<Int>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOutboxRecord(outbox: OutboxEntity)
+
+    @Query("DELETE FROM outbox_records WHERE id = :id")
+    suspend fun deleteOutboxRecord(id: String)
 }
+

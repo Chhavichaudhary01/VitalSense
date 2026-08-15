@@ -26,8 +26,10 @@ fun AshaHomeScreen(
     onSelectProxyPatient: (Patient) -> Unit,
     onRegisterPatientClick: () -> Unit = {},
     onSendNoticeClick: () -> Unit = {},
+    onSavePrescription: (Prescription) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var ocrTargetPatient by remember { mutableStateOf<Patient?>(null) }
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -191,21 +193,38 @@ fun AshaHomeScreen(
                             color = TextSecondaryMuted
                         )
 
-                        Button(
-                            onClick = { onSelectProxyPatient(patient) },
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = LimePrimary,
-                                contentColor = TextPrimaryNearBlack
-                            ),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = "🤝 Act as Proxy",
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            OutlinedButton(
+                                onClick = { ocrTargetPatient = patient },
+                                shape = PillShape,
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text(
+                                    text = "📷 Scan Rx",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 )
-                            )
+                            }
+
+                            Button(
+                                onClick = { onSelectProxyPatient(patient) },
+                                shape = PillShape,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = LimePrimary,
+                                    contentColor = TextPrimaryNearBlack
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text(
+                                    text = "🤝 Act as Proxy",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -252,4 +271,15 @@ fun AshaHomeScreen(
             }
         }
     }
+
+    ocrTargetPatient?.let { targetPatient ->
+        com.vitalsense.app.feature.prescriptions.ocr.PrescriptionOcrDialog(
+            patient = targetPatient,
+            onDismiss = { ocrTargetPatient = null },
+            onSavePrescription = { rx ->
+                onSavePrescription(rx)
+            }
+        )
+    }
 }
+

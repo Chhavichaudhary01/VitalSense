@@ -28,8 +28,9 @@ object DatabaseModule {
     @Singleton
     fun provideVitalSenseRepository(
         database: VitalSenseDatabase,
-        firestoreDataSource: FirestoreDataSource
+        firestoreDataSource: FirestoreDataSource,
+        syncManager: com.vitalsense.app.core.sync.SyncManager
     ): VitalSenseRepository {
-        return VitalSenseRepositoryImpl(database, firestoreDataSource)
+        return VitalSenseRepositoryImpl(database, firestoreDataSource, syncManager)
     }
 }
