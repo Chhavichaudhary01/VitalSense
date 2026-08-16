@@ -19,6 +19,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VitalSense">
 
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAbVbSP0MHaFCkQYQpIng2-QAZShCz-XO8" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
