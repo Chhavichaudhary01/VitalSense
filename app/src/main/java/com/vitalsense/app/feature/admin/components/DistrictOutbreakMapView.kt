@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,13 +18,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +32,7 @@ import com.vitalsense.app.core.data.model.Village
 import com.vitalsense.app.core.ui.components.SeverityBadge
 import com.vitalsense.app.core.ui.theme.*
 import kotlin.math.max
+import kotlin.math.sqrt
 
 enum class MapLayerType {
     STANDARD,
@@ -50,7 +49,8 @@ fun DistrictOutbreakMapView(
     modifier: Modifier = Modifier
 ) {
     var mapLayer by remember { mutableStateOf(MapLayerType.STANDARD) }
-    var zoomLevel by remember { mutableFloatStateOf(1f) }
+    var zoomLevel by remember { mutableFloatStateOf(1.0f) }
+    var panOffset by remember { mutableStateOf(Offset.Zero) }
 
     Surface(
         modifier = modifier
@@ -66,28 +66,39 @@ fun DistrictOutbreakMapView(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .height(340.dp)
         ) {
-            // 1. Google Map Realistic Terrain Canvas
+            // 1. Google Map Interactive Pan, Drag & Zoom Canvas
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
+                    // 2-Finger Pinch to Zoom & 1-Finger Free Pan Dragging in All Directions
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            zoomLevel = (zoomLevel * zoom).coerceIn(0.7f, 3.2f)
+                            val maxPan = 600f * zoomLevel
+                            panOffset = Offset(
+                                x = (panOffset.x + pan.x).coerceIn(-maxPan, maxPan),
+                                y = (panOffset.y + pan.y).coerceIn(-maxPan, maxPan)
+                            )
+                        }
+                    }
+                    // Tap detection for selecting village pins
                     .pointerInput(Unit) {
                         detectTapGestures { tapOffset ->
                             val width = size.width.toFloat()
                             val height = size.height.toFloat()
 
-                            // Find tapped village node
                             val tappedVillage = villages.minByOrNull { village ->
-                                val (vx, vy) = getVillageScreenCoordinates(village, width, height, zoomLevel)
+                                val (vx, vy) = getVillageScreenCoordinates(village, width, height, zoomLevel, panOffset)
                                 val distSq = (tapOffset.x - vx) * (tapOffset.x - vx) + (tapOffset.y - vy) * (tapOffset.y - vy)
                                 distSq
                             }
 
                             if (tappedVillage != null) {
-                                val (vx, vy) = getVillageScreenCoordinates(tappedVillage, width, height, zoomLevel)
-                                val dist = kotlin.math.sqrt((tapOffset.x - vx) * (tapOffset.x - vx) + (tapOffset.y - vy) * (tapOffset.y - vy))
-                                if (dist < 40f * zoomLevel) {
+                                val (vx, vy) = getVillageScreenCoordinates(tappedVillage, width, height, zoomLevel, panOffset)
+                                val dist = sqrt((tapOffset.x - vx) * (tapOffset.x - vx) + (tapOffset.y - vy) * (tapOffset.y - vy))
+                                if (dist < 45f * zoomLevel) {
                                     onSelectVillage(tappedVillage)
                                 }
                             }
@@ -97,6 +108,16 @@ fun DistrictOutbreakMapView(
                 val w = size.width
                 val h = size.height
 
+                // Apply Pan & Zoom transformation matrix for map geometry
+                val centerX = w / 2f
+                val centerY = h / 2f
+
+                fun transformOffset(ox: Float, oy: Float): Offset {
+                    val zx = centerX + (ox - centerX) * zoomLevel + panOffset.x
+                    val zy = centerY + (oy - centerY) * zoomLevel + panOffset.y
+                    return Offset(zx, zy)
+                }
+
                 // A. Base Ground & Terrain Areas
                 when (mapLayer) {
                     MapLayerType.STANDARD -> {
@@ -105,50 +126,70 @@ fun DistrictOutbreakMapView(
 
                         // Green Parks & Forest Land (Google Maps Green #D2EBD2)
                         val greenPath1 = Path().apply {
-                            moveTo(0f, 0f)
-                            lineTo(w * 0.4f, 0f)
-                            cubicTo(w * 0.35f, h * 0.25f, w * 0.15f, h * 0.35f, 0f, h * 0.3f)
+                            val p1 = transformOffset(0f, 0f)
+                            val p2 = transformOffset(w * 0.45f, 0f)
+                            val p3 = transformOffset(w * 0.35f, h * 0.32f)
+                            val p4 = transformOffset(0f, h * 0.38f)
+                            moveTo(p1.x, p1.y)
+                            lineTo(p2.x, p2.y)
+                            cubicTo(p3.x, p3.y, p3.x, p4.y, p4.x, p4.y)
                             close()
                         }
                         drawPath(greenPath1, Color(0xFFD6EAD8))
 
                         val greenPath2 = Path().apply {
-                            moveTo(w * 0.7f, h)
-                            lineTo(w, h * 0.65f)
-                            lineTo(w, h)
+                            val p1 = transformOffset(w * 0.65f, h)
+                            val p2 = transformOffset(w, h * 0.60f)
+                            val p3 = transformOffset(w, h)
+                            moveTo(p1.x, p1.y)
+                            lineTo(p2.x, p2.y)
+                            lineTo(p3.x, p3.y)
                             close()
                         }
                         drawPath(greenPath2, Color(0xFFCCE6CE))
 
                         // Ramganga River Stream (Google Maps Blue #AAD3DF)
                         val riverPath = Path().apply {
-                            moveTo(0f, h * 0.78f)
-                            cubicTo(w * 0.28f, h * 0.65f, w * 0.45f, h * 0.85f, w * 0.72f, h * 0.45f)
-                            cubicTo(w * 0.85f, h * 0.25f, w * 0.95f, h * 0.30f, w, h * 0.15f)
+                            val p1 = transformOffset(0f, h * 0.82f)
+                            val p2 = transformOffset(w * 0.30f, h * 0.68f)
+                            val p3 = transformOffset(w * 0.48f, h * 0.88f)
+                            val p4 = transformOffset(w * 0.75f, h * 0.46f)
+                            val p5 = transformOffset(w, h * 0.18f)
+                            moveTo(p1.x, p1.y)
+                            cubicTo(p2.x, p2.y, p3.x, p3.y, p4.x, p4.y)
+                            cubicTo(p4.x, p4.y, p5.x - 20f, p5.y + 20f, p5.x, p5.y)
                         }
                         drawPath(riverPath, Color(0xFFAAD3DF), style = Stroke(width = 24f * zoomLevel))
 
                         // Secondary Road Network (Google Maps White/Gray Streets)
-                        for (i in 1..4) {
+                        for (i in -2..6) {
+                            val startH = transformOffset(-w * 0.5f, h * (i / 4f))
+                            val endH = transformOffset(w * 1.5f, h * (i / 4f) + 15f)
                             drawLine(
                                 color = Color(0xFFFFFFFF),
-                                start = Offset(0f, h * (i / 5f)),
-                                end = Offset(w, h * (i / 5f) + 15f),
-                                strokeWidth = 3f
+                                start = startH,
+                                end = endH,
+                                strokeWidth = 3f * zoomLevel
                             )
+
+                            val startV = transformOffset(w * (i / 4f), -h * 0.5f)
+                            val endV = transformOffset(w * (i / 4f) - 20f, h * 1.5f)
                             drawLine(
                                 color = Color(0xFFFFFFFF),
-                                start = Offset(w * (i / 5f), 0f),
-                                end = Offset(w * (i / 5f) - 20f, h),
-                                strokeWidth = 3f
+                                start = startV,
+                                end = endV,
+                                strokeWidth = 3f * zoomLevel
                             )
                         }
 
                         // Primary National Highway NH-24 (Google Maps Orange-Yellow Highway #FCD475)
                         val highwayPath = Path().apply {
-                            moveTo(0f, h * 0.35f)
-                            lineTo(w * 0.48f, h * 0.45f)
-                            lineTo(w, h * 0.55f)
+                            val p1 = transformOffset(-w * 0.5f, h * 0.32f)
+                            val p2 = transformOffset(w * 0.48f, h * 0.45f)
+                            val p3 = transformOffset(w * 1.5f, h * 0.58f)
+                            moveTo(p1.x, p1.y)
+                            lineTo(p2.x, p2.y)
+                            lineTo(p3.x, p3.y)
                         }
                         // Highway Casing (Orange Border)
                         drawPath(highwayPath, Color(0xFFF9B858), style = Stroke(width = 10f * zoomLevel))
@@ -157,9 +198,12 @@ fun DistrictOutbreakMapView(
 
                         // State Highway SH-43
                         val stateHwyPath = Path().apply {
-                            moveTo(w * 0.35f, 0f)
-                            lineTo(w * 0.48f, h * 0.45f)
-                            lineTo(w * 0.62f, h)
+                            val p1 = transformOffset(w * 0.35f, -h * 0.5f)
+                            val p2 = transformOffset(w * 0.48f, h * 0.45f)
+                            val p3 = transformOffset(w * 0.62f, h * 1.5f)
+                            moveTo(p1.x, p1.y)
+                            lineTo(p2.x, p2.y)
+                            lineTo(p3.x, p3.y)
                         }
                         drawPath(stateHwyPath, Color(0xFFFBD78D), style = Stroke(width = 6f * zoomLevel))
                     }
@@ -168,44 +212,59 @@ fun DistrictOutbreakMapView(
                         // Satellite Earth Surface
                         drawRect(Color(0xFF1F2B1D))
 
-                        // Agricultural crop patch variations
-                        drawRect(Color(0xFF283626), topLeft = Offset(0f, 0f), size = Size(w * 0.45f, h * 0.4f))
-                        drawRect(Color(0xFF334330), topLeft = Offset(w * 0.55f, h * 0.55f), size = Size(w * 0.45f, h * 0.45f))
+                        val patch1TopLeft = transformOffset(0f, 0f)
+                        drawRect(Color(0xFF283626), topLeft = patch1TopLeft, size = Size(w * 0.5f * zoomLevel, h * 0.45f * zoomLevel))
 
                         // River Stream in Satellite (Dark Navy Water #15222E)
                         val riverPath = Path().apply {
-                            moveTo(0f, h * 0.78f)
-                            cubicTo(w * 0.28f, h * 0.65f, w * 0.45f, h * 0.85f, w * 0.72f, h * 0.45f)
-                            cubicTo(w * 0.85f, h * 0.25f, w * 0.95f, h * 0.30f, w, h * 0.15f)
+                            val p1 = transformOffset(0f, h * 0.82f)
+                            val p2 = transformOffset(w * 0.30f, h * 0.68f)
+                            val p3 = transformOffset(w * 0.48f, h * 0.88f)
+                            val p4 = transformOffset(w * 0.75f, h * 0.46f)
+                            val p5 = transformOffset(w, h * 0.18f)
+                            moveTo(p1.x, p1.y)
+                            cubicTo(p2.x, p2.y, p3.x, p3.y, p4.x, p4.y)
+                            cubicTo(p4.x, p4.y, p5.x, p5.y, p5.x, p5.y)
                         }
                         drawPath(riverPath, Color(0xFF1B3245), style = Stroke(width = 22f * zoomLevel))
 
                         // Highways in Satellite (Clean White Lines with Glow)
                         val highwayPath = Path().apply {
-                            moveTo(0f, h * 0.35f)
-                            lineTo(w * 0.48f, h * 0.45f)
-                            lineTo(w, h * 0.55f)
+                            val p1 = transformOffset(-w * 0.5f, h * 0.32f)
+                            val p2 = transformOffset(w * 0.48f, h * 0.45f)
+                            val p3 = transformOffset(w * 1.5f, h * 0.58f)
+                            moveTo(p1.x, p1.y)
+                            lineTo(p2.x, p2.y)
+                            lineTo(p3.x, p3.y)
                         }
                         drawPath(highwayPath, Color(0xCCFFFFFF), style = Stroke(width = 4f * zoomLevel))
                     }
 
                     MapLayerType.DARK -> {
-                        // Google Maps Dark Night Mode (#1B1D28)
+                        // Google Maps Dark Night Mode (#141620)
                         drawRect(Color(0xFF141620))
 
                         // Dark River (#0F2133)
                         val riverPath = Path().apply {
-                            moveTo(0f, h * 0.78f)
-                            cubicTo(w * 0.28f, h * 0.65f, w * 0.45f, h * 0.85f, w * 0.72f, h * 0.45f)
-                            cubicTo(w * 0.85f, h * 0.25f, w * 0.95f, h * 0.30f, w, h * 0.15f)
+                            val p1 = transformOffset(0f, h * 0.82f)
+                            val p2 = transformOffset(w * 0.30f, h * 0.68f)
+                            val p3 = transformOffset(w * 0.48f, h * 0.88f)
+                            val p4 = transformOffset(w * 0.75f, h * 0.46f)
+                            val p5 = transformOffset(w, h * 0.18f)
+                            moveTo(p1.x, p1.y)
+                            cubicTo(p2.x, p2.y, p3.x, p3.y, p4.x, p4.y)
+                            cubicTo(p4.x, p4.y, p5.x, p5.y, p5.x, p5.y)
                         }
                         drawPath(riverPath, Color(0xFF0F263B), style = Stroke(width = 22f * zoomLevel))
 
-                        // Roads in Dark Mode
+                        // Highways in Dark Mode
                         val highwayPath = Path().apply {
-                            moveTo(0f, h * 0.35f)
-                            lineTo(w * 0.48f, h * 0.45f)
-                            lineTo(w, h * 0.55f)
+                            val p1 = transformOffset(-w * 0.5f, h * 0.32f)
+                            val p2 = transformOffset(w * 0.48f, h * 0.45f)
+                            val p3 = transformOffset(w * 1.5f, h * 0.58f)
+                            moveTo(p1.x, p1.y)
+                            lineTo(p2.x, p2.y)
+                            lineTo(p3.x, p3.y)
                         }
                         drawPath(highwayPath, Color(0xFF2C2F42), style = Stroke(width = 6f * zoomLevel))
                     }
@@ -213,7 +272,7 @@ fun DistrictOutbreakMapView(
 
                 // B. Village Outbreak Heat Radius & Google Maps Location Markers
                 villages.forEach { village ->
-                    val (vx, vy) = getVillageScreenCoordinates(village, w, h, zoomLevel)
+                    val (vx, vy) = getVillageScreenCoordinates(village, w, h, zoomLevel, panOffset)
                     val isSelected = selectedVillage?.id == village.id
 
                     val pinColor = when {
@@ -222,7 +281,7 @@ fun DistrictOutbreakMapView(
                         else -> Color(0xFF34A853) // Google Maps Green
                     }
 
-                    val heatRadius = (max(village.activeCases, 3) * 5.5f * zoomLevel).coerceIn(24f, 75f)
+                    val heatRadius = (max(village.activeCases, 3) * 6.5f * zoomLevel).coerceIn(24f, 85f)
 
                     // 1. Heat Radius Circle Overlay
                     drawCircle(
@@ -238,7 +297,7 @@ fun DistrictOutbreakMapView(
                     )
 
                     // 2. Google Maps Teardrop Pin Marker
-                    val pinSize = if (isSelected) 30f else 22f
+                    val pinSize = if (isSelected) 32f else 24f
 
                     // Shadow underneath pin
                     drawCircle(
@@ -270,10 +329,10 @@ fun DistrictOutbreakMapView(
                 }
             }
 
-            // 2. Floating Marker Label Overlay Chips (HTML/Compose layer for crisp text)
+            // 2. Floating Marker Label Overlay Chips (Moves with Pan & Zoom)
             villages.forEach { village ->
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    val (vx, vy) = getVillageScreenCoordinates(village, maxWidth.value, maxHeight.value, zoomLevel)
+                    val (vx, vy) = getVillageScreenCoordinates(village, maxWidth.value, maxHeight.value, zoomLevel, panOffset)
                     val isSelected = selectedVillage?.id == village.id
 
                     val pinColor = when {
@@ -284,7 +343,7 @@ fun DistrictOutbreakMapView(
 
                     Box(
                         modifier = Modifier
-                            .offset(x = (vx - 45).dp, y = (vy - 48).dp)
+                            .offset(x = (vx - 48).dp, y = (vy - 52).dp)
                             .clickable { onSelectVillage(village) }
                     ) {
                         Surface(
@@ -318,7 +377,7 @@ fun DistrictOutbreakMapView(
                 }
             }
 
-            // 3. Top-Right Map Controls (Layer Switcher & Zoom)
+            // 3. Top-Right Map Controls (Layer Switcher)
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -360,35 +419,55 @@ fun DistrictOutbreakMapView(
                 }
             }
 
-            // 4. Floating Zoom Controls on Middle-Right
+            // 4. Floating Zoom & Recenter Controls on Middle-Right
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .padding(end = Spacing.xs),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                // Zoom In
                 Surface(
-                    shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
+                    shape = CircleShape,
                     color = Color.White,
-                    shadowElevation = 2.dp,
+                    shadowElevation = 3.dp,
                     modifier = Modifier
-                        .size(32.dp)
-                        .clickable { zoomLevel = (zoomLevel + 0.25f).coerceAtMost(1.8f) }
+                        .size(34.dp)
+                        .clickable { zoomLevel = (zoomLevel + 0.3f).coerceAtMost(3.2f) }
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("+", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF334155))
+                        Text("+", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF334155))
                     }
                 }
+
+                // Zoom Out
                 Surface(
-                    shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp),
+                    shape = CircleShape,
                     color = Color.White,
-                    shadowElevation = 2.dp,
+                    shadowElevation = 3.dp,
                     modifier = Modifier
-                        .size(32.dp)
-                        .clickable { zoomLevel = (zoomLevel - 0.25f).coerceAtLeast(0.8f) }
+                        .size(34.dp)
+                        .clickable { zoomLevel = (zoomLevel - 0.3f).coerceAtLeast(0.7f) }
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("−", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF334155))
+                        Text("−", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF334155))
+                    }
+                }
+
+                // Recenter Button
+                Surface(
+                    shape = CircleShape,
+                    color = Color.White,
+                    shadowElevation = 3.dp,
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clickable {
+                            zoomLevel = 1.0f
+                            panOffset = Offset.Zero
+                        }
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("📍", fontSize = 14.sp)
                     }
                 }
             }
@@ -409,53 +488,18 @@ fun DistrictOutbreakMapView(
                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "G",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color(0xFF4285F4)
-                        )
-                        Text(
-                            text = "o",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color(0xFFEA4335)
-                        )
-                        Text(
-                            text = "o",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color(0xFFFBBC04)
-                        )
-                        Text(
-                            text = "g",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color(0xFF4285F4)
-                        )
-                        Text(
-                            text = "l",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color(0xFF34A853)
-                        )
-                        Text(
-                            text = "e",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color(0xFFEA4335)
-                        )
-                        Text(
-                            text = " Maps",
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 10.sp,
-                            color = Color(0xFF64748B)
-                        )
+                        Text(text = "G", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF4285F4))
+                        Text(text = "o", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFFEA4335))
+                        Text(text = "o", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFFFBBC04))
+                        Text(text = "g", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF4285F4))
+                        Text(text = "l", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF34A853))
+                        Text(text = "e", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFFEA4335))
+                        Text(text = " Maps", fontWeight = FontWeight.Medium, fontSize = 10.sp, color = Color(0xFF64748B))
                     }
                 }
 
                 Text(
-                    text = "2 km ───┤",
+                    text = "2 km ───┤ (Drag to pan freely)",
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,
                     color = if (mapLayer == MapLayerType.STANDARD) Color(0xFF475569) else Color(0xFF94A3B8)
@@ -522,7 +566,13 @@ fun DistrictOutbreakMapView(
     }
 }
 
-private fun getVillageScreenCoordinates(village: Village, width: Float, height: Float, zoom: Float): Pair<Float, Float> {
+private fun getVillageScreenCoordinates(
+    village: Village,
+    width: Float,
+    height: Float,
+    zoom: Float,
+    pan: Offset = Offset.Zero
+): Pair<Float, Float> {
     val centerX = width / 2f
     val centerY = height / 2f
 
@@ -536,8 +586,8 @@ private fun getVillageScreenCoordinates(village: Village, width: Float, height: 
     val unzoomedX = width * baseXFraction
     val unzoomedY = height * baseYFraction
 
-    val zoomedX = centerX + (unzoomedX - centerX) * zoom
-    val zoomedY = centerY + (unzoomedY - centerY) * zoom
+    val zoomedX = centerX + (unzoomedX - centerX) * zoom + pan.x
+    val zoomedY = centerY + (unzoomedY - centerY) * zoom + pan.y
 
     return zoomedX to zoomedY
 }
