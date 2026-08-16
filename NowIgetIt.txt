@@ -18,7 +18,8 @@ In rural India, healthcare fails because of three broken links:
 VitalSense is a unified, offline-first telemedicine and disease surveillance 
 platform. It connects the Patient, the ASHA Worker, the Doctor, and the 
 District Health Admin in ONE synchronized loop with zero-internet fallbacks, 
-on-device AI prescription scanning, and live outbreak radar mapping.
+on-device AI prescription scanning, live Google Maps outbreak surveillance, 
+and in-app update capabilities.
 
 
 --------------------------------------------------------------------------------
@@ -67,9 +68,9 @@ Here is how each role works and connects:
 
 4. DISTRICT HEALTH ADMIN (Command Center & Outbreak Surveillance):
    * Purpose: For District Chief Medical Officers (CMOs) and administrators.
-   * What they do: Monitors real-time Geo-Density Radar Maps for disease spikes 
-     (e.g., 10 fever cases reported in Rampur village in 24 hours), checks 
-     district pharmacy stock, and broadcasts urgent health directives.
+   * What they do: Monitors real-time Interactive Google Maps for disease spikes 
+     (e.g., 12 fever cases reported in Sundarpura village), checks district 
+     pharmacy stock, and broadcasts urgent health directives.
    * Connection: Admin broadcasts instantly appear on all Patient, ASHA, and 
      Doctor dashboards.
 
@@ -94,6 +95,8 @@ B. STATE MANAGEMENT & NAVIGATION (AppStateHolder + VitalSenseNavGraph)
      language preference, connectivity mode, and active ASHA proxy state.
    * AnimatedContent Navigation: Seamless animated screen transitions without 
      blank flashes.
+   * In-App Update Engine: Automatic background check against GitHub releases 
+     with a non-blocking floating update banner (Update Now / Later).
 
 C. OFFLINE-FIRST DATA ENGINE (Room SQLite + WorkManager + Firestore)
    * The Problem: Rural villages often have zero cell coverage.
@@ -118,7 +121,14 @@ D. ON-DEVICE AI PRESCRIPTION SCANNER (Google ML Kit OCR)
        (e.g., 500mg), frequencies (e.g., 1-0-1), and durations (e.g., 5 days) 
        into structured digital records.
 
-E. ZERO-INTERNET EMERGENCY SOS & FALLBACKS (EmergencySosHelper)
+E. INTERACTIVE GOOGLE MAPS OUTBREAK SURVEILLANCE
+   * High-accuracy vector Google Maps engine with 360° free pan/drag, multi-touch 
+     pinch-to-zoom, and 3 layer styles (Road Map, Satellite, Night Mode).
+   * Dynamic teardrop pin markers with color-coded severity (Red = Outbreak Zone, 
+     Amber = Active, Green = Stable) and pulsing heat radius circles.
+   * Interactive Info Window Card on marker tap with 1-tap advisory broadcast.
+
+F. ZERO-INTERNET EMERGENCY SOS & FALLBACKS (EmergencySosHelper)
    * When a patient taps "Emergency SOS":
      1. Digital Alert: Dispatched via local database / Firestore to assigned 
         ASHA worker and doctors.
@@ -167,14 +177,17 @@ STEP 4: DOCTOR SPECIALIST TRIAGE (45 seconds)
        to real-time PHC dispensary inventory.
      - Tap "Submit Medical Advice".
 
-STEP 5: DISTRICT ADMIN SURVEILLANCE & RADAR (30 seconds)
+STEP 5: DISTRICT ADMIN SURVEILLANCE & GOOGLE MAPS (45 seconds)
    * Switch role to "Admin: District Health Command".
-   * Showcase the Geo-Density Outbreak Mapping Radar HUD with glowing clusters.
+   * Showcase the Interactive Google Maps Outbreak Surveillance view:
+     - Pan freely around the district with finger drag.
+     - Switch layers: [🗺️ Map | 🛰️ Satellite | 🌙 Night].
+     - Tap the red pin on Sundarpura -> View the pop-up Google Maps info card.
    * Explain: "Because symptoms are tagged with village telemetry, health 
      officials can detect an outbreak cluster in Sundarpura within hours 
      rather than waiting weeks for paper reports."
-   * Tap "Broadcast Health Directive" -> Send a boil-water notice -> Show it 
-     appearing on the patient and doctor feeds.
+   * Tap "📢 Send Advisory to Sundarpura Residents" -> Show the pre-filled 
+     broadcast dialog and dispatch it.
 
 
 --------------------------------------------------------------------------------
