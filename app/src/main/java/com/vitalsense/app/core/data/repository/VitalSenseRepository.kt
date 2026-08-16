@@ -59,4 +59,14 @@ interface VitalSenseRepository {
 
     // --- Emergency SOS ---
     suspend fun triggerEmergencySos(patient: Patient, locationLat: Double?, locationLng: Double?): Boolean
+
+    // --- ASHA Features ---
+    fun getImmunizationRecords(): Flow<List<ImmunizationRecord>>
+    suspend fun saveImmunizationRecord(record: ImmunizationRecord)
+    
+    fun getDailyRounds(): Flow<List<DailyRound>>
+    suspend fun saveDailyRound(round: DailyRound)
+    
+    fun getAshaMedicines(): Flow<List<AshaMedicine>>
+    suspend fun saveAshaMedicine(medicine: AshaMedicine)
 }

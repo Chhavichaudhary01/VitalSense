@@ -46,4 +46,13 @@ class Converters {
         val listType = object : TypeToken<List<String>>() {}.type
         return gson.fromJson(value, listType) ?: emptyList()
     }
+
+    @TypeConverter
+    fun fromVaccineInfoList(value: List<VaccineInfo>): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toVaccineInfoList(value: String): List<VaccineInfo> {
+        val listType = object : TypeToken<List<VaccineInfo>>() {}.type
+        return gson.fromJson(value, listType) ?: emptyList()
+    }
 }

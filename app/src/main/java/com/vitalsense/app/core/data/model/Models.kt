@@ -146,3 +146,52 @@ data class GovernmentScheme(
     val eligibility: String,
     val applicationUrl: String = ""
 )
+
+data class VaccineInfo(
+    val name: String,
+    val dueDateFormatted: String,
+    val givenDateFormatted: String?,
+    val status: String // "Upcoming", "Completed", "Overdue"
+)
+
+data class ImmunizationRecord(
+    val id: String,
+    val childName: String,
+    val motherName: String,
+    val dobFormatted: String,
+    val gender: String,
+    val villageName: String,
+    val ashaWorkerId: String,
+    val vaccines: List<VaccineInfo>
+)
+
+data class DailyRound(
+    val id: String,
+    val dateFormatted: String,
+    val villageName: String,
+    val householdName: String,
+    val personName: String,
+    val ashaWorkerId: String,
+    val purpose: String,
+    val isPregnancyChecked: Boolean,
+    val isChildHealthChecked: Boolean,
+    val isImmunizationChecked: Boolean,
+    val isMedicineGiven: Boolean,
+    val isCounsellingDone: Boolean,
+    val notes: String,
+    val status: String // "Pending", "Completed"
+)
+
+data class AshaMedicine(
+    val id: String,
+    val ashaWorkerId: String,
+    val medicineName: String,
+    val availableQuantity: Int,
+    val unit: String,
+    val minStockQuantity: Int,
+    val expiryDateFormatted: String,
+    val lastRestockDateFormatted: String?
+) {
+    val isLowStock: Boolean
+        get() = availableQuantity <= minStockQuantity
+}

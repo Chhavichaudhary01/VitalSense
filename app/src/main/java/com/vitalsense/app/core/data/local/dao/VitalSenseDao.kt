@@ -123,6 +123,25 @@ interface VitalSenseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchemes(schemes: List<GovernmentSchemeEntity>)
 
+    // --- ASHA Features ---
+    @Query("SELECT * FROM immunization_records")
+    fun getAllImmunizationRecords(): Flow<List<ImmunizationRecordEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertImmunizationRecord(record: ImmunizationRecordEntity)
+
+    @Query("SELECT * FROM daily_rounds")
+    fun getAllDailyRounds(): Flow<List<DailyRoundEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDailyRound(round: DailyRoundEntity)
+
+    @Query("SELECT * FROM asha_medicines")
+    fun getAllAshaMedicines(): Flow<List<AshaMedicineEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAshaMedicine(medicine: AshaMedicineEntity)
+
     // --- Outbox Queue (Offline-First Sync) ---
     @Query("SELECT * FROM outbox_records ORDER BY timestamp ASC")
     suspend fun getPendingOutboxRecords(): List<OutboxEntity>
