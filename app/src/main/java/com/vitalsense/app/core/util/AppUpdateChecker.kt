@@ -21,7 +21,7 @@ object AppUpdateChecker {
     const val CURRENT_VERSION_CODE = 1
     const val CURRENT_VERSION_NAME = "1.0.0"
     const val GITHUB_REPO = "alexansh/VitalSense"
-    const val DIRECT_APK_DOWNLOAD_URL = "https://github.com/alexansh/VitalSense/releases/download/version/VitalSense.1.0.1.apk"
+    const val DIRECT_APK_DOWNLOAD_URL = "https://github.com/alexansh/VitalSense/releases/download/version/VitalSense.apk"
 
     /**
      * Checks GitHub Releases API in the background for new version releases

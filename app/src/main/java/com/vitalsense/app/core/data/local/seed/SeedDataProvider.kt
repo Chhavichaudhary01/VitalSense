@@ -371,6 +371,66 @@ object SeedDataProvider {
         )
     )
 
+    val initialImmunizations = listOf(
+        ImmunizationRecord(
+            id = "imm_1",
+            childName = "Aarav Kumar",
+            motherName = "Anita Sharma",
+            dobFormatted = "10 Jan 2026",
+            gender = "Male",
+            villageName = "Sundarpura",
+            ashaWorkerId = "asha_priya",
+            vaccines = listOf(
+                VaccineInfo("BCG", "10 Jan 2026", "11 Jan 2026", "Completed"),
+                VaccineInfo("OPV-1", "10 Feb 2026", "15 Feb 2026", "Completed"),
+                VaccineInfo("Pentavalent-1", "10 Feb 2026", null, "Overdue"),
+                VaccineInfo("Rotavirus-1", "10 Feb 2026", null, "Overdue")
+            )
+        )
+    )
+
+    val initialDailyRounds = listOf(
+        DailyRound(
+            id = "round_1",
+            dateFormatted = "16 Aug 2026",
+            villageName = "Sundarpura",
+            householdName = "Sharma Household",
+            personName = "Anita Sharma",
+            ashaWorkerId = "asha_priya",
+            purpose = "Prenatal checkup follow-up",
+            isPregnancyChecked = true,
+            isChildHealthChecked = false,
+            isImmunizationChecked = false,
+            isMedicineGiven = true,
+            isCounsellingDone = true,
+            notes = "Provided IFA supplements, vitals normal.",
+            status = "Completed"
+        ),
+        DailyRound(
+            id = "round_2",
+            dateFormatted = "16 Aug 2026",
+            villageName = "Bhimnagar",
+            householdName = "Patel Household",
+            personName = "Meena Patel",
+            ashaWorkerId = "asha_priya",
+            purpose = "Dietary Guidance",
+            isPregnancyChecked = false,
+            isChildHealthChecked = false,
+            isImmunizationChecked = false,
+            isMedicineGiven = false,
+            isCounsellingDone = false,
+            notes = "",
+            status = "Pending"
+        )
+    )
+
+    val initialAshaMedicines = listOf(
+        AshaMedicine("asha_med_1", "asha_priya", "Paracetamol 500mg", 40, "tablets", 20, "12 Dec 2027", "01 Aug 2026"),
+        AshaMedicine("asha_med_2", "asha_priya", "IFA Tablets", 15, "tablets", 30, "10 Nov 2027", "15 Jul 2026"),
+        AshaMedicine("asha_med_3", "asha_priya", "ORS Packets", 5, "packets", 15, "05 Jan 2028", "20 Jun 2026"),
+        AshaMedicine("asha_med_4", "asha_priya", "Zinc Tablets", 0, "tablets", 10, "01 Sep 2026", "10 May 2026")
+    )
+
     // Entity conversions for Room seeding
     fun getVillageEntities(): List<VillageEntity> = initialVillages.map {
         VillageEntity(it.id, it.name, it.district, it.state, it.population, it.latitude, it.longitude, it.activeCases, it.highRiskCount)
@@ -425,5 +485,17 @@ object SeedDataProvider {
 
     fun getSchemeEntities(): List<GovernmentSchemeEntity> = initialSchemes.map {
         GovernmentSchemeEntity(it.id, it.title, it.category, it.targetBeneficiary, it.benefitsSummary, it.eligibility, it.applicationUrl)
+    }
+
+    fun getImmunizationEntities(): List<ImmunizationRecordEntity> = initialImmunizations.map {
+        ImmunizationRecordEntity(it.id, it.childName, it.motherName, it.dobFormatted, it.gender, it.villageName, it.ashaWorkerId, gson.toJson(it.vaccines))
+    }
+
+    fun getDailyRoundEntities(): List<DailyRoundEntity> = initialDailyRounds.map {
+        DailyRoundEntity(it.id, it.dateFormatted, it.villageName, it.householdName, it.personName, it.ashaWorkerId, it.purpose, it.isPregnancyChecked, it.isChildHealthChecked, it.isImmunizationChecked, it.isMedicineGiven, it.isCounsellingDone, it.notes, it.status)
+    }
+
+    fun getAshaMedicineEntities(): List<AshaMedicineEntity> = initialAshaMedicines.map {
+        AshaMedicineEntity(it.id, it.ashaWorkerId, it.medicineName, it.availableQuantity, it.unit, it.minStockQuantity, it.expiryDateFormatted, it.lastRestockDateFormatted)
     }
 }

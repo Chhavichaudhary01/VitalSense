@@ -149,3 +149,45 @@ data class GovernmentSchemeEntity(
     val eligibility: String,
     val applicationUrl: String = ""
 )
+
+@Entity(tableName = "immunization_records")
+data class ImmunizationRecordEntity(
+    @PrimaryKey val id: String,
+    val childName: String,
+    val motherName: String,
+    val dobFormatted: String,
+    val gender: String,
+    val villageName: String,
+    val ashaWorkerId: String,
+    val vaccinesJson: String // List<VaccineInfo>
+)
+
+@Entity(tableName = "daily_rounds")
+data class DailyRoundEntity(
+    @PrimaryKey val id: String,
+    val dateFormatted: String,
+    val villageName: String,
+    val householdName: String,
+    val personName: String,
+    val ashaWorkerId: String,
+    val purpose: String,
+    val isPregnancyChecked: Boolean,
+    val isChildHealthChecked: Boolean,
+    val isImmunizationChecked: Boolean,
+    val isMedicineGiven: Boolean,
+    val isCounsellingDone: Boolean,
+    val notes: String,
+    val status: String // "Pending", "Completed"
+)
+
+@Entity(tableName = "asha_medicines")
+data class AshaMedicineEntity(
+    @PrimaryKey val id: String,
+    val ashaWorkerId: String,
+    val medicineName: String,
+    val availableQuantity: Int,
+    val unit: String,
+    val minStockQuantity: Int,
+    val expiryDateFormatted: String,
+    val lastRestockDateFormatted: String?
+)

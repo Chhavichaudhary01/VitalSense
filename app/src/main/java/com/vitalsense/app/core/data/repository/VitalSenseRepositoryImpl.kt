@@ -35,6 +35,9 @@ class VitalSenseRepositoryImpl @Inject constructor(
     private val _notices = MutableStateFlow(SeedDataProvider.initialNotices)
     private val _dispensary = MutableStateFlow(SeedDataProvider.initialDispensaryItems)
     private val _schemes = MutableStateFlow(SeedDataProvider.initialSchemes)
+    private val _immunizations = MutableStateFlow(SeedDataProvider.initialImmunizations)
+    private val _dailyRounds = MutableStateFlow(SeedDataProvider.initialDailyRounds)
+    private val _ashaMedicines = MutableStateFlow(SeedDataProvider.initialAshaMedicines)
 
     init {
         // 1. Pre-seed local Room database on first launch
@@ -50,6 +53,10 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 dao.insertDispensaryItems(SeedDataProvider.getDispensaryEntities())
                 dao.insertNotices(SeedDataProvider.getNoticeEntities())
                 dao.insertSchemes(SeedDataProvider.getSchemeEntities())
+                
+                SeedDataProvider.getImmunizationEntities().forEach { dao.insertImmunizationRecord(it) }
+                SeedDataProvider.getDailyRoundEntities().forEach { dao.insertDailyRound(it) }
+                SeedDataProvider.getAshaMedicineEntities().forEach { dao.insertAshaMedicine(it) }
             } catch (e: Exception) {
                 // Fallback to in-memory state
             }
@@ -571,5 +578,74 @@ class VitalSenseRepositoryImpl @Inject constructor(
         )
         sendNotice(sosNotice)
         return true
+    }
+
+    // --- ASHA Features ---
+    override fun getImmunizationRecords(): Flow<List<ImmunizationRecord>> = _immunizations.asStateFlow()
+
+    override suspend fun saveImmunizationRecord(record: ImmunizationRecord) {
+        _immunizations.update { list ->
+            val index = list.indexOfFirst { it.id == record.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, record) }
+            } else {
+                list + record
+            }
+        }
+        scope.launch {
+            dao.insertImmunizationRecord(
+                ImmunizationRecordEntity(
+                    record.id, record.childName, record.motherName, record.dobFormatted,
+                    record.gender, record.villageName, record.ashaWorkerId,
+                    gson.toJson(record.vaccines)
+                )
+            )
+        }
+    }
+
+    override fun getDailyRounds(): Flow<List<DailyRound>> = _dailyRounds.asStateFlow()
+
+    override suspend fun saveDailyRound(round: DailyRound) {
+        _dailyRounds.update { list ->
+            val index = list.indexOfFirst { it.id == round.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, round) }
+            } else {
+                list + round
+            }
+        }
+        scope.launch {
+            dao.insertDailyRound(
+                DailyRoundEntity(
+                    round.id, round.dateFormatted, round.villageName, round.householdName,
+                    round.personName, round.ashaWorkerId, round.purpose,
+                    round.isPregnancyChecked, round.isChildHealthChecked,
+                    round.isImmunizationChecked, round.isMedicineGiven,
+                    round.isCounsellingDone, round.notes, round.status
+                )
+            )
+        }
+    }
+
+    override fun getAshaMedicines(): Flow<List<AshaMedicine>> = _ashaMedicines.asStateFlow()
+
+    override suspend fun saveAshaMedicine(medicine: AshaMedicine) {
+        _ashaMedicines.update { list ->
+            val index = list.indexOfFirst { it.id == medicine.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, medicine) }
+            } else {
+                list + medicine
+            }
+        }
+        scope.launch {
+            dao.insertAshaMedicine(
+                AshaMedicineEntity(
+                    medicine.id, medicine.ashaWorkerId, medicine.medicineName,
+                    medicine.availableQuantity, medicine.unit, medicine.minStockQuantity,
+                    medicine.expiryDateFormatted, medicine.lastRestockDateFormatted
+                )
+            )
+        }
     }
 }

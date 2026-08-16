@@ -28,6 +28,9 @@ fun AshaHomeScreen(
     onRegisterPatientClick: () -> Unit = {},
     onSendNoticeClick: () -> Unit = {},
     onSavePrescription: (Prescription) -> Unit = {},
+    onImmunizationClick: () -> Unit = {},
+    onDailyRoundsClick: () -> Unit = {},
+    onMedicineRestockClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -194,22 +197,52 @@ fun AshaHomeScreen(
 
         // 5. Quick Action Buttons (Glume Primary & Secondary Pill Buttons)
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-            ) {
-                VitalSenseButton(
-                    text = strings.newPatient,
-                    onClick = onRegisterPatientClick,
-                    modifier = Modifier.weight(1f),
-                    style = ButtonStyle.PRIMARY
-                )
-                VitalSenseButton(
-                    text = strings.sendNotice,
-                    onClick = onSendNoticeClick,
-                    modifier = Modifier.weight(1f),
-                    style = ButtonStyle.DARK
-                )
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    VitalSenseButton(
+                        text = strings.newPatient,
+                        onClick = onRegisterPatientClick,
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.PRIMARY
+                    )
+                    VitalSenseButton(
+                        text = strings.sendNotice,
+                        onClick = onSendNoticeClick,
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.DARK
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    VitalSenseButton(
+                        text = "Immunization Tracker",
+                        onClick = onImmunizationClick,
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.SECONDARY
+                    )
+                    VitalSenseButton(
+                        text = "Daily Rounds",
+                        onClick = onDailyRoundsClick,
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.SECONDARY
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    VitalSenseButton(
+                        text = "Medicine Restock",
+                        onClick = onMedicineRestockClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = ButtonStyle.SECONDARY
+                    )
+                }
             }
         }
 
