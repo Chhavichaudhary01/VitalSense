@@ -12,6 +12,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.data.repository.VitalSenseRepository
 import com.vitalsense.app.core.state.AppStateHolder
+import com.vitalsense.app.core.ui.components.AppUpdateBanner
+import com.vitalsense.app.core.util.AppUpdateChecker
+import com.vitalsense.app.core.util.AppUpdateInfo
 import com.vitalsense.app.core.ui.components.TopRoleSwitcherBar
 import com.vitalsense.app.feature.admin.AdminHomeScreen
 import com.vitalsense.app.feature.asha.AshaHomeScreen
@@ -33,6 +36,15 @@ fun VitalSenseNavGraph(
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
+
+    // Background In-App Update Check
+    var updateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    var isUpdateDismissed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val info = AppUpdateChecker.checkForUpdates()
+        updateInfo = info
+    }
 
     // Core global state
     val isLoggedIn by appStateHolder.isLoggedIn.collectAsStateWithLifecycle()
@@ -124,18 +136,30 @@ fun VitalSenseNavGraph(
                 containerColor = MaterialTheme.colorScheme.background,
                 modifier = modifier.fillMaxSize()
             ) { innerPadding ->
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    AnimatedContent(
-                        targetState = currentRole,
-                        transitionSpec = {
-                            fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
-                        },
-                        label = "RoleTransition"
-                    ) { role ->
+                    if (!isUpdateDismissed && updateInfo?.isUpdateAvailable == true) {
+                        AppUpdateBanner(
+                            updateInfo = updateInfo,
+                            onDismiss = { isUpdateDismissed = true }
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        AnimatedContent(
+                            targetState = currentRole,
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
+                            },
+                            label = "RoleTransition"
+                        ) { role ->
                         when (role) {
                             UserRole.PATIENT -> {
                                 var showMentalWellness by remember { mutableStateOf(false) }
@@ -357,4 +381,5 @@ fun VitalSenseNavGraph(
             }
         }
     }
+}
 }
