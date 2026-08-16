@@ -23,10 +23,19 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            storeFile file("vitalsense-release.jks")
+            storePassword "vitalsense123"
+            keyAlias "vitalsense"
+            keyPassword "vitalsense123"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
