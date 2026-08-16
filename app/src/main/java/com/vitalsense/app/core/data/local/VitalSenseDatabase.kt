@@ -21,9 +21,12 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         BroadcastNoticeEntity::class,
         DispensaryEntity::class,
         GovernmentSchemeEntity::class,
-        OutboxEntity::class
+        OutboxEntity::class,
+        ImmunizationRecordEntity::class,
+        DailyRoundEntity::class,
+        AshaMedicineEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

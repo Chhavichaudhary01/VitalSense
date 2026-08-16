@@ -228,26 +228,68 @@ fun VitalSenseNavGraph(
                             }
 
                             UserRole.ASHA -> {
-                                BackHandler {
-                                    appStateHolder.logout()
-                                }
+                                var currentAshaScreen by remember { mutableStateOf("home") }
 
-                                AshaHomeScreen(
-                                    asha = activeAsha,
-                                    patients = patients.filter { it.ashaWorkerId == activeAsha.id },
-                                    notices = notices,
-                                    onSelectProxyPatient = { selectedPatient ->
-                                        appStateHolder.setProxyPatient(selectedPatient)
-                                        appStateHolder.switchRole(UserRole.PATIENT)
+                                val immunizations by repository.getImmunizationRecords().collectAsStateWithLifecycle(initialValue = emptyList())
+                                val dailyRounds by repository.getDailyRounds().collectAsStateWithLifecycle(initialValue = emptyList())
+                                val ashaMedicines by repository.getAshaMedicines().collectAsStateWithLifecycle(initialValue = emptyList())
+
+                                AnimatedContent(
+                                    targetState = currentAshaScreen,
+                                    transitionSpec = {
+                                        fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
                                     },
-                                    onRegisterPatientClick = {},
-                                    onSendNoticeClick = {},
-                                    onSavePrescription = { rx ->
-                                        coroutineScope.launch {
-                                            repository.savePrescription(rx)
+                                    label = "AshaScreenTransition"
+                                ) { screen ->
+                                    when (screen) {
+                                        "immunization" -> {
+                                            BackHandler { currentAshaScreen = "home" }
+                                            com.vitalsense.app.feature.asha.ImmunizationTrackerScreen(
+                                                records = immunizations,
+                                                onBackClick = { currentAshaScreen = "home" }
+                                            )
+                                        }
+                                        "daily_rounds" -> {
+                                            BackHandler { currentAshaScreen = "home" }
+                                            com.vitalsense.app.feature.asha.DailyRoundsScreen(
+                                                rounds = dailyRounds,
+                                                onBackClick = { currentAshaScreen = "home" }
+                                            )
+                                        }
+                                        "medicine_restock" -> {
+                                            BackHandler { currentAshaScreen = "home" }
+                                            com.vitalsense.app.feature.asha.MedicineRestockScreen(
+                                                medicines = ashaMedicines,
+                                                onBackClick = { currentAshaScreen = "home" }
+                                            )
+                                        }
+                                        else -> {
+                                            BackHandler {
+                                                appStateHolder.logout()
+                                            }
+
+                                            AshaHomeScreen(
+                                                asha = activeAsha,
+                                                patients = patients.filter { it.ashaWorkerId == activeAsha.id },
+                                                notices = notices,
+                                                onSelectProxyPatient = { selectedPatient ->
+                                                    appStateHolder.setProxyPatient(selectedPatient)
+                                                    appStateHolder.switchRole(UserRole.PATIENT)
+                                                },
+                                                onRegisterPatientClick = {},
+                                                onSendNoticeClick = {},
+                                                onSavePrescription = { rx ->
+                                                    coroutineScope.launch {
+                                                        repository.savePrescription(rx)
+                                                    }
+                                                },
+                                                onImmunizationClick = { currentAshaScreen = "immunization" },
+                                                onDailyRoundsClick = { currentAshaScreen = "daily_rounds" },
+                                                onMedicineRestockClick = { currentAshaScreen = "medicine_restock" }
+                                            )
                                         }
                                     }
-                                )
+                                }
                             }
 
                             UserRole.DOCTOR -> {
