@@ -41,7 +41,8 @@ enum class DoctorSpecialty(val displayName: String) {
     PEDIATRICIAN("Pediatrician"),
     GYNECOLOGIST("Gynecologist & Maternal Care"),
     NEUROLOGIST("Neurologist"),
-    CARDIOLOGIST("Cardiologist")
+    CARDIOLOGIST("Cardiologist"),
+    ORTHOPLASTIC_SURGEON("Orthoplastic Surgeon")
 }
 
 /**

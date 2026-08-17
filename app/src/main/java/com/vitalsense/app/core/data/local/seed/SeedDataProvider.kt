@@ -84,6 +84,16 @@ object SeedDataProvider {
             distanceKm = 6.5,
             phone = "+91 94150 99887",
             availableDays = "Mon - Fri (10:00 AM - 3:00 PM)"
+        ),
+        Doctor(
+            id = "doc_ayushman",
+            name = "Dr. Ayushman Dev Singh",
+            specialty = DoctorSpecialty.ORTHOPLASTIC_SURGEON,
+            qualification = "MS (Orthopaedics), MCh (Plastic & Reconstructive Surgery)",
+            hospitalName = "District Apex Trauma & Reconstructive Center",
+            distanceKm = 5.8,
+            phone = "+91 94150 77665",
+            availableDays = "Mon - Sat (9:00 AM - 5:00 PM)"
         )
     )
 
@@ -222,6 +232,19 @@ object SeedDataProvider {
             notes = "Crop failure stress resulting in insomnia, anxiety attacks, and loss of appetite.",
             timestamp = System.currentTimeMillis() - 86400000L * 3,
             ashaProxyLogged = false
+        ),
+        ConditionRecord(
+            id = "cond_5",
+            patientId = "pat_vikram",
+            patientName = "Vikram Singh",
+            villageId = "v_kalyanpur",
+            villageName = "Kalyanpur",
+            category = ConditionCategory.GENERAL_MEDICINE,
+            severity = SeverityLevel.SEVERE,
+            requestedDoctorType = DoctorSpecialty.ORTHOPLASTIC_SURGEON,
+            notes = "Post-traumatic lower extremity crush injury with extensive soft-tissue defect and compound fracture. Urgent orthoplastic reconstructive evaluation requested.",
+            timestamp = System.currentTimeMillis() - 86400000L * 1,
+            ashaProxyLogged = true
         )
     )
 
@@ -297,6 +320,18 @@ object SeedDataProvider {
             timeSlot = "03:30 PM",
             status = "Pending Confirmation",
             proposedBy = UserRole.PATIENT
+        ),
+        Appointment(
+            id = "apt_4",
+            patientId = "pat_vikram",
+            patientName = "Vikram Singh",
+            doctorId = "doc_ayushman",
+            doctorName = "Dr. Ayushman Dev Singh",
+            doctorSpecialty = "Orthoplastic Surgeon",
+            dateFormatted = "19 Aug 2026",
+            timeSlot = "11:00 AM",
+            status = "Confirmed",
+            proposedBy = UserRole.DOCTOR
         )
     )
 
