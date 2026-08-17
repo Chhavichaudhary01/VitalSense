@@ -20,6 +20,11 @@ import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.doctor.components.*
+import com.vitalsense.app.feature.doctor.components.PatientHistoryDialog
+import com.vitalsense.app.feature.doctor.components.PrescriptionComposerDialog
+import com.vitalsense.app.feature.doctor.components.ProposeAppointmentDialog
+import com.vitalsense.app.feature.doctor.components.ReferCaseDialog
+import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -48,6 +53,7 @@ fun CaseDetailScreen(
     var showPrescriptionDialog by remember { mutableStateOf(false) }
     var showAppointmentDialog by remember { mutableStateOf(false) }
     var showReferDialog by remember { mutableStateOf(false) }
+    var showTeleConsultModal by remember { mutableStateOf(false) }
 
     val isMentalHealthCase = record.category == ConditionCategory.MENTAL_HEALTH ||
             record.requestedDoctorType == DoctorSpecialty.PSYCHOLOGIST
@@ -378,28 +384,37 @@ fun CaseDetailScreen(
         }
 
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 VitalSenseButton(
-                    text = strings.issueRx,
-                    onClick = { showPrescriptionDialog = true },
-                    modifier = Modifier.weight(1f),
-                    style = ButtonStyle.DARK
+                    text = "📹 Start Tele-Consultation Call",
+                    onClick = { showTeleConsultModal = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = ButtonStyle.PRIMARY
                 )
-                VitalSenseButton(
-                    text = strings.proposeAppt,
-                    onClick = { showAppointmentDialog = true },
-                    modifier = Modifier.weight(1f),
-                    style = ButtonStyle.SECONDARY
-                )
-                VitalSenseButton(
-                    text = strings.refer,
-                    onClick = { showReferDialog = true },
-                    modifier = Modifier.weight(0.9f),
-                    style = ButtonStyle.OUTLINED
-                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    VitalSenseButton(
+                        text = strings.issueRx,
+                        onClick = { showPrescriptionDialog = true },
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.DARK
+                    )
+                    VitalSenseButton(
+                        text = strings.proposeAppt,
+                        onClick = { showAppointmentDialog = true },
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.SECONDARY
+                    )
+                    VitalSenseButton(
+                        text = strings.refer,
+                        onClick = { showReferDialog = true },
+                        modifier = Modifier.weight(0.9f),
+                        style = ButtonStyle.OUTLINED
+                    )
+                }
             }
         }
 
@@ -522,6 +537,21 @@ fun CaseDetailScreen(
             currentSpecialty = currentDoctor.specialty,
             onDismiss = { showReferDialog = false },
             onRefer = onReferCase
+        )
+    }
+
+    if (showTeleConsultModal) {
+        TeleConsultationModal(
+            patientName = record.patientName,
+            doctorName = currentDoctor.name,
+            specialty = currentDoctor.specialty.displayName,
+            villageName = record.villageName,
+            patientAge = patient?.age ?: 32,
+            onDismiss = { showTeleConsultModal = false },
+            onEndCall = { notes ->
+                showTeleConsultModal = false
+                responseText = if (responseText.isNotBlank()) "$responseText\n$notes" else notes
+            }
         )
     }
 }

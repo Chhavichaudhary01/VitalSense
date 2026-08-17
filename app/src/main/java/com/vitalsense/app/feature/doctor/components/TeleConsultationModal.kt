@@ -1,0 +1,454 @@
+package com.vitalsense.app.feature.doctor.components
+
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CallEnd
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.vitalsense.app.core.ui.theme.*
+import kotlinx.coroutines.delay
+
+@Composable
+fun TeleConsultationModal(
+    patientName: String,
+    doctorName: String,
+    specialty: String = "General Physician",
+    villageName: String = "Sundarpura",
+    patientAge: Int = 34,
+    onDismiss: () -> Unit,
+    onEndCall: (consultationNotes: String) -> Unit
+) {
+    var isMuted by remember { mutableStateOf(false) }
+    var isCameraOff by remember { mutableStateOf(false) }
+    var isLowBandwidthMode by remember { mutableStateOf(false) }
+    var callSeconds by remember { mutableIntStateOf(0) }
+    var consultationNotes by remember { mutableStateOf("") }
+    var showRxSheet by remember { mutableStateOf(false) }
+
+    // Live call duration timer
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            callSeconds++
+        }
+    }
+
+    val formattedTime = remember(callSeconds) {
+        val minutes = callSeconds / 60
+        val seconds = callSeconds % 60
+        "%02d:%02d".format(minutes, seconds)
+    }
+
+    // Audio waveform animation
+    val infiniteTransition = rememberInfiniteTransition(label = "Waveform")
+    val waveAnim1 by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(400, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "wave1"
+    )
+    val waveAnim2 by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 0.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(550, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "wave2"
+    )
+    val waveAnim3 by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(350, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "wave3"
+    )
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        )
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(GlumeBackground),
+            color = GlumeBackground
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // 1. Video Simulation Canvas
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF13131D),
+                                    Color(0xFF1F1F2E),
+                                    Color(0xFF151522)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLowBandwidthMode) {
+                        // Ultra-low bandwidth audio-only visualizer
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = GlumePrimaryPurpleContainer,
+                                border = BorderStroke(2.dp, GlumePrimaryPurple),
+                                modifier = Modifier.size(110.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("👤", fontSize = 54.sp)
+                                }
+                            }
+                            Text(
+                                text = patientName,
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
+                            )
+                            Text(
+                                text = "📡 Ultra-Low Bandwidth Mode (2G Audio Only)",
+                                style = MaterialTheme.typography.bodySmall.copy(color = GlumeSuccessMint, fontWeight = FontWeight.Bold)
+                            )
+
+                            // Live Audio Bars
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.height(30.dp)
+                            ) {
+                                listOf(waveAnim1, waveAnim2, waveAnim3, waveAnim2, waveAnim1).forEach { heightFraction ->
+                                    Box(
+                                        modifier = Modifier
+                                            .width(5.dp)
+                                            .fillMaxHeight(heightFraction)
+                                            .clip(CircleShape)
+                                            .background(GlumeSuccessMint)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Simulated Remote Patient Video Feed
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(160.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(
+                                                GlumePrimaryPurpleContainer,
+                                                GlumeSurfaceElevated
+                                            )
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("👩🏽‍🌾", fontSize = 82.sp)
+                            }
+
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "$patientName ($patientAge yrs)",
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumeTextPrimary
+                                )
+                                Text(
+                                    text = "Connected from Sundarpura PHC Tele-Kiosk",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = GlumeTextSecondary
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 2. Top Bar HUD (Timer, Quality, Village Info)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = PillShape,
+                        color = Color(0x99000000),
+                        border = BorderStroke(1.dp, GlumeBorder)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(GlumeAlertCoral)
+                            )
+                            Text(
+                                text = "REC  $formattedTime",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = PillShape,
+                        color = Color(0x99000000),
+                        border = BorderStroke(1.dp, GlumeBorder)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text("📡", fontSize = 12.sp)
+                            Text(
+                                text = if (isLowBandwidthMode) "2G Optimized (32 kbps)" else "HD 720p · 42ms",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = if (isLowBandwidthMode) GlumeWarningAmber else GlumeSuccessMint,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // 3. Live Tele-Vitals HUD Card (Left Side Overlay)
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xCC181824),
+                    border = BorderStroke(1.dp, GlumeBorder),
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = Spacing.md)
+                        .width(130.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "LIVE VITALS",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = GlumeTextSecondary
+                            )
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("❤️ Pulse", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = GlumeTextSecondary))
+                            Text("74 bpm", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GlumeSuccessMint))
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("🩸 BP", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = GlumeTextSecondary))
+                            Text("118/78", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GlumeTextPrimary))
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("🫁 SpO2", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = GlumeTextSecondary))
+                            Text("98%", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GlumeSuccessMint))
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("🌡️ Temp", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = GlumeTextSecondary))
+                            Text("98.4°F", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GlumeTextPrimary))
+                        }
+                    }
+                }
+
+                // 4. Picture-in-Picture (PiP) Floating Doctor View
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (isCameraOff) GlumeSurfaceElevated else Color(0xFF28283C),
+                    border = BorderStroke(1.5.dp, GlumePrimaryPurple),
+                    shadowElevation = 8.dp,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = Spacing.md, bottom = 120.dp)
+                        .size(width = 100.dp, height = 140.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isCameraOff) {
+                            Text("📷 Off", style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
+                        } else {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text("👨‍⚕️", fontSize = 42.sp)
+                                Text(
+                                    text = "You",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                )
+                            }
+                        }
+
+                        if (isMuted) {
+                            Surface(
+                                shape = CircleShape,
+                                color = GlumeAlertCoral,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(4.dp)
+                                    .size(18.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🔇", fontSize = 9.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 5. In-Call Controls Bottom Bar
+                Surface(
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    color = Color(0xEB14141E),
+                    border = BorderStroke(1.dp, GlumeBorder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Mic Button
+                            Surface(
+                                shape = CircleShape,
+                                color = if (isMuted) GlumeAlertCoral else GlumeSurfaceElevated,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clickable { isMuted = !isMuted }
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(if (isMuted) "🔇" else "🎙️", fontSize = 20.sp)
+                                }
+                            }
+
+                            // Camera Button
+                            Surface(
+                                shape = CircleShape,
+                                color = if (isCameraOff) GlumeSurfaceSubtle else GlumeSurfaceElevated,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clickable { isCameraOff = !isCameraOff }
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(if (isCameraOff) "🚫" else "📹", fontSize = 20.sp)
+                                }
+                            }
+
+                            // 2G Mode Button
+                            Surface(
+                                shape = CircleShape,
+                                color = if (isLowBandwidthMode) GlumeWarningAmber.copy(alpha = 0.3f) else GlumeSurfaceElevated,
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (isLowBandwidthMode) GlumeWarningAmber else Color.Transparent
+                                ),
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clickable { isLowBandwidthMode = !isLowBandwidthMode }
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("📡", fontSize = 20.sp)
+                                }
+                            }
+
+                            // End Call Button (Red Circle)
+                            Surface(
+                                shape = CircleShape,
+                                color = GlumeAlertCoral,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clickable {
+                                        onEndCall("Tele-consultation completed ($formattedTime). Vitals verified, medication advised.")
+                                    }
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.CallEnd,
+                                        contentDescription = "End Call",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

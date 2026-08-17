@@ -20,6 +20,7 @@ import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.doctor.components.PatientHistoryDialog
 import com.vitalsense.app.feature.doctor.components.ScheduleAppointmentDialog
+import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
 
 @Composable
 fun DoctorHomeScreen(
@@ -40,6 +41,7 @@ fun DoctorHomeScreen(
     val strings = LocalAppStrings.current
     var showScheduleDialog by remember { mutableStateOf(false) }
     var selectedPatientForHistory by remember { mutableStateOf<Patient?>(null) }
+    var activeTeleConsultationPatient by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
     val pendingCases = cases.filter { it.status == CaseStatus.PENDING_REVIEW || it.status == CaseStatus.IN_PROGRESS }
@@ -472,6 +474,36 @@ fun DoctorHomeScreen(
                                     Text("Accept ✓", color = GlumeBackground, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                 }
                             }
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Button(
+                                    onClick = {
+                                        activeTeleConsultationPatient = appointment.patientName
+                                    },
+                                    shape = PillShape,
+                                    colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
+                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                    modifier = Modifier.defaultMinSize(minHeight = 32.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text("📹", fontSize = 12.sp)
+                                        Text(
+                                            text = "Join Tele-Consultation Call",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = Color.White,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -624,6 +656,18 @@ fun DoctorHomeScreen(
             prescriptions = allPrescriptions,
             appointments = appointments,
             onDismiss = { selectedPatientForHistory = null }
+        )
+    }
+
+    activeTeleConsultationPatient?.let { patName ->
+        TeleConsultationModal(
+            patientName = patName,
+            doctorName = doctor.name,
+            specialty = doctor.specialty.displayName,
+            onDismiss = { activeTeleConsultationPatient = null },
+            onEndCall = { notes ->
+                activeTeleConsultationPatient = null
+            }
         )
     }
 }
