@@ -3,6 +3,7 @@ package com.vitalsense.app.feature.patient
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,13 +20,18 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.feature.patient.components.LogSymptomDialog
+import com.vitalsense.app.feature.patient.components.HealthCardDialog
+import com.vitalsense.app.feature.patient.components.GovernmentSchemesDialog
 
 @Composable
 fun PatientHomeScreen(
     patient: Patient,
     notices: List<BroadcastNotice> = emptyList(),
     prescriptions: List<Prescription> = emptyList(),
+    schemes: List<GovernmentScheme> = emptyList(),
     onCategoryClick: (ConditionCategory) -> Unit = {},
+    onLogCondition: (ConditionRecord) -> Unit = {},
     onViewHealthCard: () -> Unit = {},
     onTriggerSos: () -> Unit = {},
     onSavePrescription: (Prescription) -> Unit = {},
@@ -35,6 +41,13 @@ fun PatientHomeScreen(
     var showSosConfirmation by remember { mutableStateOf(false) }
     var sosSentSuccess by remember { mutableStateOf(false) }
     var showPrescriptionUploadDialog by remember { mutableStateOf(false) }
+
+    // Dialog states for complete functional implementation
+    var showHealthCardDialog by remember { mutableStateOf(false) }
+    var showLogSymptomDialog by remember { mutableStateOf(false) }
+    var activeSymptomCategory by remember { mutableStateOf(ConditionCategory.GENERAL_MEDICINE) }
+    var showSchemesDialog by remember { mutableStateOf(false) }
+    var conditionLoggedSuccess by remember { mutableStateOf(false) }
 
     // Toggle to evaluate Glume Dark Mode vs Sunlight High-Contrast Mode for Patient
     var isSunlightMode by remember { mutableStateOf(false) }
@@ -133,7 +146,7 @@ fun PatientHomeScreen(
             VitalSenseCard(
                 backgroundColor = cardBgColor,
                 border = BorderStroke(1.dp, cardBorderColor),
-                onClick = onViewHealthCard
+                onClick = { showHealthCardDialog = true }
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     Row(
@@ -170,7 +183,8 @@ fun PatientHomeScreen(
 
                         Surface(
                             shape = PillShape,
-                            color = GlumePrimaryPurple
+                            color = GlumePrimaryPurple,
+                            modifier = Modifier.clickable { showHealthCardDialog = true }
                         ) {
                             Text(
                                 text = strings.viewCard,
@@ -227,6 +241,39 @@ fun PatientHomeScreen(
             }
         }
 
+        // Success banner when symptoms logged
+        if (conditionLoggedSuccess) {
+            item {
+                Surface(
+                    shape = PillShape,
+                    color = GlumeSuccessContainer,
+                    border = BorderStroke(1.dp, GlumeSuccessMint),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            Text("✓", color = GlumeSuccessMint, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "Symptoms submitted to PHC Doctor triage queue!",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeSuccessMint
+                            )
+                        }
+                        IconButton(onClick = { conditionLoggedSuccess = false }, modifier = Modifier.size(24.dp)) {
+                            Text("✕", color = GlumeSuccessMint, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+
         // 3. Section Title: Health Categories (Icon-First & High Contrast)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
@@ -263,7 +310,14 @@ fun PatientHomeScreen(
                             CategoryChip(
                                 category = category,
                                 isSelected = false,
-                                onClick = { onCategoryClick(category) },
+                                onClick = {
+                                    if (category == ConditionCategory.MENTAL_HEALTH) {
+                                        onCategoryClick(category)
+                                    } else {
+                                        activeSymptomCategory = category
+                                        showLogSymptomDialog = true
+                                    }
+                                },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -455,7 +509,64 @@ fun PatientHomeScreen(
             }
         }
 
-        // 6. Persistent Emergency SOS Banner (Single Full-Width Rounded Button/Card)
+        // 6. Rural Welfare & Government Schemes Card
+        item {
+            VitalSenseCard(
+                backgroundColor = cardBgColor,
+                border = BorderStroke(1.dp, GlumePrimaryPurple.copy(alpha = 0.5f)),
+                onClick = { showSchemesDialog = true }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = GlumePrimaryPurpleContainer,
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("🏛️", fontSize = 20.sp)
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "Rural Health Schemes (PM-JAY)",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = textPrimaryColor
+                            )
+                            Text(
+                                text = "Free treatment up to ₹5 Lakh & Maternal Subsidies",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = textSecondaryColor
+                            )
+                        }
+                    }
+                    Surface(
+                        shape = PillShape,
+                        color = GlumePrimaryPurple,
+                        modifier = Modifier.clickable { showSchemesDialog = true }
+                    ) {
+                        Text(
+                            text = "View Schemes",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // 7. Persistent Emergency SOS Banner (Single Full-Width Rounded Button/Card)
         item {
             Spacer(modifier = Modifier.height(Spacing.xxs))
             Surface(
@@ -641,6 +752,33 @@ fun PatientHomeScreen(
             isAshaProxy = false,
             onDismiss = { showPrescriptionUploadDialog = false },
             onSavePrescription = onSavePrescription
+        )
+    }
+
+    if (showHealthCardDialog) {
+        HealthCardDialog(
+            patient = patient,
+            onDismiss = { showHealthCardDialog = false }
+        )
+    }
+
+    if (showLogSymptomDialog) {
+        LogSymptomDialog(
+            patient = patient,
+            initialCategory = activeSymptomCategory,
+            onDismiss = { showLogSymptomDialog = false },
+            onSubmit = { record ->
+                onLogCondition(record)
+                showLogSymptomDialog = false
+                conditionLoggedSuccess = true
+            }
+        )
+    }
+
+    if (showSchemesDialog) {
+        GovernmentSchemesDialog(
+            schemes = schemes,
+            onDismiss = { showSchemesDialog = false }
         )
     }
 }

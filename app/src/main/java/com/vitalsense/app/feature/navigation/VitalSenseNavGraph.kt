@@ -70,6 +70,7 @@ fun VitalSenseNavGraph(
     val allPrescriptions by repository.getPrescriptions().collectAsStateWithLifecycle(initialValue = emptyList())
     val allConditions by repository.getConditionRecords().collectAsStateWithLifecycle(initialValue = emptyList())
     val allAppointments by repository.getAppointments().collectAsStateWithLifecycle(initialValue = emptyList())
+    val schemes by repository.getGovernmentSchemes().collectAsStateWithLifecycle(initialValue = emptyList())
 
     val currentLanguage by appStateHolder.currentLanguage.collectAsStateWithLifecycle()
 
@@ -204,13 +205,16 @@ fun VitalSenseNavGraph(
                                             patient = effectivePatient,
                                             notices = notices,
                                             prescriptions = allPrescriptions.filter { it.patientId == effectivePatient.id },
+                                            schemes = schemes,
                                             onCategoryClick = { category ->
                                                 if (category == ConditionCategory.MENTAL_HEALTH) {
                                                     showMentalWellness = true
                                                 }
                                             },
-                                            onViewHealthCard = {
-                                                // Health card view hook
+                                            onLogCondition = { record ->
+                                                coroutineScope.launch {
+                                                    repository.logCondition(record)
+                                                }
                                             },
                                             onTriggerSos = {
                                                 coroutineScope.launch {

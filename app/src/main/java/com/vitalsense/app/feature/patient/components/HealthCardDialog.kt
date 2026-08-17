@@ -1,0 +1,263 @@
+package com.vitalsense.app.feature.patient.components
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.vitalsense.app.core.data.model.Patient
+import com.vitalsense.app.core.ui.components.SeverityBadge
+import com.vitalsense.app.core.ui.theme.*
+
+@Composable
+fun HealthCardDialog(
+    patient: Patient,
+    onDismiss: () -> Unit
+) {
+    var isSunlightMode by remember { mutableStateOf(false) }
+
+    val cardBg = if (isSunlightMode) Color.White else GlumeSurfaceCard
+    val cardTextPrimary = if (isSunlightMode) Color(0xFF111111) else GlumeTextPrimary
+    val cardTextSecondary = if (isSunlightMode) Color(0xFF555555) else GlumeTextSecondary
+    val cardBorder = if (isSunlightMode) Color(0xFFCCCCCC) else GlumePrimaryPurple.copy(alpha = 0.6f)
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = cardBg,
+            border = BorderStroke(1.5.dp, cardBorder),
+            shadowElevation = 12.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.md)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                // Top Header: National Health Digital Card Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = GlumePrimaryPurpleContainer,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("🪪", fontSize = 18.sp)
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "DIGITAL HEALTH CARD",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                ),
+                                color = GlumePrimaryPurple
+                            )
+                            Text(
+                                text = "VitalSense / SehatSetu Identity",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = cardTextSecondary
+                            )
+                        }
+                    }
+
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Text("✕", color = cardTextSecondary, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                HorizontalDivider(color = if (isSunlightMode) Color(0xFFEEEEEE) else GlumeBorder)
+
+                // Patient Profile Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = patient.name,
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                            color = cardTextPrimary
+                        )
+                        Text(
+                            text = "${patient.age} Yrs · ${patient.gender} · ${patient.villageName}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = cardTextSecondary
+                        )
+                        Text(
+                            text = "ABHA ID: 91-${patient.phone.takeLast(6)}-${patient.id.takeLast(4).uppercase()}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                color = GlumePrimaryPurpleLight,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+
+                    SeverityBadge(severity = patient.currentRiskLevel)
+                }
+
+                // High-Contrast QR Code Card
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, Color(0xFFDDDDDD)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = Spacing.xs)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Spacing.sm),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        // Vector QR Code representation
+                        Box(
+                            modifier = Modifier
+                                .size(140.dp)
+                                .background(Color.White)
+                                .padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                val blockSize = size.width / 11f
+                                val primaryColor = Color(0xFF111111)
+
+                                // Top-Left Corner Box
+                                drawRect(primaryColor, Offset(0f, 0f), Size(blockSize * 3.5f, blockSize * 3.5f))
+                                drawRect(Color.White, Offset(blockSize * 0.7f, blockSize * 0.7f), Size(blockSize * 2.1f, blockSize * 2.1f))
+                                drawRect(primaryColor, Offset(blockSize * 1.2f, blockSize * 1.2f), Size(blockSize * 1.1f, blockSize * 1.1f))
+
+                                // Top-Right Corner Box
+                                drawRect(primaryColor, Offset(size.width - blockSize * 3.5f, 0f), Size(blockSize * 3.5f, blockSize * 3.5f))
+                                drawRect(Color.White, Offset(size.width - blockSize * 2.8f, blockSize * 0.7f), Size(blockSize * 2.1f, blockSize * 2.1f))
+                                drawRect(primaryColor, Offset(size.width - blockSize * 2.3f, blockSize * 1.2f), Size(blockSize * 1.1f, blockSize * 1.1f))
+
+                                // Bottom-Left Corner Box
+                                drawRect(primaryColor, Offset(0f, size.height - blockSize * 3.5f), Size(blockSize * 3.5f, blockSize * 3.5f))
+                                drawRect(Color.White, Offset(blockSize * 0.7f, size.height - blockSize * 2.8f), Size(blockSize * 2.1f, blockSize * 2.1f))
+                                drawRect(primaryColor, Offset(blockSize * 1.2f, size.height - blockSize * 2.3f), Size(blockSize * 1.1f, blockSize * 1.1f))
+
+                                // Center Data Dots
+                                drawRect(primaryColor, Offset(blockSize * 4.5f, blockSize * 2f), Size(blockSize * 1.2f, blockSize * 1.2f))
+                                drawRect(primaryColor, Offset(blockSize * 4.5f, blockSize * 5f), Size(blockSize * 2f, blockSize * 2f))
+                                drawRect(primaryColor, Offset(blockSize * 7.5f, blockSize * 4f), Size(blockSize * 1.2f, blockSize * 2f))
+                                drawRect(primaryColor, Offset(blockSize * 2f, blockSize * 7.5f), Size(blockSize * 1.5f, blockSize * 1.5f))
+                                drawRect(primaryColor, Offset(blockSize * 5.5f, blockSize * 8f), Size(blockSize * 2f, blockSize * 1.2f))
+                                drawRect(primaryColor, Offset(blockSize * 8.5f, blockSize * 7f), Size(blockSize * 1.5f, blockSize * 1.5f))
+                            }
+                        }
+
+                        Text(
+                            text = "SCAN AT PHC CLINIC / DISPENSARY",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp,
+                                color = Color(0xFF333333)
+                            )
+                        )
+                    }
+                }
+
+                // Emergency & Care Details Grid
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSunlightMode) Color(0xFFF7F7F7) else GlumeSurfaceElevated,
+                    border = BorderStroke(1.dp, if (isSunlightMode) Color(0xFFE0E0E0) else GlumeBorder),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Spacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text("Emergency Contact", style = MaterialTheme.typography.labelSmall, color = cardTextSecondary)
+                                Text(patient.emergencyContact, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = cardTextPrimary)
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("Assigned ASHA", style = MaterialTheme.typography.labelSmall, color = cardTextSecondary)
+                                Text(patient.ashaWorkerName, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = cardTextPrimary)
+                            }
+                        }
+
+                        HorizontalDivider(color = if (isSunlightMode) Color(0xFFE5E5E5) else GlumeBorder)
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text("Active Clinical Condition", style = MaterialTheme.typography.labelSmall, color = cardTextSecondary)
+                                Text(patient.lastCondition, style = MaterialTheme.typography.bodySmall, color = cardTextPrimary)
+                            }
+                        }
+                    }
+                }
+
+                // Footer Actions: Offline Status & Sunlight Mode Toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text("🔒", fontSize = 12.sp)
+                        Text(
+                            text = "Offline SQLite Encrypted",
+                            style = MaterialTheme.typography.labelSmall.copy(color = GlumeSuccessMint, fontWeight = FontWeight.Bold)
+                        )
+                    }
+
+                    TextButton(
+                        onClick = { isSunlightMode = !isSunlightMode },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = if (isSunlightMode) "🌙 Dark Mode" else "☀️ Sunlight Mode",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = GlumePrimaryPurple
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
