@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.feature.asha.components.RegisterPatientDialog
+import com.vitalsense.app.feature.asha.components.SendNoticeDialog
 
 @Composable
 fun AshaHomeScreen(
@@ -27,6 +29,8 @@ fun AshaHomeScreen(
     onSelectProxyPatient: (Patient) -> Unit,
     onRegisterPatientClick: () -> Unit = {},
     onSendNoticeClick: () -> Unit = {},
+    onSavePatient: (Patient) -> Unit = {},
+    onSendNotice: (BroadcastNotice) -> Unit = {},
     onSavePrescription: (Prescription) -> Unit = {},
     onImmunizationClick: () -> Unit = {},
     onDailyRoundsClick: () -> Unit = {},
@@ -35,6 +39,10 @@ fun AshaHomeScreen(
 ) {
     val strings = LocalAppStrings.current
     var ocrTargetPatient by remember { mutableStateOf<Patient?>(null) }
+
+    var showRegisterPatientDialog by remember { mutableStateOf(false) }
+    var showSendNoticeDialog by remember { mutableStateOf(false) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
 
     val totalPatients = patients.size
     val highRiskPatients = patients.count { it.currentRiskLevel == SeverityLevel.HIGH || it.currentRiskLevel == SeverityLevel.SEVERE }
@@ -195,6 +203,33 @@ fun AshaHomeScreen(
             }
         }
 
+        // Success banner
+        if (successMessage != null) {
+            item {
+                Surface(
+                    shape = PillShape,
+                    color = GlumeSuccessContainer,
+                    border = BorderStroke(1.dp, GlumeSuccessMint),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = successMessage ?: "",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeSuccessMint
+                        )
+                        IconButton(onClick = { successMessage = null }, modifier = Modifier.size(24.dp)) {
+                            Text("✕", color = GlumeSuccessMint, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+
         // 5. Quick Action Buttons (Glume Primary & Secondary Pill Buttons)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
@@ -204,13 +239,13 @@ fun AshaHomeScreen(
                 ) {
                     VitalSenseButton(
                         text = strings.newPatient,
-                        onClick = onRegisterPatientClick,
+                        onClick = { showRegisterPatientDialog = true },
                         modifier = Modifier.weight(1f),
                         style = ButtonStyle.PRIMARY
                     )
                     VitalSenseButton(
                         text = strings.sendNotice,
-                        onClick = onSendNoticeClick,
+                        onClick = { showSendNoticeDialog = true },
                         modifier = Modifier.weight(1f),
                         style = ButtonStyle.DARK
                     )
@@ -460,6 +495,30 @@ fun AshaHomeScreen(
             isAshaProxy = true,
             onDismiss = { ocrTargetPatient = null },
             onSavePrescription = onSavePrescription
+        )
+    }
+
+    if (showRegisterPatientDialog) {
+        RegisterPatientDialog(
+            asha = asha,
+            onDismiss = { showRegisterPatientDialog = false },
+            onRegister = { newPatient ->
+                onSavePatient(newPatient)
+                showRegisterPatientDialog = false
+                successMessage = "✓ Registered ${newPatient.name} into your caseload!"
+            }
+        )
+    }
+
+    if (showSendNoticeDialog) {
+        SendNoticeDialog(
+            asha = asha,
+            onDismiss = { showSendNoticeDialog = false },
+            onSend = { notice ->
+                onSendNotice(notice)
+                showSendNoticeDialog = false
+                successMessage = "✓ Broadcast advisory sent to village!"
+            }
         )
     }
 }

@@ -257,14 +257,24 @@ fun VitalSenseNavGraph(
                                             BackHandler { currentAshaScreen = "home" }
                                             com.vitalsense.app.feature.asha.DailyRoundsScreen(
                                                 rounds = dailyRounds,
-                                                onBackClick = { currentAshaScreen = "home" }
+                                                onBackClick = { currentAshaScreen = "home" },
+                                                onSaveRound = { round ->
+                                                    coroutineScope.launch {
+                                                        repository.saveDailyRound(round)
+                                                    }
+                                                }
                                             )
                                         }
                                         "medicine_restock" -> {
                                             BackHandler { currentAshaScreen = "home" }
                                             com.vitalsense.app.feature.asha.MedicineRestockScreen(
                                                 medicines = ashaMedicines,
-                                                onBackClick = { currentAshaScreen = "home" }
+                                                onBackClick = { currentAshaScreen = "home" },
+                                                onRequestRestock = { updatedMedicine ->
+                                                    coroutineScope.launch {
+                                                        repository.saveAshaMedicine(updatedMedicine)
+                                                    }
+                                                }
                                             )
                                         }
                                         else -> {
@@ -280,8 +290,16 @@ fun VitalSenseNavGraph(
                                                     appStateHolder.setProxyPatient(selectedPatient)
                                                     appStateHolder.switchRole(UserRole.PATIENT)
                                                 },
-                                                onRegisterPatientClick = {},
-                                                onSendNoticeClick = {},
+                                                onSavePatient = { newPatient ->
+                                                    coroutineScope.launch {
+                                                        repository.savePatient(newPatient)
+                                                    }
+                                                },
+                                                onSendNotice = { notice ->
+                                                    coroutineScope.launch {
+                                                        repository.sendNotice(notice)
+                                                    }
+                                                },
                                                 onSavePrescription = { rx ->
                                                     coroutineScope.launch {
                                                         repository.savePrescription(rx)

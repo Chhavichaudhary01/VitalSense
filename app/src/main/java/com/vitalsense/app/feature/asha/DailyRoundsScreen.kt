@@ -4,25 +4,33 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.DailyRound
 import com.vitalsense.app.core.ui.components.VitalSenseCard
-
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.feature.asha.components.LogDailyRoundDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyRoundsScreen(
     rounds: List<DailyRound>,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onSaveRound: (DailyRound) -> Unit = {}
 ) {
+    var showLogRoundDialog by remember { mutableStateOf(false) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -39,6 +47,22 @@ fun DailyRoundsScreen(
                 )
             )
         },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showLogRoundDialog = true },
+                containerColor = GlumePrimaryPurple,
+                contentColor = Color.White
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Log Round")
+                    Text("Log Visit", fontWeight = FontWeight.Bold)
+                }
+            }
+        },
         containerColor = GlumeBackground
     ) { paddingValues ->
         LazyColumn(
@@ -50,17 +74,49 @@ fun DailyRoundsScreen(
             contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
         ) {
             item {
-                Text(
-                    text = "Village Rounds & Door-to-Door Visits",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = GlumeTextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Village Rounds & Door-to-Door Visits",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = GlumeTextPrimary
+                    )
+                }
+            }
+
+            if (successMessage != null) {
+                item {
+                    Surface(
+                        shape = PillShape,
+                        color = GlumeSuccessContainer,
+                        border = BorderStroke(1.dp, GlumeSuccessMint),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = successMessage ?: "",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeSuccessMint
+                            )
+                            IconButton(onClick = { successMessage = null }, modifier = Modifier.size(24.dp)) {
+                                Text("✕", color = GlumeSuccessMint, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
             }
 
             if (rounds.isEmpty()) {
                 item {
                     Text(
-                        text = "No rounds found.",
+                        text = "No village rounds logged yet. Tap '+ Log Visit' to record door-to-door checkups.",
                         color = GlumeTextSecondary,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -98,65 +154,56 @@ fun DailyRoundsScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
+                            
+                            HorizontalDivider(color = GlumeBorder, modifier = Modifier.padding(vertical = 4.dp))
+                            
                             Text(
                                 text = "Purpose: ${round.purpose}",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                                 color = GlumePrimaryPurpleLight
                             )
-
-                            HorizontalDivider(color = GlumeBorder, thickness = 1.dp)
-
                             Text(
-                                text = "Checklist",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                text = "Notes: ${round.notes}",
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = GlumeTextPrimary
                             )
-
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                if (round.isPregnancyChecked) ChecklistItem("Pregnancy Checked")
-                                if (round.isChildHealthChecked) ChecklistItem("Child Health Checked")
-                                if (round.isImmunizationChecked) ChecklistItem("Immunization Checked")
-                                if (round.isMedicineGiven) ChecklistItem("Medicine Given")
-                                if (round.isCounsellingDone) ChecklistItem("Counselling Done")
-                            }
-
-                            if (round.notes.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Notes: ${round.notes}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = GlumeTextSecondary
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(4.dp))
                             
-                            val statusColor = when (round.status) {
-                                "Completed" -> GlumeSuccessMint
-                                "Pending" -> GlumeAlertCoral
-                                else -> GlumeTextSecondary
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                if (round.isPregnancyChecked) {
+                                    Surface(shape = PillShape, color = GlumePrimaryPurpleContainer) {
+                                        Text("🤰 Maternal", fontSize = 10.sp, color = GlumePrimaryPurpleLight, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                                if (round.isChildHealthChecked) {
+                                    Surface(shape = PillShape, color = GlumeSuccessContainer) {
+                                        Text("👶 Child", fontSize = 10.sp, color = GlumeSuccessMint, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                                if (round.isImmunizationChecked) {
+                                    Surface(shape = PillShape, color = GlumeWarningContainer) {
+                                        Text("💉 Vaccine", fontSize = 10.sp, color = GlumeWarningAmber, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
                             }
-                            Text(
-                                text = "Status: ${round.status}",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                color = statusColor,
-                                modifier = Modifier.align(Alignment.End)
-                            )
                         }
                     }
                 }
             }
         }
     }
-}
 
-@Composable
-private fun ChecklistItem(text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-    ) {
-        Text(text = "✓", color = GlumeSuccessMint, style = MaterialTheme.typography.bodyMedium)
-        Text(text = text, color = GlumeTextPrimary, style = MaterialTheme.typography.bodyMedium)
+    if (showLogRoundDialog) {
+        LogDailyRoundDialog(
+            ashaWorkerId = rounds.firstOrNull()?.ashaWorkerId ?: "asha_priya",
+            onDismiss = { showLogRoundDialog = false },
+            onSaveRound = { newRound ->
+                onSaveRound(newRound)
+                showLogRoundDialog = false
+                successMessage = "✓ Visit for ${newRound.householdName} saved!"
+            }
+        )
     }
 }
