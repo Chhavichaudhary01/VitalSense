@@ -88,9 +88,9 @@ object SeedDataProvider {
         Doctor(
             id = "doc_ayushman",
             name = "Dr. Ayushman Dev Singh",
-            specialty = DoctorSpecialty.ORTHOPLASTIC_SURGEON,
-            qualification = "MS (Orthopaedics), MCh (Plastic & Reconstructive Surgery)",
-            hospitalName = "District Apex Trauma & Reconstructive Center",
+            specialty = DoctorSpecialty.MAXILLOFACIAL_RECONSTRUCTIVE_SURGEON,
+            qualification = "Orthognathic, Oncogenic, Trauma, Oral & Maxillofacial, and Cosmetic Surgeon | MS, MCh, FICS",
+            hospitalName = "District Apex Trauma & Maxillofacial Reconstructive Center",
             distanceKm = 5.8,
             phone = "+91 94150 77665",
             availableDays = "Mon - Sat (9:00 AM - 5:00 PM)"

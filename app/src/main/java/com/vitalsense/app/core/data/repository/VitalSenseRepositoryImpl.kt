@@ -169,7 +169,16 @@ class VitalSenseRepositoryImpl @Inject constructor(
 
     override fun getCasesForDoctor(doctorId: String, specialty: DoctorSpecialty): Flow<List<ConditionRecord>> = _conditions.map { list ->
         list.filter { record ->
-            record.requestedDoctorType == specialty || record.assignedDoctorId == doctorId
+            record.requestedDoctorType == specialty || 
+            record.assignedDoctorId == doctorId ||
+            (specialty == DoctorSpecialty.MAXILLOFACIAL_RECONSTRUCTIVE_SURGEON && (
+                record.requestedDoctorType == DoctorSpecialty.ORTHOPLASTIC_SURGEON ||
+                record.requestedDoctorType == DoctorSpecialty.ORTHOGNATHIC_SURGEON ||
+                record.requestedDoctorType == DoctorSpecialty.ONCOGENIC_SURGEON ||
+                record.requestedDoctorType == DoctorSpecialty.TRAUMA_SURGEON ||
+                record.requestedDoctorType == DoctorSpecialty.ORAL_MAXILLOFACIAL_SURGEON ||
+                record.requestedDoctorType == DoctorSpecialty.COSMETIC_SURGEON
+            ))
         }.sortedWith(
             compareBy<ConditionRecord> { record ->
                 when (record.severity) {

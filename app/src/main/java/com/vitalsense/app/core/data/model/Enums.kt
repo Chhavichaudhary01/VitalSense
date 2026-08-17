@@ -42,7 +42,13 @@ enum class DoctorSpecialty(val displayName: String) {
     GYNECOLOGIST("Gynecologist & Maternal Care"),
     NEUROLOGIST("Neurologist"),
     CARDIOLOGIST("Cardiologist"),
-    ORTHOPLASTIC_SURGEON("Orthoplastic Surgeon")
+    ORTHOPLASTIC_SURGEON("Orthoplastic Surgeon"),
+    ORTHOGNATHIC_SURGEON("Orthognathic Surgeon"),
+    ONCOGENIC_SURGEON("Oncogenic Surgeon"),
+    TRAUMA_SURGEON("Trauma Surgeon"),
+    ORAL_MAXILLOFACIAL_SURGEON("Oral & Maxillofacial Surgeon"),
+    COSMETIC_SURGEON("Cosmetic Surgeon"),
+    MAXILLOFACIAL_RECONSTRUCTIVE_SURGEON("Orthognathic, Oncogenic, Trauma, Oral & Maxillofacial & Cosmetic Surgeon")
 }
 
 /**
