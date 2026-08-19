@@ -24,9 +24,10 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         OutboxEntity::class,
         ImmunizationRecordEntity::class,
         DailyRoundEntity::class,
-        AshaMedicineEntity::class
+        AshaMedicineEntity::class,
+        DiseaseTrendRecordEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

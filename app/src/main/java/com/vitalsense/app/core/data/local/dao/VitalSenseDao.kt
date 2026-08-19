@@ -154,5 +154,18 @@ interface VitalSenseDao {
 
     @Query("DELETE FROM outbox_records WHERE id = :id")
     suspend fun deleteOutboxRecord(id: String)
+
+    // --- Disease Trend Records ---
+    @Query("SELECT * FROM disease_trend_records ORDER BY dateFormatted ASC")
+    fun getAllDiseaseTrendRecords(): Flow<List<DiseaseTrendRecordEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDiseaseTrendRecord(record: DiseaseTrendRecordEntity)
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDiseaseTrendRecords(records: List<DiseaseTrendRecordEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDispensaryItem(item: DispensaryEntity)
 }
 

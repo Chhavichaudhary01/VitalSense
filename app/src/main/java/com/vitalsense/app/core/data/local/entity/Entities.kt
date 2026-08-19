@@ -136,7 +136,8 @@ data class DispensaryEntity(
     val category: String,
     val availableQuantity: Int,
     val unit: String,
-    val reorderThreshold: Int
+    val reorderThreshold: Int,
+    val lastRestockDateFormatted: String? = null
 )
 
 @Entity(tableName = "government_schemes")
@@ -190,4 +191,14 @@ data class AshaMedicineEntity(
     val minStockQuantity: Int,
     val expiryDateFormatted: String,
     val lastRestockDateFormatted: String?
+)
+
+@Entity(tableName = "disease_trend_records")
+data class DiseaseTrendRecordEntity(
+    @PrimaryKey val id: String,
+    val villageName: String,
+    val diseaseName: String,
+    val caseCount: Int,
+    val dateFormatted: String,
+    val severity: String?
 )

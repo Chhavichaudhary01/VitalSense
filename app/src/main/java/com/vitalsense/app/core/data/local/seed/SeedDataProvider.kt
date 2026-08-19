@@ -336,14 +336,24 @@ object SeedDataProvider {
     )
 
     val initialDispensaryItems = listOf(
-        DispensaryItem("disp_1", "Paracetamol 650mg", "Analgesic / Antipyretic", 450, "tablets", 100),
-        DispensaryItem("disp_2", "Amoxicillin 500mg", "Antibiotic", 180, "capsules", 50),
-        DispensaryItem("disp_3", "Oral Rehydration Salts (ORS)", "Hydration", 320, "packets", 80),
-        DispensaryItem("disp_4", "Iron & Folic Acid (IFA)", "Maternal / Anemia", 500, "tablets", 150),
-        DispensaryItem("disp_5", "Cetirizine 10mg", "Antihistamine", 220, "tablets", 60),
-        DispensaryItem("disp_6", "Amlodipine 5mg", "Hypertension", 35, "tablets", 50), // Low stock
-        DispensaryItem("disp_7", "Metformin 500mg", "Diabetes", 240, "tablets", 70),
-        DispensaryItem("disp_8", "Ambroxol Syrup (100ml)", "Respiratory", 12, "bottles", 20) // Low stock
+        DispensaryItem("disp_1", "Paracetamol 650mg", "Analgesic / Antipyretic", 450, "tablets", 100, "10 Aug 2026"),
+        DispensaryItem("disp_2", "Amoxicillin 500mg", "Antibiotic", 180, "capsules", 50, "12 Aug 2026"),
+        DispensaryItem("disp_3", "Oral Rehydration Salts (ORS)", "Hydration", 320, "packets", 80, "01 Aug 2026"),
+        DispensaryItem("disp_4", "Iron & Folic Acid (IFA)", "Maternal / Anemia", 500, "tablets", 150, "15 Jul 2026"),
+        DispensaryItem("disp_5", "Cetirizine 10mg", "Antihistamine", 220, "tablets", 60, "05 Aug 2026"),
+        DispensaryItem("disp_6", "Amlodipine 5mg", "Hypertension", 35, "tablets", 50, "01 Jun 2026"), // Low stock
+        DispensaryItem("disp_7", "Metformin 500mg", "Diabetes", 240, "tablets", 70, "10 Jul 2026"),
+        DispensaryItem("disp_8", "Ambroxol Syrup (100ml)", "Respiratory", 12, "bottles", 20, "20 May 2026") // Low stock
+    )
+
+    val initialDiseaseTrendRecords = listOf(
+        DiseaseTrendRecord("dt_1", "Sundarpura", "Viral Fever", 12, "10 Aug 2026", "Moderate"),
+        DiseaseTrendRecord("dt_2", "Sundarpura", "Viral Fever", 15, "12 Aug 2026", "High"),
+        DiseaseTrendRecord("dt_3", "Sundarpura", "Viral Fever", 18, "15 Aug 2026", "Severe"),
+        DiseaseTrendRecord("dt_4", "Sundarpura", "Viral Fever", 14, "18 Aug 2026", "Moderate"),
+        DiseaseTrendRecord("dt_5", "Kalyanpur", "Dengue", 2, "05 Aug 2026", "High"),
+        DiseaseTrendRecord("dt_6", "Kalyanpur", "Dengue", 5, "10 Aug 2026", "Severe"),
+        DiseaseTrendRecord("dt_7", "Kalyanpur", "Dengue", 8, "15 Aug 2026", "Severe")
     )
 
     val initialNotices = listOf(
@@ -511,7 +521,7 @@ object SeedDataProvider {
     }
 
     fun getDispensaryEntities(): List<DispensaryEntity> = initialDispensaryItems.map {
-        DispensaryEntity(it.id, it.medicineName, it.category, it.availableQuantity, it.unit, it.reorderThreshold)
+        DispensaryEntity(it.id, it.medicineName, it.category, it.availableQuantity, it.unit, it.reorderThreshold, it.lastRestockDateFormatted)
     }
 
     fun getNoticeEntities(): List<BroadcastNoticeEntity> = initialNotices.map {
@@ -532,5 +542,9 @@ object SeedDataProvider {
 
     fun getAshaMedicineEntities(): List<AshaMedicineEntity> = initialAshaMedicines.map {
         AshaMedicineEntity(it.id, it.ashaWorkerId, it.medicineName, it.availableQuantity, it.unit, it.minStockQuantity, it.expiryDateFormatted, it.lastRestockDateFormatted)
+    }
+
+    fun getDiseaseTrendRecordEntities(): List<DiseaseTrendRecordEntity> = initialDiseaseTrendRecords.map {
+        DiseaseTrendRecordEntity(it.id, it.villageName, it.diseaseName, it.caseCount, it.dateFormatted, it.severity)
     }
 }
