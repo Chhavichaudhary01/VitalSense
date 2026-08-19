@@ -131,7 +131,8 @@ data class DispensaryItem(
     val category: String,
     val availableQuantity: Int,
     val unit: String,
-    val reorderThreshold: Int
+    val reorderThreshold: Int,
+    val lastRestockDateFormatted: String? = null
 ) {
     val isLowStock: Boolean
         get() = availableQuantity <= reorderThreshold
@@ -195,3 +196,12 @@ data class AshaMedicine(
     val isLowStock: Boolean
         get() = availableQuantity <= minStockQuantity
 }
+
+data class DiseaseTrendRecord(
+    val id: String,
+    val villageName: String,
+    val diseaseName: String,
+    val caseCount: Int,
+    val dateFormatted: String,
+    val severity: String?
+)

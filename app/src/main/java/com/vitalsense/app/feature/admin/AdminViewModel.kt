@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vitalsense.app.core.data.model.BroadcastNotice
 import com.vitalsense.app.core.data.model.UserRole
+import com.vitalsense.app.core.data.model.DispensaryItem
+import com.vitalsense.app.core.data.model.DiseaseTrendRecord
 import com.vitalsense.app.core.data.repository.VitalSenseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -39,6 +41,13 @@ class AdminViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    val diseaseTrends = repository.getDiseaseTrendRecords()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     private val _uiEvent = kotlinx.coroutines.flow.MutableSharedFlow<String>()
     val uiEvent = _uiEvent.asSharedFlow()
 
@@ -61,6 +70,26 @@ class AdminViewModel @Inject constructor(
             } catch (e: Exception) {
                 // Log and emit error safely
                 _uiEvent.emit("Error sending broadcast: ${e.localizedMessage ?: "Unknown error"}")
+            }
+        }
+    }
+
+    fun saveDispensaryItem(item: DispensaryItem) {
+        viewModelScope.launch {
+            try {
+                repository.saveDispensaryItem(item)
+            } catch (e: Exception) {
+                _uiEvent.emit("Error saving item: ${e.localizedMessage ?: "Unknown error"}")
+            }
+        }
+    }
+
+    fun saveDiseaseTrendRecord(record: DiseaseTrendRecord) {
+        viewModelScope.launch {
+            try {
+                repository.saveDiseaseTrendRecord(record)
+            } catch (e: Exception) {
+                _uiEvent.emit("Error saving record: ${e.localizedMessage ?: "Unknown error"}")
             }
         }
     }

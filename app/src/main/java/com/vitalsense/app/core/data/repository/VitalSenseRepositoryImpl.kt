@@ -38,6 +38,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
     private val _immunizations = MutableStateFlow(SeedDataProvider.initialImmunizations)
     private val _dailyRounds = MutableStateFlow(SeedDataProvider.initialDailyRounds)
     private val _ashaMedicines = MutableStateFlow(SeedDataProvider.initialAshaMedicines)
+    private val _diseaseTrends = MutableStateFlow(SeedDataProvider.initialDiseaseTrendRecords)
 
     init {
         // 1. Pre-seed local Room database on first launch
@@ -57,6 +58,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 SeedDataProvider.getImmunizationEntities().forEach { dao.insertImmunizationRecord(it) }
                 SeedDataProvider.getDailyRoundEntities().forEach { dao.insertDailyRound(it) }
                 SeedDataProvider.getAshaMedicineEntities().forEach { dao.insertAshaMedicine(it) }
+                SeedDataProvider.getDiseaseTrendRecordEntities().forEach { dao.insertDiseaseTrendRecord(it) }
             } catch (e: Exception) {
                 // Fallback to in-memory state
             }
@@ -563,6 +565,47 @@ class VitalSenseRepositoryImpl @Inject constructor(
 
     // --- Dispensary Stock ---
     override fun getDispensaryStock(): Flow<List<DispensaryItem>> = _dispensary.asStateFlow()
+
+    override suspend fun saveDispensaryItem(item: DispensaryItem) {
+        _dispensary.update { list ->
+            val index = list.indexOfFirst { it.id == item.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, item) }
+            } else {
+                list + item
+            }
+        }
+        scope.launch {
+            dao.insertDispensaryItem(
+                DispensaryEntity(
+                    item.id, item.medicineName, item.category, item.availableQuantity,
+                    item.unit, item.reorderThreshold, item.lastRestockDateFormatted
+                )
+            )
+        }
+    }
+
+    // --- Disease Trend Records ---
+    override fun getDiseaseTrendRecords(): Flow<List<DiseaseTrendRecord>> = _diseaseTrends.asStateFlow()
+
+    override suspend fun saveDiseaseTrendRecord(record: DiseaseTrendRecord) {
+        _diseaseTrends.update { list ->
+            val index = list.indexOfFirst { it.id == record.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, record) }
+            } else {
+                list + record
+            }
+        }
+        scope.launch {
+            dao.insertDiseaseTrendRecord(
+                DiseaseTrendRecordEntity(
+                    record.id, record.villageName, record.diseaseName, record.caseCount,
+                    record.dateFormatted, record.severity
+                )
+            )
+        }
+    }
 
     // --- Government Schemes ---
     override fun getGovernmentSchemes(): Flow<List<GovernmentScheme>> = _schemes.asStateFlow()

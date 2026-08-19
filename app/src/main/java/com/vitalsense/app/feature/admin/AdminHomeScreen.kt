@@ -28,6 +28,8 @@ fun AdminHomeScreen(
     notices: List<BroadcastNotice>,
     dispensaryStock: List<DispensaryItem> = emptyList(),
     onSendBroadcast: (title: String, message: String, village: String?) -> Unit,
+    onNavigateToDispensary: () -> Unit,
+    onNavigateToDiseaseTrends: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -205,7 +207,28 @@ fun AdminHomeScreen(
             }
         }
 
-        // 4. Broadcast Action Button (Single Full-Width Purple CTA)
+        // 4. Admin Management Action Buttons
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                VitalSenseButton(
+                    text = "Manage Dispensary",
+                    onClick = onNavigateToDispensary,
+                    style = ButtonStyle.SECONDARY,
+                    modifier = Modifier.weight(1f)
+                )
+                VitalSenseButton(
+                    text = "Disease Trends",
+                    onClick = onNavigateToDiseaseTrends,
+                    style = ButtonStyle.SECONDARY,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        // 5. Broadcast Action Button (Single Full-Width Purple CTA)
         item {
             VitalSenseButton(
                 text = "📢 Broadcast District-Wide Health Directive",
@@ -217,7 +240,7 @@ fun AdminHomeScreen(
             )
         }
 
-        // 5. Active Directives Sent by Admin
+        // 6. Active Directives Sent by Admin
         if (adminIssuedDirectives.isNotEmpty()) {
             item {
                 Text(
@@ -266,47 +289,54 @@ fun AdminHomeScreen(
             }
         }
 
-        // 6. District Dispensary Stock Check
+        // 7. District Dispensary Stock Check (Summary)
         if (dispensaryStock.isNotEmpty()) {
             item {
-                Text(
-                    text = "District Pharmacy & Dispensary Inventory",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = GlumeTextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Dispensary Low Stock Alerts",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = GlumeTextPrimary
+                    )
+                }
             }
 
-            items(dispensaryStock) { item ->
-                VitalSenseCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = item.medicineName,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = GlumeTextPrimary
-                            )
-                            Text(
-                                text = item.category,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = GlumeTextSecondary
-                            )
-                        }
+            val lowStockItems = dispensaryStock.filter { it.isLowStock }
+            if (lowStockItems.isNotEmpty()) {
+                items(lowStockItems) { item ->
+                    VitalSenseCard {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "${item.availableQuantity} ${item.unit}",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (item.isLowStock) GlumeAlertCoral else GlumeTextPrimary
+                            Column {
+                                Text(
+                                    text = item.medicineName,
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumeTextPrimary
                                 )
-                            )
-                            if (item.isLowStock) {
+                                Text(
+                                    text = item.category,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = GlumeTextSecondary
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            ) {
+                                Text(
+                                    text = "${item.availableQuantity} ${item.unit}",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = GlumeAlertCoral
+                                    )
+                                )
                                 Surface(shape = PillShape, color = GlumeAlertContainer) {
                                     Text(
                                         text = "LOW",
@@ -317,6 +347,10 @@ fun AdminHomeScreen(
                             }
                         }
                     }
+                }
+            } else {
+                item {
+                    Text("All stock is above reorder thresholds.", color = GlumeTextSecondary)
                 }
             }
         }

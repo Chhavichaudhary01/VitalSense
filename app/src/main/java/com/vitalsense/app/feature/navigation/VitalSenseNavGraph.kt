@@ -17,6 +17,9 @@ import com.vitalsense.app.core.util.AppUpdateChecker
 import com.vitalsense.app.core.util.AppUpdateInfo
 import com.vitalsense.app.core.ui.components.TopRoleSwitcherBar
 import com.vitalsense.app.feature.admin.AdminHomeScreen
+import com.vitalsense.app.feature.admin.AdminViewModel
+import com.vitalsense.app.feature.admin.AdminDispensaryRestockScreen
+import com.vitalsense.app.feature.admin.AdminDiseaseTrendsScreen
 import com.vitalsense.app.feature.asha.AshaHomeScreen
 import com.vitalsense.app.feature.auth.LoginScreen
 import com.vitalsense.app.feature.doctor.CaseDetailScreen
@@ -34,6 +37,7 @@ fun VitalSenseNavGraph(
     repository: VitalSenseRepository,
     patientViewModel: PatientViewModel = hiltViewModel(),
     doctorViewModel: DoctorViewModel = hiltViewModel(),
+    adminViewModel: AdminViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -428,31 +432,58 @@ fun VitalSenseNavGraph(
                                         }
 
                                         UserRole.ADMIN -> {
-                                            BackHandler {
-                                                appStateHolder.logout()
-                                            }
+                                            var currentAdminScreen by remember { mutableStateOf("home") }
+                                            
+                                            val adminDispensaryStock by adminViewModel.dispensaryStock.collectAsStateWithLifecycle()
+                                            val adminDiseaseTrends by adminViewModel.diseaseTrends.collectAsStateWithLifecycle()
 
-                                            AdminHomeScreen(
-                                                villages = villages,
-                                                notices = notices,
-                                                dispensaryStock = doctorDispensaryStock,
-                                                onSendBroadcast = { title, message, village ->
-                                                    coroutineScope.launch {
-                                                        val broadcast = BroadcastNotice(
-                                                            id = "notice_${System.currentTimeMillis()}",
-                                                            senderRole = UserRole.ADMIN,
-                                                            senderName = "Chief Medical Officer",
-                                                            targetRole = "ALL",
-                                                            targetVillage = village,
-                                                            title = title,
-                                                            message = message,
-                                                            timestamp = System.currentTimeMillis(),
-                                                            isUrgent = false
+                                            AnimatedContent(
+                                                targetState = currentAdminScreen,
+                                                transitionSpec = {
+                                                    fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
+                                                },
+                                                label = "AdminScreenTransition"
+                                            ) { screen ->
+                                                when (screen) {
+                                                    "dispensary_restock" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        AdminDispensaryRestockScreen(
+                                                            dispensaryStock = adminDispensaryStock,
+                                                            onBackClick = { currentAdminScreen = "home" },
+                                                            onSaveItem = { item ->
+                                                                adminViewModel.saveDispensaryItem(item)
+                                                            }
                                                         )
-                                                        repository.sendNotice(broadcast)
+                                                    }
+                                                    "disease_trends" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        AdminDiseaseTrendsScreen(
+                                                            villages = villages,
+                                                            trendRecords = adminDiseaseTrends,
+                                                            onBackClick = { currentAdminScreen = "home" },
+                                                            onSaveRecord = { record ->
+                                                                adminViewModel.saveDiseaseTrendRecord(record)
+                                                            }
+                                                        )
+                                                    }
+                                                    else -> {
+                                                        BackHandler {
+                                                            appStateHolder.logout()
+                                                        }
+
+                                                        AdminHomeScreen(
+                                                            villages = villages,
+                                                            notices = notices,
+                                                            dispensaryStock = adminDispensaryStock,
+                                                            onSendBroadcast = { title, message, village ->
+                                                                adminViewModel.sendBroadcast(title, message, village)
+                                                            },
+                                                            onNavigateToDispensary = { currentAdminScreen = "dispensary_restock" },
+                                                            onNavigateToDiseaseTrends = { currentAdminScreen = "disease_trends" }
+                                                        )
                                                     }
                                                 }
-                                            )
+                                            }
                                         }
                                     }
                                 }

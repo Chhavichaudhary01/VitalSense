@@ -53,6 +53,11 @@ interface VitalSenseRepository {
 
     // --- Dispensary Stock ---
     fun getDispensaryStock(): Flow<List<DispensaryItem>>
+    suspend fun saveDispensaryItem(item: DispensaryItem)
+
+    // --- Disease Trend Records ---
+    fun getDiseaseTrendRecords(): Flow<List<DiseaseTrendRecord>>
+    suspend fun saveDiseaseTrendRecord(record: DiseaseTrendRecord)
 
     // --- Government Schemes ---
     fun getGovernmentSchemes(): Flow<List<GovernmentScheme>>
