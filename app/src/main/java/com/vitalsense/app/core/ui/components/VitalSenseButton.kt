@@ -7,15 +7,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.util.touchSpring
 
 enum class ButtonStyle {
-    PRIMARY,   // Glume Single Primary Purple (#7C5CFC) with white text
-    DARK,      // Glume Elevated Slate (#22222F)
-    SECONDARY, // Glume Surface Subtle (#2C2C3C)
-    DANGER,    // Glume Alert Coral (#FF5C5C)
+    PRIMARY,   // NagarSeva Electric Violet (#7C5CFF) with pure white text
+    DARK,      // Elevated Surface (#F1F5F9)
+    SECONDARY, // Soft Indigo Container (#EEF2FF)
+    DANGER,    // Alert Rose/Red (#EF4444) with pure white text
     OUTLINED   // Transparent with subtle border
 }
 
@@ -32,16 +34,16 @@ fun VitalSenseButton(
     val containerColor = when (style) {
         ButtonStyle.PRIMARY -> GlumePrimaryPurple
         ButtonStyle.DARK -> GlumeSurfaceElevated
-        ButtonStyle.SECONDARY -> GlumeSurfaceSubtle
+        ButtonStyle.SECONDARY -> GlumePrimaryPurpleContainer
         ButtonStyle.DANGER -> GlumeAlertCoral
         ButtonStyle.OUTLINED -> Color.Transparent
     }
 
     val contentColor = when (style) {
-        ButtonStyle.PRIMARY -> GlumeTextPrimary
+        ButtonStyle.PRIMARY -> Color.White
         ButtonStyle.DARK -> GlumeTextPrimary
-        ButtonStyle.SECONDARY -> GlumeTextPrimary
-        ButtonStyle.DANGER -> GlumeTextPrimary
+        ButtonStyle.SECONDARY -> GlumePrimaryPurple
+        ButtonStyle.DANGER -> Color.White
         ButtonStyle.OUTLINED -> GlumeTextPrimary
     }
 
@@ -53,7 +55,8 @@ fun VitalSenseButton(
         onClick = onClick,
         modifier = modifier
             .defaultMinSize(minHeight = minHeight)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .touchSpring(onClick = if (enabled) onClick else null),
         enabled = enabled,
         shape = PillShape,
         colors = ButtonDefaults.buttonColors(

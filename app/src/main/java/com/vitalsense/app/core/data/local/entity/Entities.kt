@@ -202,3 +202,151 @@ data class DiseaseTrendRecordEntity(
     val dateFormatted: String,
     val severity: String?
 )
+
+@Entity(tableName = "lab_reports")
+data class LabReportEntity(
+    @PrimaryKey val id: String,
+    val patientId: String,
+    val patientName: String,
+    val testCategory: String,
+    val doctorName: String,
+    val dateFormatted: String,
+    val items: List<com.vitalsense.app.core.data.model.LabTestItem>,
+    val notes: String,
+    val status: String
+)
+
+@Entity(tableName = "opd_tokens")
+data class OpdTokenEntity(
+    @PrimaryKey val id: String,
+    val tokenNumber: String,
+    val patientId: String,
+    val patientName: String,
+    val doctorName: String,
+    val department: String,
+    val cabinNumber: String,
+    val currentServingToken: String,
+    val estimatedWaitMinutes: Int,
+    val status: String,
+    val dateFormatted: String
+)
+
+@Entity(tableName = "medical_certificates")
+data class MedicalCertificateEntity(
+    @PrimaryKey val id: String,
+    val certificateNumber: String,
+    val patientId: String,
+    val patientName: String,
+    val patientAge: Int,
+    val patientGender: String,
+    val doctorName: String,
+    val doctorRegistrationNumber: String,
+    val diagnosis: String,
+    val restStartDate: String,
+    val restEndDate: String,
+    val fitDate: String,
+    val certificateType: String,
+    val issuedDateFormatted: String
+)
+
+@Entity(tableName = "blood_stock")
+data class BloodStockEntity(
+    @PrimaryKey val id: String,
+    val bloodGroup: String,
+    val unitsAvailable: Int,
+    val hospitalName: String,
+    val contactPhone: String,
+    val status: String
+)
+
+@Entity(tableName = "ipd_beds")
+data class IpdBedEntity(
+    @PrimaryKey val id: String,
+    val wardName: String,
+    val bedNumber: String,
+    val isOccupied: Boolean,
+    val patientId: String?,
+    val patientName: String?,
+    val admissionDate: String?,
+    val attendingDoctorName: String?,
+    val diagnosis: String?,
+    val nurseInCharge: String?
+)
+
+@Entity(tableName = "ot_surgery_bookings")
+data class OtSurgeryBookingEntity(
+    @PrimaryKey val id: String,
+    val otRoomName: String,
+    val patientId: String,
+    val patientName: String,
+    val surgeryName: String,
+    val surgeonName: String,
+    val anesthetistName: String,
+    val scheduledDate: String,
+    val scheduledTimeSlot: String,
+    val pacCleared: Boolean,
+    val status: String
+)
+
+@Entity(tableName = "external_referrals")
+data class ExternalReferralEntity(
+    @PrimaryKey val id: String,
+    val referralLetterId: String,
+    val patientId: String,
+    val patientName: String,
+    val referringDoctorName: String,
+    val empanelledHospitalName: String,
+    val specialtyRequired: String,
+    val clinicalSummary: String,
+    val isCashlessApproved: Boolean,
+    val ambulanceRequisitioned: Boolean,
+    val issuedDate: String,
+    val status: String
+)
+
+@Entity(tableName = "biomedical_equipment")
+data class BioMedicalEquipmentEntity(
+    @PrimaryKey val id: String,
+    val assetCode: String,
+    val name: String,
+    val department: String,
+    val status: String,
+    val lastServiceDate: String,
+    val nextServiceDue: String,
+    val location: String,
+    val inChargeContact: String
+)
+
+@Entity(tableName = "doctor_day_slots")
+data class DoctorDaySlotEntity(
+    @PrimaryKey val id: String,
+    val doctorId: String,
+    val dateFormatted: String,
+    val startTime: String,
+    val endTime: String,
+    val capacity: Int,
+    val isWalkInOpen: Boolean
+)
+
+@Entity(tableName = "queue_entries")
+data class QueueEntryEntity(
+    @PrimaryKey val id: String,
+    val doctorId: String,
+    val doctorName: String,
+    val dateFormatted: String,
+    val tokenNumber: Int,
+    val provisionalToken: Boolean,
+    val appointmentId: String?,
+    val patientId: String,
+    val patientName: String,
+    val source: com.vitalsense.app.core.data.model.QueueEntrySource,
+    val status: com.vitalsense.app.core.data.model.QueueEntryStatus,
+    val priorityFlag: Boolean,
+    val checkedInAt: Long,
+    val calledAt: Long?,
+    val consultationStartedAt: Long?,
+    val completedAt: Long?,
+    val outcomeNotes: String?,
+    val isPendingSync: Boolean
+)
+

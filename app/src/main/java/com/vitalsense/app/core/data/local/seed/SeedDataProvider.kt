@@ -547,4 +547,288 @@ object SeedDataProvider {
     fun getDiseaseTrendRecordEntities(): List<DiseaseTrendRecordEntity> = initialDiseaseTrendRecords.map {
         DiseaseTrendRecordEntity(it.id, it.villageName, it.diseaseName, it.caseCount, it.dateFormatted, it.severity)
     }
+
+    val initialLabReports = listOf(
+        LabReport(
+            id = "lab_1",
+            patientId = "pat_1",
+            patientName = "Ramesh Kumar",
+            testCategory = "Complete Blood Count (CBC)",
+            doctorName = "Dr. Rajesh Kumar",
+            dateFormatted = "18 Aug 2026",
+            items = listOf(
+                LabTestItem("Hemoglobin", "11.2", "g/dL", "13.0 - 17.0", "LOW"),
+                LabTestItem("Total Leukocyte Count (WBC)", "12,400", "/mcL", "4,000 - 11,000", "HIGH"),
+                LabTestItem("Platelet Count", "1.85", "Lakh/mcL", "1.50 - 4.50", "NORMAL"),
+                LabTestItem("Hematocrit (PCV)", "36.8", "%", "40.0 - 50.0", "LOW")
+            ),
+            notes = "Mild microcytic hypochromic anemia with mild leukocytosis. Clinical correlation suggested."
+        ),
+        LabReport(
+            id = "lab_2",
+            patientId = "pat_1",
+            patientName = "Ramesh Kumar",
+            testCategory = "Biochemistry / Fasting Blood Sugar",
+            doctorName = "Dr. Rajesh Kumar",
+            dateFormatted = "10 Aug 2026",
+            items = listOf(
+                LabTestItem("Fasting Blood Glucose", "142", "mg/dL", "70 - 100", "HIGH"),
+                LabTestItem("HbA1c (Glycated Hemoglobin)", "7.4", "%", "< 5.7", "HIGH"),
+                LabTestItem("Serum Creatinine", "0.9", "mg/dL", "0.7 - 1.3", "NORMAL")
+            ),
+            notes = "Uncontrolled fasting hyperglycemia. Follow up with diabetic dietary regimen and Metformin."
+        ),
+        LabReport(
+            id = "lab_3",
+            patientId = "pat_2",
+            patientName = "Sunita Devi",
+            testCategory = "Maternal & Antenatal Serology",
+            doctorName = "Dr. Rajesh Kumar",
+            dateFormatted = "15 Aug 2026",
+            items = listOf(
+                LabTestItem("Hemoglobin", "9.4", "g/dL", "11.0 - 15.0", "LOW"),
+                LabTestItem("ABO Blood Grouping & Rh", "B Positive", "-", "B Positive", "NORMAL"),
+                LabTestItem("VDRL / RPR Serology", "Non-Reactive", "-", "Non-Reactive", "NORMAL"),
+                LabTestItem("Urine Albumin / Sugar", "Nil / Nil", "-", "Nil", "NORMAL")
+            ),
+            notes = "Moderate gestational anemia. Prescribed double dose of Iron & Folic Acid (IFA)."
+        ),
+        LabReport(
+            id = "lab_4",
+            patientId = "pat_2",
+            patientName = "Sunita Devi",
+            testCategory = "Dengue & Febrile Serology",
+            doctorName = "Dr. Rajesh Kumar",
+            dateFormatted = "19 Aug 2026",
+            items = listOf(
+                LabTestItem("Dengue NS1 Antigen", "Negative", "-", "Negative", "NORMAL"),
+                LabTestItem("Widal S. Typhi 'O'", "1:80", "Titre", "< 1:80", "NORMAL"),
+                LabTestItem("Malarial Parasite Smear", "Negative", "-", "Negative", "NORMAL")
+            ),
+            notes = "Viral prodrome. Dengue & Malaria negative."
+        )
+    )
+
+    val initialOpdTokens = listOf(
+        OpdToken(
+            id = "tok_1",
+            tokenNumber = "OPD-A24",
+            patientId = "pat_1",
+            patientName = "Ramesh Kumar",
+            doctorName = "Dr. Rajesh Kumar",
+            department = "General Medicine",
+            cabinNumber = "Room 4",
+            currentServingToken = "OPD-A21",
+            estimatedWaitMinutes = 12,
+            status = "In Queue",
+            dateFormatted = "Today"
+        ),
+        OpdToken(
+            id = "tok_2",
+            tokenNumber = "OPD-B12",
+            patientId = "pat_2",
+            patientName = "Sunita Devi",
+            doctorName = "Dr. Rajesh Kumar",
+            department = "Maternal & Antenatal Care",
+            cabinNumber = "Room 2",
+            currentServingToken = "OPD-B12",
+            estimatedWaitMinutes = 0,
+            status = "Serving",
+            dateFormatted = "Today"
+        ),
+        OpdToken(
+            id = "tok_3",
+            tokenNumber = "OPD-C05",
+            patientId = "pat_3",
+            patientName = "Vikram Singh",
+            doctorName = "Dr. Ayushman Dev Singh",
+            department = "Orthopedics & Trauma Surgery",
+            cabinNumber = "Trauma Bay 1",
+            currentServingToken = "OPD-C03",
+            estimatedWaitMinutes = 20,
+            status = "In Queue",
+            dateFormatted = "Today"
+        )
+    )
+
+    val initialMedicalCertificates = listOf(
+        MedicalCertificate(
+            id = "cert_1",
+            certificateNumber = "MC-2026-8910",
+            patientId = "pat_1",
+            patientName = "Ramesh Kumar",
+            patientAge = 45,
+            patientGender = "Male",
+            doctorName = "Dr. Rajesh Kumar",
+            doctorRegistrationNumber = "MCI-48201",
+            diagnosis = "Acute Febrile Illness & Bronchitis",
+            restStartDate = "12 Aug 2026",
+            restEndDate = "17 Aug 2026",
+            fitDate = "18 Aug 2026",
+            certificateType = "Sick Leave Certificate",
+            issuedDateFormatted = "12 Aug 2026"
+        ),
+        MedicalCertificate(
+            id = "cert_2",
+            certificateNumber = "MC-2026-9042",
+            patientId = "pat_1",
+            patientName = "Ramesh Kumar",
+            patientAge = 45,
+            patientGender = "Male",
+            doctorName = "Dr. Rajesh Kumar",
+            doctorRegistrationNumber = "MCI-48201",
+            diagnosis = "Recovered from Acute Bronchitis - Fit to Resume Normal Duties",
+            restStartDate = "12 Aug 2026",
+            restEndDate = "17 Aug 2026",
+            fitDate = "18 Aug 2026",
+            certificateType = "Medical Fitness Certificate",
+            issuedDateFormatted = "18 Aug 2026"
+        )
+    )
+
+    val initialBloodStock = listOf(
+        BloodStockItem("bs_1", "A+", 24, "District Civil Hospital & Blood Centre (Rampur)", "0595-2348101", "Available"),
+        BloodStockItem("bs_2", "A-", 4, "District Civil Hospital & Blood Centre (Rampur)", "0595-2348101", "Low Stock"),
+        BloodStockItem("bs_3", "B+", 38, "District Civil Hospital & Blood Centre (Rampur)", "0595-2348101", "Available"),
+        BloodStockItem("bs_4", "B-", 6, "Community Health Centre (Bilaspur)", "0595-2348102", "Available"),
+        BloodStockItem("bs_5", "O+", 45, "District Civil Hospital & Blood Centre (Rampur)", "0595-2348101", "Available"),
+        BloodStockItem("bs_6", "O-", 3, "District Civil Hospital & Blood Centre (Rampur)", "0595-2348101", "Critical"),
+        BloodStockItem("bs_7", "AB+", 18, "Sub-District Hospital (Shahabad)", "0595-2348103", "Available"),
+        BloodStockItem("bs_8", "AB-", 2, "District Civil Hospital & Blood Centre (Rampur)", "0595-2348101", "Critical")
+    )
+
+    val initialFamilyMembers = listOf(
+        FamilyMember("fam_1", "pat_1", "Geeta Devi", "Spouse", 42, "Female", "O+", "91-4920-1182-3910"),
+        FamilyMember("fam_2", "pat_1", "Amit Kumar", "Son", 14, "Male", "B+", "91-8830-4920-1102"),
+        FamilyMember("fam_3", "pat_1", "Kavita Kumari", "Daughter", 9, "Female", "A+", "91-3390-1129-8831")
+    )
+
+    fun getLabReportEntities(): List<LabReportEntity> = initialLabReports.map {
+        LabReportEntity(it.id, it.patientId, it.patientName, it.testCategory, it.doctorName, it.dateFormatted, it.items, it.notes, it.status)
+    }
+
+    fun getOpdTokenEntities(): List<OpdTokenEntity> = initialOpdTokens.map {
+        OpdTokenEntity(it.id, it.tokenNumber, it.patientId, it.patientName, it.doctorName, it.department, it.cabinNumber, it.currentServingToken, it.estimatedWaitMinutes, it.status, it.dateFormatted)
+    }
+
+    fun getMedicalCertificateEntities(): List<MedicalCertificateEntity> = initialMedicalCertificates.map {
+        MedicalCertificateEntity(it.id, it.certificateNumber, it.patientId, it.patientName, it.patientAge, it.patientGender, it.doctorName, it.doctorRegistrationNumber, it.diagnosis, it.restStartDate, it.restEndDate, it.fitDate, it.certificateType, it.issuedDateFormatted)
+    }
+
+    fun getBloodStockEntities(): List<BloodStockEntity> = initialBloodStock.map {
+        BloodStockEntity(it.id, it.bloodGroup, it.unitsAvailable, it.hospitalName, it.contactPhone, it.status)
+    }
+
+    val initialIpdBeds = listOf(
+        IpdBed("bed_1", "Male Medical Ward", "BED-01", true, "pat_1", "Ramesh Kumar", "18 Aug 2026", "Dr. Rajesh Kumar", "Acute Bronchitis with Hypoxia", "Sister Sunita R."),
+        IpdBed("bed_2", "Male Medical Ward", "BED-02", false),
+        IpdBed("bed_3", "Male Medical Ward", "BED-03", true, "pat_3", "Devi Dayal", "19 Aug 2026", "Dr. Rajesh Kumar", "Decompensated Chronic Liver Disease", "Sister Sunita R."),
+        IpdBed("bed_4", "Male Medical Ward", "BED-04", false),
+        IpdBed("bed_5", "Female & Maternal Ward", "BED-05", true, "pat_2", "Sunita Devi", "17 Aug 2026", "Dr. Ananya Sen", "High-Risk Gestational Anemia (Hb 7.2)", "Sister Rekha M."),
+        IpdBed("bed_6", "Female & Maternal Ward", "BED-06", false),
+        IpdBed("bed_7", "Female & Maternal Ward", "BED-07", false),
+        IpdBed("bed_8", "Emergency Trauma Ward", "BED-08", true, "pat_4", "Kunal Sharma", "20 Aug 2026", "Dr. Ayushman Dev Singh", "RTA Compound Mandibular Fracture", "Sister Preeti K."),
+        IpdBed("bed_9", "Emergency Trauma Ward", "BED-09", false),
+        IpdBed("bed_10", "Intensive Care Unit (ICU)", "ICU-01", true, "pat_5", "Harish Chandra", "19 Aug 2026", "Dr. Rajesh Kumar", "Septic Shock / Sepsis on Norepinephrine", "Sister Mary J."),
+        IpdBed("bed_11", "Intensive Care Unit (ICU)", "ICU-02", false)
+    )
+
+    val initialOtSurgeryBookings = listOf(
+        OtSurgeryBooking(
+            id = "ot_1",
+            otRoomName = "Trauma & Ortho OT-2",
+            patientId = "pat_4",
+            patientName = "Kunal Sharma",
+            surgeryName = "Open Reduction & Internal Fixation (ORIF) Mandible",
+            surgeonName = "Dr. Ayushman Dev Singh",
+            anesthetistName = "Dr. S. K. Verma (Sr. Anesthetist)",
+            scheduledDate = "Tomorrow",
+            scheduledTimeSlot = "09:00 AM - 11:30 AM",
+            pacCleared = true,
+            status = "Scheduled"
+        ),
+        OtSurgeryBooking(
+            id = "ot_2",
+            otRoomName = "Major OT-1",
+            patientId = "pat_1",
+            patientName = "Ramesh Kumar",
+            surgeryName = "Elective Maxillofacial Cyst Enucleation",
+            surgeonName = "Dr. Ayushman Dev Singh",
+            anesthetistName = "Dr. Preeti Saxena",
+            scheduledDate = "24 Aug 2026",
+            scheduledTimeSlot = "12:00 PM - 02:00 PM",
+            pacCleared = true,
+            status = "Scheduled"
+        ),
+        OtSurgeryBooking(
+            id = "ot_3",
+            otRoomName = "Emergency Minor OT",
+            patientId = "pat_2",
+            patientName = "Sunita Devi",
+            surgeryName = "Emergency Cervical Cerclage",
+            surgeonName = "Dr. Ananya Sen",
+            anesthetistName = "Dr. S. K. Verma",
+            scheduledDate = "Yesterday",
+            scheduledTimeSlot = "03:00 PM - 04:00 PM",
+            pacCleared = true,
+            status = "Completed"
+        )
+    )
+
+    val initialExternalReferrals = listOf(
+        ExternalReferral(
+            id = "ref_1",
+            referralLetterId = "REF-2026-4401",
+            patientId = "pat_1",
+            patientName = "Ramesh Kumar",
+            referringDoctorName = "Dr. Rajesh Kumar",
+            empanelledHospitalName = "Railway Central Hospital, New Delhi",
+            specialtyRequired = "Cardiothoracic & Vascular Surgery",
+            clinicalSummary = "Severe Tri-Vessel Coronary Artery Disease with post-infarct angina requiring urgent CABG evaluation.",
+            isCashlessApproved = true,
+            ambulanceRequisitioned = true,
+            issuedDate = "19 Aug 2026",
+            status = "Active"
+        ),
+        ExternalReferral(
+            id = "ref_2",
+            referralLetterId = "REF-2026-4402",
+            patientId = "pat_2",
+            patientName = "Sunita Devi",
+            referringDoctorName = "Dr. Ananya Sen",
+            empanelledHospitalName = "AIIMS New Delhi (Apex Maternal Center)",
+            specialtyRequired = "Fetal Medicine & High Risk Perinatology",
+            clinicalSummary = "Severe Rh Isoimmunization with Fetal Hydrops signs for specialized intrauterine transfusion.",
+            isCashlessApproved = true,
+            ambulanceRequisitioned = false,
+            issuedDate = "16 Aug 2026",
+            status = "Active"
+        )
+    )
+
+    val initialBioMedicalEquipment = listOf(
+        BioMedicalEquipment("bme_1", "BME-OX-104", "PSA Medical Oxygen Generator (250 LPM)", "Hospital Central Supply", "OPERATIONAL", "15 Jul 2026", "15 Oct 2026", "Utility Block B", "Er. Manoj Kumar (9876541101)"),
+        BioMedicalEquipment("bme_2", "BME-ECG-02", "12-Lead Digital ECG Machine (Schiller)", "Emergency Trauma Ward", "OPERATIONAL", "01 Aug 2026", "01 Nov 2026", "Trauma Cabin 1", "Er. Manoj Kumar (9876541101)"),
+        BioMedicalEquipment("bme_3", "BME-DEF-01", "Biphasic Defibrillator with Pacer", "ICU / Critical Care", "OPERATIONAL", "10 Aug 2026", "10 Nov 2026", "ICU Station Alpha", "Er. Manoj Kumar (9876541101)"),
+        BioMedicalEquipment("bme_4", "BME-USG-03", "Color Doppler Ultrasound Scanner (GE)", "Radiology & Imaging", "CALIBRATION_DUE", "12 May 2026", "12 Aug 2026", "Radiology Room 2", "Er. Amit Saxena (9876541102)"),
+        BioMedicalEquipment("bme_5", "BME-AUTO-01", "High-Pressure Horizontal Autoclave", "Central Sterile Supply (CSSD)", "OPERATIONAL", "25 Jul 2026", "25 Oct 2026", "CSSD Sterilization Room", "Er. Manoj Kumar (9876541101)"),
+        BioMedicalEquipment("bme_6", "BME-VENT-04", "Advanced ICU Invasive Ventilator", "ICU / Critical Care", "UNDER_MAINTENANCE", "05 Jun 2026", "05 Sep 2026", "ICU Bay 4", "Er. Amit Saxena (9876541102)")
+    )
+
+    fun getIpdBedEntities(): List<IpdBedEntity> = initialIpdBeds.map {
+        IpdBedEntity(it.id, it.wardName, it.bedNumber, it.isOccupied, it.patientId, it.patientName, it.admissionDate, it.attendingDoctorName, it.diagnosis, it.nurseInCharge)
+    }
+
+    fun getOtSurgeryBookingEntities(): List<OtSurgeryBookingEntity> = initialOtSurgeryBookings.map {
+        OtSurgeryBookingEntity(it.id, it.otRoomName, it.patientId, it.patientName, it.surgeryName, it.surgeonName, it.anesthetistName, it.scheduledDate, it.scheduledTimeSlot, it.pacCleared, it.status)
+    }
+
+    fun getExternalReferralEntities(): List<ExternalReferralEntity> = initialExternalReferrals.map {
+        ExternalReferralEntity(it.id, it.referralLetterId, it.patientId, it.patientName, it.referringDoctorName, it.empanelledHospitalName, it.specialtyRequired, it.clinicalSummary, it.isCashlessApproved, it.ambulanceRequisitioned, it.issuedDate, it.status)
+    }
+
+    fun getBioMedicalEquipmentEntities(): List<BioMedicalEquipmentEntity> = initialBioMedicalEquipment.map {
+        BioMedicalEquipmentEntity(it.id, it.assetCode, it.name, it.department, it.status, it.lastServiceDate, it.nextServiceDue, it.location, it.inChargeContact)
+    }
 }
+

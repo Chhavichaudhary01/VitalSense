@@ -78,9 +78,9 @@ fun SplashScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        GlumeBackground,
-                        Color(0xFF13131D),
-                        GlumeBackground
+                        PresentationLightBackground,
+                        VitalSenseTealContainer,
+                        PresentationLightBackground
                     )
                 )
             ),

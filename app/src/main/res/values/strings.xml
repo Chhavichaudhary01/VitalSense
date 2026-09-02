@@ -5,4 +5,25 @@
     <string name="role_asha">ASHA Worker</string>
     <string name="role_doctor">Doctor</string>
     <string name="role_admin">Admin</string>
+
+    <!-- Queue & Appointments -->
+    <string name="queue_token">Token #%1$d</string>
+    <string name="queue_confirming_position">Confirming your position…</string>
+    <string name="queue_position_ahead">%1$d ahead of you</string>
+    <string name="queue_you_are_next">You are next in line</string>
+    <string name="queue_estimated_wait">~%1$d min</string>
+    <string name="queue_check_in">Check In</string>
+    <string name="queue_join_walkin">Join Walk-in Queue</string>
+    <string name="queue_cancel">Cancel Token</string>
+    <string name="queue_call_next">Call Next</string>
+    <string name="queue_start_consultation">Start Consultation</string>
+    <string name="queue_complete_consultation">Complete Consultation</string>
+    <string name="queue_mark_noshow">No-Show</string>
+    <string name="queue_skip">Skip</string>
+    <string name="queue_prioritize">Prioritize</string>
+    <string name="queue_open_clinic">Open Today\'s Queue</string>
+    <string name="queue_close_clinic">Close Walk-in Queue</string>
+    <string name="queue_walkin_intake">Add Walk-in Patient</string>
+    <string name="queue_oversight_title">Live Clinic Queue Oversight</string>
+    <string name="queue_status_title">Live Visit Queue</string>
 </resources>

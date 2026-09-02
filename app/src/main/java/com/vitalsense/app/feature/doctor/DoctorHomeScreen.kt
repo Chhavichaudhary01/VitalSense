@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.vitalsense.app.core.ui.util.touchSpring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +38,10 @@ fun DoctorHomeScreen(
     onAcceptAppointment: (String) -> Unit = {},
     onDeclineAppointment: (String) -> Unit = {},
     onProposeAppointment: (patientId: String, patientName: String, date: String, timeSlot: String) -> Unit = { _, _, _, _ -> },
+    onNavigateToOtScheduler: () -> Unit = {},
+    onNavigateToIpdBeds: () -> Unit = {},
+    onNavigateToExternalReferrals: () -> Unit = {},
+    onNavigateToLiveQueue: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -163,6 +169,111 @@ fun DoctorHomeScreen(
                     badgeText = "Today",
                     badgeColor = GlumeSuccessMint
                 )
+            }
+        }
+
+        // 3.2 Doctor Clinical Quick Hub
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
+                VitalSenseCard(
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = GlumeSurfaceCard,
+                    border = BorderStroke(1.dp, GlumeBorder),
+                    onClick = onNavigateToOtScheduler
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                        Text("🔪", fontSize = 20.sp)
+                        Text("OT Desk", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = GlumeTextPrimary)
+                        Text("Surgeries & PAC", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp), color = GlumeTextSecondary)
+                    }
+                }
+
+                VitalSenseCard(
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = GlumeSurfaceCard,
+                    border = BorderStroke(1.dp, GlumeBorder),
+                    onClick = onNavigateToIpdBeds
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                        Text("🛏️", fontSize = 20.sp)
+                        Text("IPD Beds", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = GlumeTextPrimary)
+                        Text("Ward Occupancy", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp), color = GlumeTextSecondary)
+                    }
+                }
+
+                VitalSenseCard(
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = GlumeSurfaceCard,
+                    border = BorderStroke(1.dp, GlumeBorder),
+                    onClick = onNavigateToExternalReferrals
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                        Text("🏛️", fontSize = 20.sp)
+                        Text("Referrals", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = GlumeTextPrimary)
+                        Text("AIIMS / Tie-Up", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp), color = GlumeTextSecondary)
+                    }
+                }
+            }
+        }
+
+        // 3.1 Live Clinic Queue Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .touchSpring(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = NagarSevaSurfaceLight),
+                border = BorderStroke(1.5.dp, NagarSevaPrimary.copy(alpha = 0.3f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = NagarSevaPrimary.copy(alpha = 0.12f),
+                            modifier = Modifier.size(44.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("🩺", fontSize = 22.sp)
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "Live OPD & Walk-In Queue",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
+                            )
+                            Text(
+                                text = "Call next, prioritize cases & manage consultations",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = onNavigateToLiveQueue,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Text("Open HUD", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
             }
         }
 

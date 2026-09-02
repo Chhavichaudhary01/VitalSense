@@ -21,6 +21,9 @@ class AppStateHolder @Inject constructor() {
     private val _currentLanguage = MutableStateFlow(AppLanguage.ENGLISH)
     val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
 
+    private val _isPresentationLightMode = MutableStateFlow(true)
+    val isPresentationLightMode: StateFlow<Boolean> = _isPresentationLightMode.asStateFlow()
+
     private val _activePatient = MutableStateFlow(SeedDataProvider.initialPatients.first())
     val activePatient: StateFlow<Patient> = _activePatient.asStateFlow()
 
@@ -79,6 +82,10 @@ class AppStateHolder @Inject constructor() {
 
     fun toggleLanguage() {
         _currentLanguage.value = if (_currentLanguage.value == AppLanguage.ENGLISH) AppLanguage.HINDI else AppLanguage.ENGLISH
+    }
+
+    fun togglePresentationTheme() {
+        _isPresentationLightMode.value = !_isPresentationLightMode.value
     }
 
     fun selectPatient(patient: Patient) {

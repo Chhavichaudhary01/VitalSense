@@ -10,6 +10,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,6 +41,17 @@ class VitalSenseRepositoryImpl @Inject constructor(
     private val _dailyRounds = MutableStateFlow(SeedDataProvider.initialDailyRounds)
     private val _ashaMedicines = MutableStateFlow(SeedDataProvider.initialAshaMedicines)
     private val _diseaseTrends = MutableStateFlow(SeedDataProvider.initialDiseaseTrendRecords)
+    private val _labReports = MutableStateFlow(SeedDataProvider.initialLabReports)
+    private val _opdTokens = MutableStateFlow(SeedDataProvider.initialOpdTokens)
+    private val _medicalCertificates = MutableStateFlow(SeedDataProvider.initialMedicalCertificates)
+    private val _bloodStock = MutableStateFlow(SeedDataProvider.initialBloodStock)
+    private val _familyMembers = MutableStateFlow(SeedDataProvider.initialFamilyMembers)
+    private val _ipdBeds = MutableStateFlow(SeedDataProvider.initialIpdBeds)
+    private val _otSurgeryBookings = MutableStateFlow(SeedDataProvider.initialOtSurgeryBookings)
+    private val _externalReferrals = MutableStateFlow(SeedDataProvider.initialExternalReferrals)
+    private val _bioMedicalEquipment = MutableStateFlow(SeedDataProvider.initialBioMedicalEquipment)
+    private val _queueEntries = MutableStateFlow<List<QueueEntry>>(emptyList())
+    private val _doctorSlots = MutableStateFlow<List<DoctorDaySlotConfig>>(emptyList())
 
     init {
         // 1. Pre-seed local Room database on first launch
@@ -59,6 +72,14 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 SeedDataProvider.getDailyRoundEntities().forEach { dao.insertDailyRound(it) }
                 SeedDataProvider.getAshaMedicineEntities().forEach { dao.insertAshaMedicine(it) }
                 SeedDataProvider.getDiseaseTrendRecordEntities().forEach { dao.insertDiseaseTrendRecord(it) }
+                SeedDataProvider.getLabReportEntities().forEach { dao.insertLabReport(it) }
+                SeedDataProvider.getOpdTokenEntities().forEach { dao.insertOpdToken(it) }
+                SeedDataProvider.getMedicalCertificateEntities().forEach { dao.insertMedicalCertificate(it) }
+                SeedDataProvider.getBloodStockEntities().forEach { dao.insertBloodStockItem(it) }
+                SeedDataProvider.getIpdBedEntities().forEach { dao.insertIpdBed(it) }
+                SeedDataProvider.getOtSurgeryBookingEntities().forEach { dao.insertOtSurgeryBooking(it) }
+                SeedDataProvider.getExternalReferralEntities().forEach { dao.insertExternalReferral(it) }
+                SeedDataProvider.getBioMedicalEquipmentEntities().forEach { dao.insertBioMedicalEquipment(it) }
             } catch (e: Exception) {
                 // Fallback to in-memory state
             }
@@ -700,4 +721,523 @@ class VitalSenseRepositoryImpl @Inject constructor(
             )
         }
     }
-}
+
+    // --- Diagnostic Lab Reports ---
+    override fun getLabReports(): Flow<List<LabReport>> = _labReports.asStateFlow()
+
+    override fun getLabReportsForPatient(patientId: String): Flow<List<LabReport>> =
+        _labReports.map { list -> list.filter { it.patientId == patientId } }
+
+    override suspend fun saveLabReport(report: LabReport) {
+        _labReports.update { list ->
+            val index = list.indexOfFirst { it.id == report.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, report) }
+            } else {
+                listOf(report) + list
+            }
+        }
+        scope.launch {
+            dao.insertLabReport(
+                LabReportEntity(
+                    report.id, report.patientId, report.patientName, report.testCategory,
+                    report.doctorName, report.dateFormatted, report.items, report.notes, report.status
+                )
+            )
+        }
+    }
+
+    // --- Live OPD Queue Tokens ---
+    override fun getOpdTokens(): Flow<List<OpdToken>> = _opdTokens.asStateFlow()
+
+    override fun getOpdTokensForPatient(patientId: String): Flow<List<OpdToken>> =
+        _opdTokens.map { list -> list.filter { it.patientId == patientId } }
+
+    override suspend fun bookOpdToken(token: OpdToken) {
+        _opdTokens.update { list ->
+            val index = list.indexOfFirst { it.id == token.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, token) }
+            } else {
+                listOf(token) + list
+            }
+        }
+        scope.launch {
+            dao.insertOpdToken(
+                OpdTokenEntity(
+                    token.id, token.tokenNumber, token.patientId, token.patientName,
+                    token.doctorName, token.department, token.cabinNumber,
+                    token.currentServingToken, token.estimatedWaitMinutes, token.status, token.dateFormatted
+                )
+            )
+        }
+    }
+
+    // --- Medical Certificates ---
+    override fun getMedicalCertificates(): Flow<List<MedicalCertificate>> = _medicalCertificates.asStateFlow()
+
+    override fun getMedicalCertificatesForPatient(patientId: String): Flow<List<MedicalCertificate>> =
+        _medicalCertificates.map { list -> list.filter { it.patientId == patientId } }
+
+    override suspend fun saveMedicalCertificate(certificate: MedicalCertificate) {
+        _medicalCertificates.update { list ->
+            val index = list.indexOfFirst { it.id == certificate.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, certificate) }
+            } else {
+                listOf(certificate) + list
+            }
+        }
+        scope.launch {
+            dao.insertMedicalCertificate(
+                MedicalCertificateEntity(
+                    certificate.id, certificate.certificateNumber, certificate.patientId,
+                    certificate.patientName, certificate.patientAge, certificate.patientGender,
+                    certificate.doctorName, certificate.doctorRegistrationNumber,
+                    certificate.diagnosis, certificate.restStartDate, certificate.restEndDate,
+                    certificate.fitDate, certificate.certificateType, certificate.issuedDateFormatted
+                )
+            )
+        }
+    }
+
+    // --- Blood Bank Inventory ---
+    override fun getBloodStock(): Flow<List<BloodStockItem>> = _bloodStock.asStateFlow()
+
+    override suspend fun updateBloodStock(item: BloodStockItem) {
+        _bloodStock.update { list ->
+            val index = list.indexOfFirst { it.id == item.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, item) }
+            } else {
+                list + item
+            }
+        }
+        scope.launch {
+            dao.insertBloodStockItem(
+                BloodStockEntity(
+                    item.id, item.bloodGroup, item.unitsAvailable, item.hospitalName,
+                    item.contactPhone, item.status
+                )
+            )
+        }
+    }
+
+    // --- Family Linkage ---
+    override fun getFamilyMembers(primaryPatientId: String): Flow<List<FamilyMember>> =
+        _familyMembers.map { list -> list.filter { it.primaryPatientId == primaryPatientId } }
+
+    // --- In-Patient Care (IPD) Beds ---
+    override fun getIpdBeds(): Flow<List<IpdBed>> = _ipdBeds.asStateFlow()
+
+    override suspend fun saveIpdBed(bed: IpdBed) {
+        _ipdBeds.update { list ->
+            val index = list.indexOfFirst { it.id == bed.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, bed) }
+            } else {
+                list + bed
+            }
+        }
+        scope.launch {
+            dao.insertIpdBed(
+                IpdBedEntity(
+                    bed.id, bed.wardName, bed.bedNumber, bed.isOccupied,
+                    bed.patientId, bed.patientName, bed.admissionDate,
+                    bed.attendingDoctorName, bed.diagnosis, bed.nurseInCharge
+                )
+            )
+        }
+    }
+
+    // --- Operation Theatre (OT) Surgery Bookings ---
+    override fun getOtSurgeryBookings(): Flow<List<OtSurgeryBooking>> = _otSurgeryBookings.asStateFlow()
+
+    override suspend fun saveOtSurgeryBooking(booking: OtSurgeryBooking) {
+        _otSurgeryBookings.update { list ->
+            val index = list.indexOfFirst { it.id == booking.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, booking) }
+            } else {
+                listOf(booking) + list
+            }
+        }
+        scope.launch {
+            dao.insertOtSurgeryBooking(
+                OtSurgeryBookingEntity(
+                    booking.id, booking.otRoomName, booking.patientId, booking.patientName,
+                    booking.surgeryName, booking.surgeonName, booking.anesthetistName,
+                    booking.scheduledDate, booking.scheduledTimeSlot, booking.pacCleared, booking.status
+                )
+            )
+        }
+    }
+
+    // --- External Hospital Referrals ---
+    override fun getExternalReferrals(): Flow<List<ExternalReferral>> = _externalReferrals.asStateFlow()
+
+    override fun getExternalReferralsForPatient(patientId: String): Flow<List<ExternalReferral>> =
+        _externalReferrals.map { list -> list.filter { it.patientId == patientId } }
+
+    override suspend fun saveExternalReferral(referral: ExternalReferral) {
+        _externalReferrals.update { list ->
+            val index = list.indexOfFirst { it.id == referral.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, referral) }
+            } else {
+                listOf(referral) + list
+            }
+        }
+        scope.launch {
+            dao.insertExternalReferral(
+                ExternalReferralEntity(
+                    referral.id, referral.referralLetterId, referral.patientId, referral.patientName,
+                    referringDoctorName = referral.referringDoctorName,
+                    empanelledHospitalName = referral.empanelledHospitalName,
+                    specialtyRequired = referral.specialtyRequired,
+                    clinicalSummary = referral.clinicalSummary,
+                    isCashlessApproved = referral.isCashlessApproved,
+                    ambulanceRequisitioned = referral.ambulanceRequisitioned,
+                    issuedDate = referral.issuedDate,
+                    status = referral.status
+                )
+            )
+        }
+    }
+
+    // --- Bio-Medical Equipment ---
+    override fun getBioMedicalEquipment(): Flow<List<BioMedicalEquipment>> = _bioMedicalEquipment.asStateFlow()
+
+    override suspend fun saveBioMedicalEquipment(equipment: BioMedicalEquipment) {
+        _bioMedicalEquipment.update { list ->
+            val index = list.indexOfFirst { it.id == equipment.id }
+            if (index >= 0) {
+                list.toMutableList().apply { set(index, equipment) }
+            } else {
+                list + equipment
+            }
+        }
+        scope.launch {
+            dao.insertBioMedicalEquipment(
+                BioMedicalEquipmentEntity(
+                    equipment.id, equipment.assetCode, equipment.name,
+                    equipment.department, equipment.status, equipment.lastServiceDate,
+                    equipment.nextServiceDue, equipment.location, equipment.inChargeContact
+                )
+            )
+        }
+    }
+
+    // --- Live Clinic Queue & Day Slots ---
+
+    override fun observeDoctorQueue(doctorId: String, date: String): Flow<List<QueueEntry>> {
+        scope.launch {
+            try {
+                firestoreDataSource.observeDoctorQueueStream(doctorId, date).collect { remoteEntries ->
+                    if (remoteEntries.isNotEmpty()) {
+                        _queueEntries.update { current ->
+                            val remoteMap = remoteEntries.associateBy { it.id }
+                            current.map { local -> remoteMap[local.id] ?: local } +
+                                remoteEntries.filter { remote -> current.none { it.id == remote.id } }
+                        }
+                        dao.upsertQueueEntries(remoteEntries.map { it.toEntity() })
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline fallback
+            }
+        }
+
+        return _queueEntries.map { list ->
+            val forDoctor = list.filter { it.doctorId == doctorId && it.dateFormatted == date }
+            val (waiting, nonWaiting) = forDoctor.partition { it.status == QueueEntryStatus.WAITING }
+            com.vitalsense.app.core.util.QueueEtaCalculator.sortWaitingEntries(waiting) +
+                nonWaiting.sortedBy { it.checkedInAt }
+        }
+    }
+
+    override fun observePatientQueueEntry(patientId: String, date: String): Flow<QueueEntry?> {
+        return _queueEntries.map { list ->
+            list.firstOrNull { it.patientId == patientId && it.dateFormatted == date }
+        }
+    }
+
+    override fun observeDoctorSlots(doctorId: String, date: String): Flow<List<DoctorDaySlotConfig>> {
+        scope.launch {
+            try {
+                firestoreDataSource.observeDoctorSlotsStream(doctorId, date).collect { remoteSlots ->
+                    if (remoteSlots.isNotEmpty()) {
+                        _doctorSlots.update { remoteSlots }
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline
+            }
+        }
+        return _doctorSlots.map { list -> list.filter { it.doctorId == doctorId && it.dateFormatted == date } }
+    }
+
+    override fun observeAllDoctorQueueSummaries(date: String): Flow<List<DoctorQueueSummary>> {
+        return combine(_doctors, _queueEntries, _doctorSlots) { doctors, entries, slots ->
+            doctors.map { doc ->
+                val docEntries = entries.filter { it.doctorId == doc.id && it.dateFormatted == date }
+                val waitingCount = docEntries.count { it.status == QueueEntryStatus.WAITING }
+                val activeOrCalled = docEntries.firstOrNull { it.status == QueueEntryStatus.IN_CONSULTATION || it.status == QueueEntryStatus.CALLED }
+                val currentToken = activeOrCalled?.tokenNumber ?: 0
+                val avgWait = com.vitalsense.app.core.util.QueueEtaCalculator.averageConsultationSeconds(docEntries)
+                val isQueueOpen = slots.find { it.doctorId == doc.id && it.dateFormatted == date }?.isWalkInOpen ?: true
+
+                DoctorQueueSummary(
+                    doctorId = doc.id,
+                    doctorName = doc.name,
+                    dateFormatted = date,
+                    waitingCount = waitingCount,
+                    currentToken = currentToken,
+                    avgWaitSeconds = avgWait,
+                    isQueueOpen = isQueueOpen
+                )
+            }
+        }
+    }
+
+    override suspend fun defineDoctorSlot(slot: DoctorDaySlotConfig) {
+        _doctorSlots.update { list ->
+            val idx = list.indexOfFirst { it.id == slot.id }
+            if (idx >= 0) list.toMutableList().apply { set(idx, slot) } else list + slot
+        }
+        dao.upsertDoctorSlot(
+            com.vitalsense.app.core.data.local.entity.DoctorDaySlotEntity(
+                slot.id, slot.doctorId, slot.dateFormatted, slot.startTime, slot.endTime, slot.capacity, slot.isWalkInOpen
+            )
+        )
+        try {
+            firestoreDataSource.uploadDoctorSlot(slot)
+        } catch (e: Exception) {
+            val outbox = OutboxEntity(
+                id = UUID.randomUUID().toString(),
+                actionType = "DOCTOR_DAY_SLOT",
+                entityId = slot.id,
+                payloadJson = gson.toJson(slot),
+                timestamp = System.currentTimeMillis()
+            )
+            dao.insertOutboxRecord(outbox)
+            syncManager.triggerImmediateSync()
+        }
+    }
+
+    override suspend fun checkInAppointment(appointmentId: String): QueueEntry {
+        val appt = _appointments.value.find { it.id == appointmentId }
+            ?: throw IllegalArgumentException("Appointment $appointmentId not found")
+
+        val entryId = "queue_${UUID.randomUUID()}"
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        val provisionalEntry = QueueEntry(
+            id = entryId,
+            doctorId = appt.doctorId,
+            doctorName = appt.doctorName,
+            dateFormatted = today,
+            tokenNumber = -1,
+            provisionalToken = true,
+            appointmentId = appt.id,
+            patientId = appt.patientId,
+            patientName = appt.patientName,
+            source = QueueEntrySource.SCHEDULED,
+            status = QueueEntryStatus.WAITING,
+            priorityFlag = false,
+            checkedInAt = System.currentTimeMillis(),
+            isPendingSync = true
+        )
+
+        _queueEntries.update { it + provisionalEntry }
+        dao.upsertQueueEntry(provisionalEntry.toEntity())
+
+        return try {
+            val authoritative = firestoreDataSource.assignAuthoritativeTokenAndSave(provisionalEntry)
+            _queueEntries.update { list ->
+                list.map { if (it.id == authoritative.id) authoritative else it }
+            }
+            dao.upsertQueueEntry(authoritative.toEntity())
+            authoritative
+        } catch (e: Exception) {
+            val outbox = OutboxEntity(
+                id = UUID.randomUUID().toString(),
+                actionType = "QUEUE_ENTRY",
+                entityId = provisionalEntry.id,
+                payloadJson = gson.toJson(provisionalEntry),
+                timestamp = System.currentTimeMillis()
+            )
+            dao.insertOutboxRecord(outbox)
+            syncManager.triggerImmediateSync()
+            provisionalEntry
+        }
+    }
+
+    override suspend fun joinWalkInQueue(
+        doctorId: String,
+        doctorName: String,
+        patientId: String,
+        patientName: String
+    ): QueueEntry {
+        val entryId = "queue_${UUID.randomUUID()}"
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        val provisionalEntry = QueueEntry(
+            id = entryId,
+            doctorId = doctorId,
+            doctorName = doctorName,
+            dateFormatted = today,
+            tokenNumber = -1,
+            provisionalToken = true,
+            appointmentId = null,
+            patientId = patientId,
+            patientName = patientName,
+            source = QueueEntrySource.WALK_IN,
+            status = QueueEntryStatus.WAITING,
+            priorityFlag = false,
+            checkedInAt = System.currentTimeMillis(),
+            isPendingSync = true
+        )
+
+        _queueEntries.update { it + provisionalEntry }
+        dao.upsertQueueEntry(provisionalEntry.toEntity())
+
+        return try {
+            val authoritative = firestoreDataSource.assignAuthoritativeTokenAndSave(provisionalEntry)
+            _queueEntries.update { list ->
+                list.map { if (it.id == authoritative.id) authoritative else it }
+            }
+            dao.upsertQueueEntry(authoritative.toEntity())
+            authoritative
+        } catch (e: Exception) {
+            val outbox = OutboxEntity(
+                id = UUID.randomUUID().toString(),
+                actionType = "QUEUE_ENTRY",
+                entityId = provisionalEntry.id,
+                payloadJson = gson.toJson(provisionalEntry),
+                timestamp = System.currentTimeMillis()
+            )
+            dao.insertOutboxRecord(outbox)
+            syncManager.triggerImmediateSync()
+            provisionalEntry
+        }
+    }
+
+    override suspend fun callNext(doctorId: String, date: String) {
+        val waiting = _queueEntries.value.filter {
+            it.doctorId == doctorId && it.dateFormatted == date && it.status == QueueEntryStatus.WAITING
+        }
+        val nextEntry = com.vitalsense.app.core.util.QueueEtaCalculator.sortWaitingEntries(waiting).firstOrNull()
+            ?: return
+
+        val updated = nextEntry.copy(
+            status = QueueEntryStatus.CALLED,
+            calledAt = System.currentTimeMillis()
+        )
+        mutateQueueEntry(updated)
+    }
+
+    override suspend fun startConsultation(entryId: String) {
+        val entry = _queueEntries.value.find { it.id == entryId } ?: return
+
+        val existingActive = _queueEntries.value.find {
+            it.doctorId == entry.doctorId && it.dateFormatted == entry.dateFormatted && it.status == QueueEntryStatus.IN_CONSULTATION && it.id != entryId
+        }
+        if (existingActive != null) {
+            throw IllegalStateException("Another consultation is already in progress with ${existingActive.patientName} (Token #${existingActive.tokenNumber}).")
+        }
+
+        val updated = entry.copy(
+            status = QueueEntryStatus.IN_CONSULTATION,
+            consultationStartedAt = System.currentTimeMillis()
+        )
+        mutateQueueEntry(updated)
+    }
+
+    override suspend fun completeConsultation(entryId: String, outcomeNotes: String?) {
+        val entry = _queueEntries.value.find { it.id == entryId } ?: return
+        val updated = entry.copy(
+            status = QueueEntryStatus.COMPLETED,
+            completedAt = System.currentTimeMillis(),
+            outcomeNotes = outcomeNotes
+        )
+        mutateQueueEntry(updated)
+    }
+
+    override suspend fun markNoShow(entryId: String) {
+        val entry = _queueEntries.value.find { it.id == entryId } ?: return
+        val updated = entry.copy(status = QueueEntryStatus.NO_SHOW)
+        mutateQueueEntry(updated)
+    }
+
+    override suspend fun skipEntry(entryId: String) {
+        val entry = _queueEntries.value.find { it.id == entryId } ?: return
+        val isAlreadySkipped = entry.outcomeNotes?.contains("[SKIPPED_ONCE]") == true
+        val updated = if (isAlreadySkipped) {
+            entry.copy(status = QueueEntryStatus.NO_SHOW)
+        } else {
+            entry.copy(
+                status = QueueEntryStatus.WAITING,
+                checkedInAt = System.currentTimeMillis(),
+                priorityFlag = false,
+                outcomeNotes = "[SKIPPED_ONCE]"
+            )
+        }
+        mutateQueueEntry(updated)
+    }
+
+    override suspend fun prioritizeEntry(entryId: String) {
+        val entry = _queueEntries.value.find { it.id == entryId } ?: return
+        val updated = entry.copy(priorityFlag = !entry.priorityFlag)
+        mutateQueueEntry(updated)
+    }
+
+    override suspend fun cancelQueueEntry(entryId: String) {
+        val entry = _queueEntries.value.find { it.id == entryId } ?: return
+        val updated = entry.copy(status = QueueEntryStatus.CANCELLED)
+        mutateQueueEntry(updated)
+    }
+
+    private suspend fun mutateQueueEntry(entry: QueueEntry) {
+        _queueEntries.update { list ->
+            list.map { if (it.id == entry.id) entry else it }
+        }
+        dao.upsertQueueEntry(entry.toEntity())
+        try {
+            firestoreDataSource.uploadQueueEntry(entry)
+        } catch (e: Exception) {
+            val outbox = OutboxEntity(
+                id = UUID.randomUUID().toString(),
+                actionType = "QUEUE_ENTRY",
+                entityId = entry.id,
+                payloadJson = gson.toJson(entry),
+                timestamp = System.currentTimeMillis()
+            )
+            dao.insertOutboxRecord(outbox)
+            syncManager.triggerImmediateSync()
+        }
+    }
+
+    private fun QueueEntry.toEntity(): com.vitalsense.app.core.data.local.entity.QueueEntryEntity {
+        return com.vitalsense.app.core.data.local.entity.QueueEntryEntity(
+            id = id,
+            doctorId = doctorId,
+            doctorName = doctorName,
+            dateFormatted = dateFormatted,
+            tokenNumber = tokenNumber,
+            provisionalToken = provisionalToken,
+            appointmentId = appointmentId,
+            patientId = patientId,
+            patientName = patientName,
+            source = source,
+            status = status,
+            priorityFlag = priorityFlag,
+            checkedInAt = checkedInAt,
+            calledAt = calledAt,
+            consultationStartedAt = consultationStartedAt,
+            completedAt = completedAt,
+            outcomeNotes = outcomeNotes,
+            isPendingSync = isPendingSync
+        )
+    }
+}

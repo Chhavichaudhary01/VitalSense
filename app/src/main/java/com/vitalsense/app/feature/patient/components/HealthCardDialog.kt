@@ -3,6 +3,7 @@ package com.vitalsense.app.feature.patient.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,9 +27,17 @@ import com.vitalsense.app.core.ui.theme.*
 @Composable
 fun HealthCardDialog(
     patient: Patient,
+    familyMembers: List<com.vitalsense.app.core.data.model.FamilyMember> = emptyList(),
     onDismiss: () -> Unit
 ) {
     var isSunlightMode by remember { mutableStateOf(false) }
+    var selectedFamilyMember by remember { mutableStateOf<com.vitalsense.app.core.data.model.FamilyMember?>(null) }
+
+    val activeName = selectedFamilyMember?.name ?: patient.name
+    val activeAge = selectedFamilyMember?.age ?: patient.age
+    val activeGender = selectedFamilyMember?.gender ?: patient.gender
+    val activeAbha = selectedFamilyMember?.abhaId ?: "91-${patient.phone.takeLast(6)}-${patient.id.takeLast(4).uppercase()}"
+    val activeBloodGroup = selectedFamilyMember?.bloodGroup ?: "O+"
 
     val cardBg = if (isSunlightMode) Color.White else GlumeSurfaceCard
     val cardTextPrimary = if (isSunlightMode) Color(0xFF111111) else GlumeTextPrimary
@@ -72,7 +81,7 @@ fun HealthCardDialog(
                         }
                         Column {
                             Text(
-                                text = "DIGITAL HEALTH CARD",
+                                text = "DIGITAL HEALTH CARD (UMID)",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 1.sp
@@ -92,6 +101,59 @@ fun HealthCardDialog(
                     }
                 }
 
+                // Family & Dependent Switcher Chips
+                if (familyMembers.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "Linked Beneficiaries (Family):",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextTertiary
+                        )
+                        androidx.compose.foundation.lazy.LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            item {
+                                val isSelf = selectedFamilyMember == null
+                                Surface(
+                                    shape = PillShape,
+                                    color = if (isSelf) GlumePrimaryPurple else GlumeSurfaceElevated,
+                                    border = BorderStroke(1.dp, if (isSelf) GlumePrimaryPurple else GlumeBorder),
+                                    modifier = Modifier.clickable { selectedFamilyMember = null }
+                                ) {
+                                    Text(
+                                        text = "👤 Primary (Self)",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = if (isSelf) FontWeight.Bold else FontWeight.Normal
+                                        ),
+                                        color = if (isSelf) Color.White else cardTextPrimary,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                            items(familyMembers.size) { idx ->
+                                val member = familyMembers[idx]
+                                val isSelected = selectedFamilyMember?.id == member.id
+                                Surface(
+                                    shape = PillShape,
+                                    color = if (isSelected) GlumePrimaryPurple else GlumeSurfaceElevated,
+                                    border = BorderStroke(1.dp, if (isSelected) GlumePrimaryPurple else GlumeBorder),
+                                    modifier = Modifier.clickable { selectedFamilyMember = member }
+                                ) {
+                                    Text(
+                                        text = "${member.name} (${member.relationship})",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                        ),
+                                        color = if (isSelected) Color.White else cardTextPrimary,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 HorizontalDivider(color = if (isSunlightMode) Color(0xFFEEEEEE) else GlumeBorder)
 
                 // Patient Profile Header
@@ -102,17 +164,17 @@ fun HealthCardDialog(
                 ) {
                     Column {
                         Text(
-                            text = patient.name,
+                            text = activeName,
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                             color = cardTextPrimary
                         )
                         Text(
-                            text = "${patient.age} Yrs · ${patient.gender} · ${patient.villageName}",
+                            text = "$activeAge Yrs · $activeGender · $activeBloodGroup · ${patient.villageName}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = cardTextSecondary
                         )
                         Text(
-                            text = "ABHA ID: 91-${patient.phone.takeLast(6)}-${patient.id.takeLast(4).uppercase()}",
+                            text = "ABHA ID: $activeAbha",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontFamily = FontFamily.Monospace,
                                 color = GlumePrimaryPurpleLight,

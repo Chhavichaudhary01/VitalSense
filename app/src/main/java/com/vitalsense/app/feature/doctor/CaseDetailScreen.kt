@@ -41,6 +41,8 @@ fun CaseDetailScreen(
     onIssuePrescription: (medicines: List<PrescribedMedicine>, instructions: String) -> Unit,
     onProposeAppointment: (date: String, timeSlot: String) -> Unit,
     onReferCase: (targetSpecialty: DoctorSpecialty, referralNotes: String) -> Unit,
+    onOrderLabTest: (LabReport) -> Unit = {},
+    onIssueMedicalCertificate: (MedicalCertificate) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -54,6 +56,8 @@ fun CaseDetailScreen(
     var showAppointmentDialog by remember { mutableStateOf(false) }
     var showReferDialog by remember { mutableStateOf(false) }
     var showTeleConsultModal by remember { mutableStateOf(false) }
+    var showMedicalCertDialog by remember { mutableStateOf(false) }
+    var showOrderLabDialog by remember { mutableStateOf(false) }
 
     val isMentalHealthCase = record.category == ConditionCategory.MENTAL_HEALTH ||
             record.requestedDoctorType == DoctorSpecialty.PSYCHOLOGIST
@@ -415,6 +419,25 @@ fun CaseDetailScreen(
                         style = ButtonStyle.OUTLINED
                     )
                 }
+
+                // Clinical Hospital Actions (Lab Investigation & Medical Leave/Fitness Certificate)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    VitalSenseButton(
+                        text = "🧪 Order Lab Test",
+                        onClick = { showOrderLabDialog = true },
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.SECONDARY
+                    )
+                    VitalSenseButton(
+                        text = "📜 Issue Certificate",
+                        onClick = { showMedicalCertDialog = true },
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.SECONDARY
+                    )
+                }
             }
         }
 
@@ -554,4 +577,43 @@ fun CaseDetailScreen(
             }
         )
     }
+
+    if (showMedicalCertDialog) {
+        MedicalCertificateDialog(
+            condition = record,
+            doctor = currentDoctor,
+            onDismiss = { showMedicalCertDialog = false },
+            onIssueCertificate = { cert ->
+                onIssueMedicalCertificate(cert)
+                showMedicalCertDialog = false
+            }
+        )
+    }
+
+    if (showOrderLabDialog) {
+        com.vitalsense.app.feature.lab.OrderLabTestDialog(
+            patient = patient ?: Patient(
+                id = record.patientId,
+                name = record.patientName,
+                age = 35,
+                gender = "Adult",
+                phone = "9876543210",
+                villageId = record.villageId,
+                villageName = record.villageName,
+                ashaWorkerId = "asha_1",
+                ashaWorkerName = "Priya Devi",
+                currentRiskLevel = SeverityLevel.LOW,
+                lastCondition = record.notes,
+                lastVisitDate = "Today",
+                nextAppointmentDate = null,
+                emergencyContact = "9876543210"
+            ),
+            onDismiss = { showOrderLabDialog = false },
+            onConfirmOrder = { newReport ->
+                onOrderLabTest(newReport)
+                showOrderLabDialog = false
+            }
+        )
+    }
 }
+

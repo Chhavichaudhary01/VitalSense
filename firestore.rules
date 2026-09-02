@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Live Queue Entries
+    match /queue_entries/{entryId} {
+      // Any authenticated user can read queue entries (patients monitor ETA, doctors manage queue, admins oversee)
+      allow read: if isAuthenticated();
+
+      // Creation allowed for patients (scheduled or walk-in check-in) or doctors/ASHA
+      // In production, enforce that request.resource.data.patientId == request.auth.uid or doctor role
+      allow create: if isAuthenticated();
+
+      // State transitions and mutations
+      // TODO: In production with custom claims, restrict mutation of status, calledAt, completedAt
+      // so that only the assigned doctor (request.auth.token.role == 'DOCTOR' && request.auth.uid == resource.data.doctorId)
+      // can advance WAITING -> CALLED -> IN_CONSULTATION -> COMPLETED.
+      // Patients should only be allowed to update status to CANCELLED for their own entry (resource.data.patientId == request.auth.uid).
+      allow update: if isAuthenticated();
+
+      // Delete prevented to preserve clinical audit trails
+      allow delete: if false;
+    }
+
+    // Doctor Day Slot Configurations
+    match /doctor_day_slots/{slotId} {
+      allow read: if isAuthenticated();
+      // TODO: replace with request.auth.token.role == 'DOCTOR' && request.auth.uid == request.resource.data.doctorId
+      allow write: if isAuthenticated();
+    }
+
+    // Atomic Queue Token Counters
+    match /queue_counters/{counterId} {
+      allow read: if isAuthenticated();
+      // Incremented atomically inside Firestore transaction during token allocation
+      allow write: if isAuthenticated();
+    }
+
+    // Default catch-all for clinical database collections
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

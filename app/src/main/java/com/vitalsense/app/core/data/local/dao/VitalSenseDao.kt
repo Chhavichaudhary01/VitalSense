@@ -167,5 +167,99 @@ interface VitalSenseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDispensaryItem(item: DispensaryEntity)
+
+    // --- Lab Reports ---
+    @Query("SELECT * FROM lab_reports ORDER BY dateFormatted DESC")
+    fun getAllLabReports(): Flow<List<LabReportEntity>>
+
+    @Query("SELECT * FROM lab_reports WHERE patientId = :patientId ORDER BY dateFormatted DESC")
+    fun getLabReportsForPatient(patientId: String): Flow<List<LabReportEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLabReport(report: LabReportEntity)
+
+    // --- OPD Queue Tokens ---
+    @Query("SELECT * FROM opd_tokens ORDER BY dateFormatted DESC")
+    fun getAllOpdTokens(): Flow<List<OpdTokenEntity>>
+
+    @Query("SELECT * FROM opd_tokens WHERE patientId = :patientId ORDER BY dateFormatted DESC")
+    fun getOpdTokensForPatient(patientId: String): Flow<List<OpdTokenEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOpdToken(token: OpdTokenEntity)
+
+    // --- Medical Certificates ---
+    @Query("SELECT * FROM medical_certificates ORDER BY issuedDateFormatted DESC")
+    fun getAllMedicalCertificates(): Flow<List<MedicalCertificateEntity>>
+
+    @Query("SELECT * FROM medical_certificates WHERE patientId = :patientId ORDER BY issuedDateFormatted DESC")
+    fun getMedicalCertificatesForPatient(patientId: String): Flow<List<MedicalCertificateEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedicalCertificate(certificate: MedicalCertificateEntity)
+
+    // --- Blood Stock ---
+    @Query("SELECT * FROM blood_stock ORDER BY bloodGroup ASC")
+    fun getAllBloodStock(): Flow<List<BloodStockEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBloodStockItem(item: BloodStockEntity)
+
+    // --- IPD Beds ---
+    @Query("SELECT * FROM ipd_beds ORDER BY wardName ASC, bedNumber ASC")
+    fun getAllIpdBeds(): Flow<List<IpdBedEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertIpdBed(bed: IpdBedEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllIpdBeds(beds: List<IpdBedEntity>)
+
+    // --- OT Surgery Bookings ---
+    @Query("SELECT * FROM ot_surgery_bookings ORDER BY scheduledDate DESC, scheduledTimeSlot ASC")
+    fun getAllOtSurgeryBookings(): Flow<List<OtSurgeryBookingEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOtSurgeryBooking(booking: OtSurgeryBookingEntity)
+
+    // --- External Referrals ---
+    @Query("SELECT * FROM external_referrals ORDER BY issuedDate DESC")
+    fun getAllExternalReferrals(): Flow<List<ExternalReferralEntity>>
+
+    @Query("SELECT * FROM external_referrals WHERE patientId = :patientId ORDER BY issuedDate DESC")
+    fun getExternalReferralsForPatient(patientId: String): Flow<List<ExternalReferralEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExternalReferral(referral: ExternalReferralEntity)
+
+    // --- Bio-Medical Equipment ---
+    @Query("SELECT * FROM biomedical_equipment ORDER BY department ASC, name ASC")
+    fun getAllBioMedicalEquipment(): Flow<List<BioMedicalEquipmentEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBioMedicalEquipment(equipment: BioMedicalEquipmentEntity)
+
+    // --- Live Clinic Queue & Day Slots ---
+    @Query("SELECT * FROM queue_entries WHERE doctorId = :doctorId AND dateFormatted = :date ORDER BY checkedInAt ASC")
+    fun observeDoctorQueue(doctorId: String, date: String): Flow<List<QueueEntryEntity>>
+
+    @Query("SELECT * FROM queue_entries WHERE patientId = :patientId AND dateFormatted = :date LIMIT 1")
+    fun observePatientQueueEntry(patientId: String, date: String): Flow<QueueEntryEntity?>
+
+    @Query("SELECT * FROM queue_entries WHERE doctorId = :doctorId AND dateFormatted = :date AND status = 'COMPLETED' ORDER BY completedAt DESC LIMIT :limit")
+    suspend fun getRecentCompletedEntries(doctorId: String, date: String, limit: Int): List<QueueEntryEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertQueueEntry(entry: QueueEntryEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertQueueEntries(entries: List<QueueEntryEntity>)
+
+    @Query("SELECT * FROM doctor_day_slots WHERE doctorId = :doctorId AND dateFormatted = :date")
+    fun observeDoctorSlots(doctorId: String, date: String): Flow<List<DoctorDaySlotEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertDoctorSlot(slot: DoctorDaySlotEntity)
 }
+
 

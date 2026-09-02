@@ -205,3 +205,181 @@ data class DiseaseTrendRecord(
     val dateFormatted: String,
     val severity: String?
 )
+
+data class LabTestItem(
+    val testName: String,
+    val resultValue: String,
+    val unit: String,
+    val referenceRange: String,
+    val flag: String // "NORMAL", "HIGH", "LOW"
+)
+
+data class LabReport(
+    val id: String,
+    val patientId: String,
+    val patientName: String,
+    val testCategory: String, // "Complete Blood Count (CBC)", "Biochemistry / Diabetes", "Liver Function Test (LFT)", "Dengue & Serology", "Urinalysis"
+    val doctorName: String,
+    val dateFormatted: String,
+    val items: List<LabTestItem>,
+    val notes: String = "Clinically verified by Pathology Dept.",
+    val status: String = "Verified" // "Pending", "Verified"
+)
+
+data class OpdToken(
+    val id: String,
+    val tokenNumber: String, // e.g. "OPD-A24"
+    val patientId: String,
+    val patientName: String,
+    val doctorName: String,
+    val department: String, // "General Medicine", "Orthopedics & Trauma", "Maternal Health", "Pediatrics"
+    val cabinNumber: String, // e.g. "Room 4"
+    val currentServingToken: String, // e.g. "OPD-A21"
+    val estimatedWaitMinutes: Int,
+    val status: String, // "In Queue", "Serving", "Completed"
+    val dateFormatted: String
+)
+
+data class MedicalCertificate(
+    val id: String,
+    val certificateNumber: String, // e.g. "MC-2026-9812"
+    val patientId: String,
+    val patientName: String,
+    val patientAge: Int,
+    val patientGender: String,
+    val doctorName: String,
+    val doctorRegistrationNumber: String, // e.g. "MCI-489201"
+    val diagnosis: String,
+    val restStartDate: String,
+    val restEndDate: String,
+    val fitDate: String,
+    val certificateType: String, // "Sick Leave Certificate", "Medical Fitness Certificate"
+    val issuedDateFormatted: String
+)
+
+data class FamilyMember(
+    val id: String,
+    val primaryPatientId: String,
+    val name: String,
+    val relationship: String, // "Spouse", "Child", "Parent"
+    val age: Int,
+    val gender: String,
+    val bloodGroup: String,
+    val abhaId: String
+)
+
+data class BloodStockItem(
+    val id: String,
+    val bloodGroup: String, // "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"
+    val unitsAvailable: Int,
+    val hospitalName: String,
+    val contactPhone: String,
+    val status: String = "Available" // "Available", "Low Stock", "Critical"
+) {
+    val isCritical: Boolean
+        get() = unitsAvailable <= 5
+}
+
+data class IpdBed(
+    val id: String,
+    val wardName: String, // "Male Medical Ward", "Female & Maternal Ward", "Emergency Trauma Ward", "Intensive Care Unit (ICU)"
+    val bedNumber: String, // "BED-01", "ICU-03"
+    val isOccupied: Boolean,
+    val patientId: String? = null,
+    val patientName: String? = null,
+    val admissionDate: String? = null,
+    val attendingDoctorName: String? = null,
+    val diagnosis: String? = null,
+    val nurseInCharge: String? = null
+)
+
+data class OtSurgeryBooking(
+    val id: String,
+    val otRoomName: String, // "Major OT-1", "Trauma & Ortho OT-2", "Emergency Minor OT"
+    val patientId: String,
+    val patientName: String,
+    val surgeryName: String, // "Open Reduction & Internal Fixation", "Maxillofacial Reconstruction", "Elective Appendectomy"
+    val surgeonName: String, // "Dr. Ayushman Dev Singh"
+    val anesthetistName: String,
+    val scheduledDate: String,
+    val scheduledTimeSlot: String, // "09:00 AM - 11:30 AM"
+    val pacCleared: Boolean = true, // Pre-Anesthesia Checkup cleared
+    val status: String = "Scheduled" // "Scheduled", "In-Progress", "Completed", "Post-Op Recovery"
+)
+
+data class ExternalReferral(
+    val id: String,
+    val referralLetterId: String, // "REF-2026-4401"
+    val patientId: String,
+    val patientName: String,
+    val referringDoctorName: String,
+    val empanelledHospitalName: String, // "AIIMS New Delhi", "Railway Central Hospital, New Delhi", "KGMU Lucknow"
+    val specialtyRequired: String, // "Cardiothoracic Surgery", "Neurosurgery & Spine", "Medical Oncology"
+    val clinicalSummary: String,
+    val isCashlessApproved: Boolean = true,
+    val ambulanceRequisitioned: Boolean = false,
+    val issuedDate: String,
+    val status: String = "Active" // "Active", "Reported", "Closed"
+)
+
+data class BioMedicalEquipment(
+    val id: String,
+    val assetCode: String, // "BME-OX-104", "BME-ECG-02"
+    val name: String, // "PSA Oxygen Generation Plant 250 LPM", "12-Lead Digital ECG Machine", "Biphasic Defibrillator"
+    val department: String, // "Critical Care / ICU", "Emergency Trauma", "Radiology & Diagnostics"
+    val status: String, // "OPERATIONAL", "CALIBRATION_DUE", "UNDER_MAINTENANCE"
+    val lastServiceDate: String,
+    val nextServiceDue: String,
+    val location: String,
+    val inChargeContact: String
+)
+
+// --- Live Queue & Appointment Domain Models ---
+
+enum class QueueEntrySource { SCHEDULED, WALK_IN }
+
+enum class QueueEntryStatus {
+    WAITING, CALLED, IN_CONSULTATION, COMPLETED, NO_SHOW, SKIPPED, CANCELLED
+}
+
+data class DoctorDaySlotConfig(
+    val id: String,
+    val doctorId: String,
+    val dateFormatted: String,       // "yyyy-MM-dd"
+    val startTime: String,           // "HH:mm"
+    val endTime: String,             // "HH:mm"
+    val capacity: Int,               // max scheduled bookings in this block
+    val isWalkInOpen: Boolean = true // whether walk-ins can join today's queue
+)
+
+data class QueueEntry(
+    val id: String,
+    val doctorId: String,
+    val doctorName: String,
+    val dateFormatted: String,
+    val tokenNumber: Int,
+    val provisionalToken: Boolean = false, // true until an offline check-in is reconciled with the server
+    val appointmentId: String?,            // null for walk-ins
+    val patientId: String,
+    val patientName: String,
+    val source: QueueEntrySource,
+    val status: QueueEntryStatus,
+    val priorityFlag: Boolean = false,     // doctor-set manual priority bump
+    val checkedInAt: Long,
+    val calledAt: Long? = null,
+    val consultationStartedAt: Long? = null,
+    val completedAt: Long? = null,
+    val outcomeNotes: String? = null,
+    val isPendingSync: Boolean = false
+)
+
+data class DoctorQueueSummary(
+    val doctorId: String,
+    val doctorName: String,
+    val dateFormatted: String,
+    val waitingCount: Int,
+    val currentToken: Int,
+    val avgWaitSeconds: Long,
+    val isQueueOpen: Boolean
+)
+

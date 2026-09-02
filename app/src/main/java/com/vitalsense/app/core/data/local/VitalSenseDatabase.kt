@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.vitalsense.app.core.data.local.dao.VitalSenseDao
 import com.vitalsense.app.core.data.local.entity.*
 import com.vitalsense.app.core.data.local.typeconverters.Converters
@@ -25,9 +27,19 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         ImmunizationRecordEntity::class,
         DailyRoundEntity::class,
         AshaMedicineEntity::class,
-        DiseaseTrendRecordEntity::class
+        DiseaseTrendRecordEntity::class,
+        LabReportEntity::class,
+        OpdTokenEntity::class,
+        MedicalCertificateEntity::class,
+        BloodStockEntity::class,
+        IpdBedEntity::class,
+        OtSurgeryBookingEntity::class,
+        ExternalReferralEntity::class,
+        BioMedicalEquipmentEntity::class,
+        DoctorDaySlotEntity::class,
+        QueueEntryEntity::class
     ],
-    version = 3,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,6 +51,45 @@ abstract class VitalSenseDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: VitalSenseDatabase? = null
 
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `doctor_day_slots` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `doctorId` TEXT NOT NULL,
+                        `dateFormatted` TEXT NOT NULL,
+                        `startTime` TEXT NOT NULL,
+                        `endTime` TEXT NOT NULL,
+                        `capacity` INTEGER NOT NULL,
+                        `isWalkInOpen` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `queue_entries` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `doctorId` TEXT NOT NULL,
+                        `doctorName` TEXT NOT NULL,
+                        `dateFormatted` TEXT NOT NULL,
+                        `tokenNumber` INTEGER NOT NULL,
+                        `provisionalToken` INTEGER NOT NULL,
+                        `appointmentId` TEXT,
+                        `patientId` TEXT NOT NULL,
+                        `patientName` TEXT NOT NULL,
+                        `source` TEXT NOT NULL,
+                        `status` TEXT NOT NULL,
+                        `priorityFlag` INTEGER NOT NULL,
+                        `checkedInAt` INTEGER NOT NULL,
+                        `calledAt` INTEGER,
+                        `consultationStartedAt` INTEGER,
+                        `completedAt` INTEGER,
+                        `outcomeNotes` TEXT,
+                        `isPendingSync` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): VitalSenseDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -46,6 +97,7 @@ abstract class VitalSenseDatabase : RoomDatabase() {
                     VitalSenseDatabase::class.java,
                     "vitalsense_database"
                 )
+                    .addMigrations(MIGRATION_5_6)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

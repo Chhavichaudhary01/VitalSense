@@ -213,4 +213,95 @@ class DoctorViewModel @Inject constructor(
             )
         }
     }
+
+    // --- Live Queue & Day Slots ---
+
+    val todayFormatted: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+    val todaysQueue: StateFlow<List<QueueEntry>> = activeDoctor.flatMapLatest { doctor ->
+        repository.observeDoctorQueue(doctor.id, todayFormatted)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val doctorDaySlots: StateFlow<List<DoctorDaySlotConfig>> = activeDoctor.flatMapLatest { doctor ->
+        repository.observeDoctorSlots(doctor.id, todayFormatted)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val todaySlotConfig: StateFlow<DoctorDaySlotConfig?> = doctorDaySlots.map { it.firstOrNull() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val activeConsultation: StateFlow<QueueEntry?> = todaysQueue.map { list ->
+        list.firstOrNull { it.status == QueueEntryStatus.IN_CONSULTATION }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val calledEntry: StateFlow<QueueEntry?> = todaysQueue.map { list ->
+        list.firstOrNull { it.status == QueueEntryStatus.CALLED }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val waitingEntries: StateFlow<List<QueueEntry>> = todaysQueue.map { list ->
+        list.filter { it.status == QueueEntryStatus.WAITING }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val completedEntries: StateFlow<List<QueueEntry>> = todaysQueue.map { list ->
+        list.filter { it.status == QueueEntryStatus.COMPLETED }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun callNext() {
+        val doctor = activeDoctor.value
+        viewModelScope.launch {
+            repository.callNext(doctor.id, todayFormatted)
+        }
+    }
+
+    fun startConsultation(entryId: String) {
+        viewModelScope.launch {
+            repository.startConsultation(entryId)
+        }
+    }
+
+    fun completeConsultation(entryId: String, outcomeNotes: String?) {
+        viewModelScope.launch {
+            repository.completeConsultation(entryId, outcomeNotes)
+        }
+    }
+
+    fun markNoShow(entryId: String) {
+        viewModelScope.launch {
+            repository.markNoShow(entryId)
+        }
+    }
+
+    fun skipEntry(entryId: String) {
+        viewModelScope.launch {
+            repository.skipEntry(entryId)
+        }
+    }
+
+    fun prioritizeEntry(entryId: String) {
+        viewModelScope.launch {
+            repository.prioritizeEntry(entryId)
+        }
+    }
+
+    fun addWalkInPatient(patientId: String, patientName: String) {
+        val doctor = activeDoctor.value
+        viewModelScope.launch {
+            repository.joinWalkInQueue(doctor.id, doctor.name, patientId, patientName)
+        }
+    }
+
+    fun updateSlotConfig(capacity: Int, isWalkInOpen: Boolean, startTime: String = "09:00", endTime: String = "17:00") {
+        val doctor = activeDoctor.value
+        val config = DoctorDaySlotConfig(
+            id = "slot_${doctor.id}_$todayFormatted",
+            doctorId = doctor.id,
+            dateFormatted = todayFormatted,
+            startTime = startTime,
+            endTime = endTime,
+            capacity = capacity,
+            isWalkInOpen = isWalkInOpen
+        )
+        viewModelScope.launch {
+            repository.defineDoctorSlot(config)
+        }
+    }
 }

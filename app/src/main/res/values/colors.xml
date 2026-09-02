@@ -1,13 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary_lime">#E8EB7D</color>
-    <color name="secondary_lavender">#A3AEFE</color>
-    <color name="tertiary_pink">#FFB8F0</color>
-    <color name="background_cream">#FFF8ED</color>
+    <!-- Canvas & Surfaces -->
+    <color name="canvas_background_light">#F8F9FA</color>
+    <color name="canvas_background_dark">#0F172A</color>
+    <color name="surface_card_light">#FFFFFF</color>
+    <color name="surface_card_dark">#1E293B</color>
+    <color name="surface_elevated_light">#F1F5F9</color>
+    <color name="surface_elevated_dark">#334155</color>
+    <color name="border_subtle_light">#E2E8F0</color>
+    <color name="border_subtle_dark">#334155</color>
+
+    <!-- Primary Accent: Electric Violet / Indigo -->
+    <color name="primary_accent">#7C5CFF</color>
+    <color name="primary_accent_variant">#6366F1</color>
+    <color name="primary_accent_container">#EEF2FF</color>
+    <color name="primary_accent_light">#A58FFF</color>
+
+    <!-- Typography -->
+    <color name="text_primary_light">#0F172A</color>
+    <color name="text_primary_dark">#F8FAFC</color>
+    <color name="text_secondary_light">#64748B</color>
+    <color name="text_secondary_dark">#94A3B8</color>
+    <color name="text_tertiary">#CBD5E1</color>
+
+    <!-- Status Badges -->
+    <color name="status_urgent_red">#EF4444</color>
+    <color name="status_urgent_container">#FEE2E2</color>
+    <color name="status_urgent_text">#DC2626</color>
+
+    <color name="status_progress_amber">#F59E0B</color>
+    <color name="status_progress_container">#FEF3C7</color>
+    <color name="status_progress_text">#D97706</color>
+
+    <color name="status_normal_emerald">#10B981</color>
+    <color name="status_normal_container">#D1FAE5</color>
+    <color name="status_normal_text">#059669</color>
+
+    <!-- Legacy Compatibility -->
+    <color name="primary_lime">#7C5CFF</color>
+    <color name="secondary_lavender">#6366F1</color>
+    <color name="tertiary_pink">#EEF2FF</color>
+    <color name="background_cream">#F8F9FA</color>
     <color name="surface_white">#FFFFFF</color>
-    <color name="text_primary">#1A1A1A</color>
-    <color name="text_secondary">#7A7A7A</color>
-    <color name="alert_coral">#FF6B6B</color>
-    <color name="warning_amber">#FFD166</color>
-    <color name="success_mint">#C8F5D4</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="alert_coral">#EF4444</color>
+    <color name="warning_amber">#F59E0B</color>
+    <color name="success_mint">#10B981</color>
 </resources>

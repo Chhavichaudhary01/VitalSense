@@ -11,12 +11,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.util.touchSpring
 
+/**
+ * NagarSeva High-Contrast Elevated Card:
+ * Surface card with 18dp corner radius, subtle shadow, hairline border,
+ * and tactile spring micro-interaction feedback on touch.
+ */
 @Composable
 fun VitalSenseCard(
     modifier: Modifier = Modifier,
     backgroundColor: Color = GlumeSurfaceCard,
-    elevation: Dp = 0.dp,
+    elevation: Dp = 2.dp,
     border: BorderStroke? = BorderStroke(1.dp, GlumeBorder),
     contentPadding: Dp = Spacing.md,
     onClick: (() -> Unit)? = null,
@@ -25,7 +31,9 @@ fun VitalSenseCard(
     if (onClick != null) {
         Surface(
             onClick = onClick,
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier
+                .fillMaxWidth()
+                .touchSpring(onClick = onClick),
             shape = CardShape,
             color = backgroundColor,
             shadowElevation = elevation,

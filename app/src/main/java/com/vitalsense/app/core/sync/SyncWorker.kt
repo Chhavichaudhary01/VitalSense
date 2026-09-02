@@ -68,6 +68,44 @@ class SyncWorker(
                             dao.deleteOutboxRecord(record.id)
                             Log.d(TAG, "✓ Flushed patient record: ${record.entityId}")
                         }
+                        "QUEUE_ENTRY" -> {
+                            val entry = gson.fromJson(record.payloadJson, QueueEntry::class.java)
+                            if (entry.provisionalToken) {
+                                val authoritative = firestoreDataSource.assignAuthoritativeTokenAndSave(entry)
+                                dao.upsertQueueEntry(
+                                    com.vitalsense.app.core.data.local.entity.QueueEntryEntity(
+                                        id = authoritative.id,
+                                        doctorId = authoritative.doctorId,
+                                        doctorName = authoritative.doctorName,
+                                        dateFormatted = authoritative.dateFormatted,
+                                        tokenNumber = authoritative.tokenNumber,
+                                        provisionalToken = false,
+                                        appointmentId = authoritative.appointmentId,
+                                        patientId = authoritative.patientId,
+                                        patientName = authoritative.patientName,
+                                        source = authoritative.source,
+                                        status = authoritative.status,
+                                        priorityFlag = authoritative.priorityFlag,
+                                        checkedInAt = authoritative.checkedInAt,
+                                        calledAt = authoritative.calledAt,
+                                        consultationStartedAt = authoritative.consultationStartedAt,
+                                        completedAt = authoritative.completedAt,
+                                        outcomeNotes = authoritative.outcomeNotes,
+                                        isPendingSync = false
+                                    )
+                                )
+                            } else {
+                                firestoreDataSource.uploadQueueEntry(entry)
+                            }
+                            dao.deleteOutboxRecord(record.id)
+                            Log.d(TAG, "✓ Flushed queue entry: ${record.entityId}")
+                        }
+                        "DOCTOR_DAY_SLOT" -> {
+                            val slot = gson.fromJson(record.payloadJson, DoctorDaySlotConfig::class.java)
+                            firestoreDataSource.uploadDoctorSlot(slot)
+                            dao.deleteOutboxRecord(record.id)
+                            Log.d(TAG, "✓ Flushed doctor day slot: ${record.entityId}")
+                        }
                         else -> {
                             dao.deleteOutboxRecord(record.id)
                         }

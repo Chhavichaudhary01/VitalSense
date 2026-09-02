@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.vitalsense.app.core.ui.util.touchSpring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +25,8 @@ import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.patient.components.LogSymptomDialog
 import com.vitalsense.app.feature.patient.components.HealthCardDialog
 import com.vitalsense.app.feature.patient.components.GovernmentSchemesDialog
+import com.vitalsense.app.feature.patient.components.SensorPairingDialog
+import com.vitalsense.app.feature.patient.components.SmartEmergencyDialog
 
 @Composable
 fun PatientHomeScreen(
@@ -30,17 +34,30 @@ fun PatientHomeScreen(
     notices: List<BroadcastNotice> = emptyList(),
     prescriptions: List<Prescription> = emptyList(),
     schemes: List<GovernmentScheme> = emptyList(),
+    familyMembers: List<com.vitalsense.app.core.data.model.FamilyMember> = emptyList(),
     onCategoryClick: (ConditionCategory) -> Unit = {},
     onLogCondition: (ConditionRecord) -> Unit = {},
     onViewHealthCard: () -> Unit = {},
     onTriggerSos: () -> Unit = {},
     onSavePrescription: (Prescription) -> Unit = {},
+    onNavigateToLabReports: () -> Unit = {},
+    onNavigateToOpdQueue: () -> Unit = {},
+    onNavigateToBloodBank: () -> Unit = {},
+    onNavigateToAppointments: () -> Unit = {},
+    onNavigateToLiveQueue: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
-    var showSosConfirmation by remember { mutableStateOf(false) }
-    var sosSentSuccess by remember { mutableStateOf(false) }
+    var showSmartEmergencyDialog by remember { mutableStateOf(false) }
+    var showSensorPairingDialog by remember { mutableStateOf(false) }
     var showPrescriptionUploadDialog by remember { mutableStateOf(false) }
+
+    // Live vitals readings as per UX Architecture §3.2
+    var heartRate by remember { mutableStateOf(76) }
+    var spO2 by remember { mutableStateOf(98) }
+    var bloodPressure by remember { mutableStateOf("120/80") }
+    var temperature by remember { mutableStateOf("98.4°F") }
+    var readingCapturedSuccess by remember { mutableStateOf(false) }
 
     // Dialog states for complete functional implementation
     var showHealthCardDialog by remember { mutableStateOf(false) }
@@ -74,46 +91,7 @@ fun PatientHomeScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
         contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
-        // 0. Sunlight vs Dark Mode Evaluation Bar
-        item {
-            Surface(
-                shape = PillShape,
-                color = elevatedBgColor,
-                border = BorderStroke(1.dp, cardBorderColor),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.sm, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (isSunlightMode) "☀️ Sunlight High-Contrast (Outdoor)" else "🌙 Glume Dark Mode (Standard)",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = textPrimaryColor
-                    )
-                    Button(
-                        onClick = { isSunlightMode = !isSunlightMode },
-                        shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = GlumePrimaryPurple,
-                            contentColor = GlumeTextPrimary
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier.height(30.dp)
-                    ) {
-                        Text(
-                            text = if (isSunlightMode) "Switch to Dark" else "Test Sunlight",
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                }
-            }
-        }
-
-        // 1. Personalized Greeting (Glume Bold Headline Style)
+        // 1. Personalized Greeting (NagarSeva Modern Typography)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Row(
@@ -141,7 +119,52 @@ fun PatientHomeScreen(
             }
         }
 
-        // 2. Hero Card: Offline Health Card & Daily Status (Glume Rounded Card)
+        // 2. THE STATUS HALO & 2x2 VITAL TILES (Hero Element as per UX Architecture §3.2 & §5.2)
+        item {
+            StatusHaloCard(
+                patient = patient,
+                heartRate = heartRate,
+                spO2 = spO2,
+                bloodPressure = bloodPressure,
+                temperature = temperature,
+                onTakeReadingClick = { showSensorPairingDialog = true }
+            )
+        }
+
+        // Success banner when new sensor vitals reading is captured
+        if (readingCapturedSuccess) {
+            item {
+                Surface(
+                    shape = PillShape,
+                    color = GlumeSuccessContainer,
+                    border = BorderStroke(1.dp, GlumeSuccessMint),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            Text("✓", color = GlumeSuccessMint, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "New health reading recorded: $heartRate bpm · $spO2% SpO2",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeSuccessMint
+                            )
+                        }
+                        IconButton(onClick = { readingCapturedSuccess = false }, modifier = Modifier.size(24.dp)) {
+                            Text("✕", color = GlumeSuccessMint, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Offline Health Card & Daily Status (Glume Rounded Card)
         item {
             VitalSenseCard(
                 backgroundColor = cardBgColor,
@@ -323,6 +346,161 @@ fun PatientHomeScreen(
                         }
                         if (rowCategories.size == 1) {
                             Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3.1 Live Clinic Queue & Appointments Entry
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .touchSpring(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = NagarSevaSurfaceLight),
+                border = BorderStroke(1.dp, NagarSevaPrimary.copy(alpha = 0.3f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = NagarSevaPrimary.copy(alpha = 0.12f),
+                            modifier = Modifier.size(44.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("🎫", fontSize = 22.sp)
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "Live Queue & Appointments",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
+                            )
+                            Text(
+                                text = "Check in today, view token # and wait time",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary
+                            )
+                        }
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Button(
+                            onClick = onNavigateToLiveQueue,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text("HUD", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                        OutlinedButton(
+                            onClick = onNavigateToAppointments,
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, NagarSevaPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text("Book", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3.2 Hospital Services Hub (Lab Reports, OPD Queue, Blood Bank)
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(
+                    text = "Hospital & Clinical Services",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = textPrimaryColor
+                )
+                Text(
+                    text = "Access pathology investigations, digital OPD token slips, and district blood registry.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = textSecondaryColor
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    // Lab Reports Card
+                    VitalSenseCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = elevatedBgColor,
+                        border = BorderStroke(1.dp, cardBorderColor),
+                        onClick = onNavigateToLabReports
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                            Text("🧪", fontSize = 24.sp)
+                            Text(
+                                text = "Lab Reports",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = textPrimaryColor
+                            )
+                            Text(
+                                text = "CBC, Sugar, Serology",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = textSecondaryColor
+                            )
+                        }
+                    }
+
+                    // OPD Queue Card
+                    VitalSenseCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = elevatedBgColor,
+                        border = BorderStroke(1.dp, cardBorderColor),
+                        onClick = onNavigateToOpdQueue
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                            Text("🎟️", fontSize = 24.sp)
+                            Text(
+                                text = "OPD Queue",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = textPrimaryColor
+                            )
+                            Text(
+                                text = "Live Tokens & Cabins",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = textSecondaryColor
+                            )
+                        }
+                    }
+
+                    // Blood Bank Card
+                    VitalSenseCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = elevatedBgColor,
+                        border = BorderStroke(1.dp, cardBorderColor),
+                        onClick = onNavigateToBloodBank
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                            Text("🩸", fontSize = 24.sp)
+                            Text(
+                                text = "Blood Bank",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = textPrimaryColor
+                            )
+                            Text(
+                                text = "Emergency Units",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = textSecondaryColor
+                            )
                         }
                     }
                 }
@@ -570,7 +748,7 @@ fun PatientHomeScreen(
         item {
             Spacer(modifier = Modifier.height(Spacing.xxs))
             Surface(
-                onClick = { showSosConfirmation = true },
+                onClick = { showSmartEmergencyDialog = true },
                 modifier = Modifier.fillMaxWidth(),
                 shape = CardShape,
                 color = GlumeAlertCoral,
@@ -630,120 +808,30 @@ fun PatientHomeScreen(
         }
     }
 
-    val sosMsg = "EMERGENCY SOS from ${patient.name} (${patient.villageName}, Age ${patient.age}). Contact: ${patient.phone}."
-
-    // Custom Styled SOS Confirmation Dialog
-    if (showSosConfirmation) {
-        VitalSenseDialog(
-            onDismissRequest = { showSosConfirmation = false },
-            title = strings.confirmSosTitle,
-            icon = { Text("🚨", fontSize = 22.sp) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showSosConfirmation = false
-                        onTriggerSos()
-                        sosSentSuccess = true
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
-                    shape = PillShape,
-                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
-                ) {
-                    Text(strings.yesSendAlert, color = GlumeTextPrimary, style = MaterialTheme.typography.labelLarge)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showSosConfirmation = false },
-                    shape = PillShape,
-                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
-                ) {
-                    Text(strings.cancel, color = GlumeTextSecondary, style = MaterialTheme.typography.labelLarge)
-                }
+    // Smart Emergency Dialog with 3s Countdown & Auto-GPS/SMS (UX Architecture §3.4)
+    if (showSmartEmergencyDialog) {
+        SmartEmergencyDialog(
+            patient = patient,
+            onDismiss = { showSmartEmergencyDialog = false },
+            onSosDispatched = {
+                onTriggerSos()
             }
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Text(
-                    text = strings.confirmSosMsg,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = GlumeTextPrimary
-                )
-                Text(
-                    text = "• ${strings.ashaAssigned}: ${patient.ashaWorkerName}\n• Available Doctors\n• Emergency SMS: ${patient.emergencyContact}",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = GlumePrimaryPurpleLight
-                )
-            }
-        }
+        )
     }
 
-    // Custom Styled SOS Sent Dialog with 0-Internet Fallbacks
-    if (sosSentSuccess) {
-        VitalSenseDialog(
-            onDismissRequest = { sosSentSuccess = false },
-            title = strings.sosDispatchedTitle,
-            icon = { Text("🚨", fontSize = 22.sp) },
-            confirmButton = {
-                Button(
-                    onClick = { sosSentSuccess = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
-                    shape = PillShape,
-                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
-                ) {
-                    Text(strings.done, color = GlumeTextPrimary, style = MaterialTheme.typography.labelLarge)
-                }
+    // Step-by-Step Bluetooth Sensor Pairing Flow (UX Architecture §3.3 & §5.3)
+    if (showSensorPairingDialog) {
+        SensorPairingDialog(
+            patient = patient,
+            onDismiss = { showSensorPairingDialog = false },
+            onReadingCaptured = { newHr, newSpo2, newBp, newTemp ->
+                heartRate = newHr
+                spO2 = newSpo2
+                bloodPressure = newBp
+                temperature = newTemp
+                readingCapturedSuccess = true
             }
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                Text(
-                    text = strings.sosDispatchedMsg,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = GlumeTextPrimary
-                )
-
-                HorizontalDivider(color = GlumeBorder)
-
-                Text(
-                    text = strings.zeroInternetFallbacks,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = GlumeTextPrimary
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            com.vitalsense.app.core.util.EmergencySosHelper.sendCellularSmsFallback(
-                                context = context,
-                                recipientPhone = patient.emergencyContact,
-                                message = sosMsg
-                            )
-                        },
-                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
-                        shape = PillShape,
-                        border = BorderStroke(1.dp, GlumeBorder)
-                    ) {
-                        Text(strings.smsAsha, style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
-                    }
-
-                    Button(
-                        onClick = {
-                            com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(
-                                context = context,
-                                phoneNumber = "108"
-                            )
-                        },
-                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
-                        shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral)
-                    ) {
-                        Text(strings.call108, color = GlumeTextPrimary, style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-        }
+        )
     }
 
     if (showPrescriptionUploadDialog) {
@@ -758,6 +846,7 @@ fun PatientHomeScreen(
     if (showHealthCardDialog) {
         HealthCardDialog(
             patient = patient,
+            familyMembers = familyMembers,
             onDismiss = { showHealthCardDialog = false }
         )
     }

@@ -16,17 +16,31 @@ import com.vitalsense.app.core.ui.components.AppUpdateBanner
 import com.vitalsense.app.core.util.AppUpdateChecker
 import com.vitalsense.app.core.util.AppUpdateInfo
 import com.vitalsense.app.core.ui.components.TopRoleSwitcherBar
+import com.vitalsense.app.core.ui.util.AdaptiveScreenContainer
 import com.vitalsense.app.feature.admin.AdminHomeScreen
 import com.vitalsense.app.feature.admin.AdminViewModel
 import com.vitalsense.app.feature.admin.AdminDispensaryRestockScreen
 import com.vitalsense.app.feature.admin.AdminDiseaseTrendsScreen
+import com.vitalsense.app.feature.admin.AdminQueueOversightViewModel
+import com.vitalsense.app.feature.admin.QueueOversightScreen
 import com.vitalsense.app.feature.asha.AshaHomeScreen
 import com.vitalsense.app.feature.auth.LoginScreen
+import com.vitalsense.app.feature.biomedical.BioMedicalScreen
+import com.vitalsense.app.feature.bloodbank.BloodBankScreen
 import com.vitalsense.app.feature.doctor.CaseDetailScreen
 import com.vitalsense.app.feature.doctor.DoctorHomeScreen
 import com.vitalsense.app.feature.doctor.DoctorViewModel
+import com.vitalsense.app.feature.doctor.DoctorQueueScreen
+import com.vitalsense.app.feature.ipd.IpdBedTrackerScreen
+import com.vitalsense.app.feature.lab.LabReportsScreen
+import com.vitalsense.app.feature.opd.OpdQueueScreen
+import com.vitalsense.app.feature.ot.OtSchedulerScreen
+import com.vitalsense.app.feature.patient.AppointmentsScreen
 import com.vitalsense.app.feature.patient.PatientHomeScreen
 import com.vitalsense.app.feature.patient.PatientViewModel
+import com.vitalsense.app.feature.patient.PatientQueueViewModel
+import com.vitalsense.app.feature.patient.QueueStatusScreen
+import com.vitalsense.app.feature.referrals.ExternalReferralScreen
 import com.vitalsense.app.feature.splash.SplashScreen
 import kotlinx.coroutines.launch
 
@@ -38,6 +52,8 @@ fun VitalSenseNavGraph(
     patientViewModel: PatientViewModel = hiltViewModel(),
     doctorViewModel: DoctorViewModel = hiltViewModel(),
     adminViewModel: AdminViewModel = hiltViewModel(),
+    patientQueueViewModel: PatientQueueViewModel = hiltViewModel(),
+    adminQueueOversightViewModel: AdminQueueOversightViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -76,6 +92,13 @@ fun VitalSenseNavGraph(
     val allConditions by repository.getConditionRecords().collectAsStateWithLifecycle(initialValue = emptyList())
     val allAppointments by repository.getAppointments().collectAsStateWithLifecycle(initialValue = emptyList())
     val schemes by repository.getGovernmentSchemes().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allLabReports by repository.getLabReports().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allOpdTokens by repository.getOpdTokens().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allBloodStock by repository.getBloodStock().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allIpdBeds by repository.getIpdBeds().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allOtBookings by repository.getOtSurgeryBookings().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allExternalReferrals by repository.getExternalReferrals().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allBioMedicalEquipment by repository.getBioMedicalEquipment().collectAsStateWithLifecycle(initialValue = emptyList())
 
     val currentLanguage by appStateHolder.currentLanguage.collectAsStateWithLifecycle()
 
@@ -182,70 +205,138 @@ fun VitalSenseNavGraph(
                                 ) { role ->
                                     when (role) {
                                         UserRole.PATIENT -> {
-                                            var showMentalWellness by remember { mutableStateOf(false) }
+                                            var currentPatientScreen by remember { mutableStateOf("home") }
+                                            val familyMembers by repository.getFamilyMembers(effectivePatient.id).collectAsStateWithLifecycle(initialValue = emptyList())
 
                                             AnimatedContent(
-                                                targetState = showMentalWellness,
+                                                targetState = currentPatientScreen,
                                                 transitionSpec = {
                                                     fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
                                                 },
                                                 label = "PatientScreenTransition"
-                                            ) { inMentalWellness ->
-                                                if (inMentalWellness) {
-                                                    BackHandler {
-                                                        showMentalWellness = false
+                                            ) { screen ->
+                                                when (screen) {
+                                                    "mental_wellness" -> {
+                                                        BackHandler { currentPatientScreen = "home" }
+                                                        com.vitalsense.app.feature.patient.mentalhealth.MentalWellnessScreen(
+                                                            patient = effectivePatient,
+                                                            onLogMood = { notes, severity ->
+                                                                patientViewModel.logMentalWellness(
+                                                                    patient = effectivePatient,
+                                                                    moodNotes = notes,
+                                                                    severityLevel = severity,
+                                                                    isProxy = activeProxyPatient != null
+                                                                )
+                                                            },
+                                                            onBack = { currentPatientScreen = "home" }
+                                                        )
                                                     }
-
-                                                    com.vitalsense.app.feature.patient.mentalhealth.MentalWellnessScreen(
-                                                        patient = effectivePatient,
-                                                        onLogMood = { notes, severity ->
-                                                            patientViewModel.logMentalWellness(
-                                                                patient = effectivePatient,
-                                                                moodNotes = notes,
-                                                                severityLevel = severity,
-                                                                isProxy = activeProxyPatient != null
-                                                            )
-                                                        },
-                                                        onBack = { showMentalWellness = false }
-                                                    )
-                                                } else {
-                                                    if (activeProxyPatient != null) {
-                                                        BackHandler {
-                                                            appStateHolder.clearProxy()
-                                                            appStateHolder.switchRole(UserRole.ASHA)
-                                                        }
-                                                    } else {
-                                                        BackHandler {
-                                                            appStateHolder.logout()
-                                                        }
+                                                    "lab_reports" -> {
+                                                        BackHandler { currentPatientScreen = "home" }
+                                                        LabReportsScreen(
+                                                            patient = effectivePatient,
+                                                            labReports = allLabReports.filter { it.patientId == effectivePatient.id },
+                                                            onBackClick = { currentPatientScreen = "home" },
+                                                            onOrderNewTest = { report ->
+                                                                coroutineScope.launch {
+                                                                    repository.saveLabReport(report)
+                                                                }
+                                                            }
+                                                        )
                                                     }
-
-                                                    PatientHomeScreen(
-                                                        patient = effectivePatient,
-                                                        notices = notices,
-                                                        prescriptions = allPrescriptions.filter { it.patientId == effectivePatient.id },
-                                                        schemes = schemes,
-                                                        onCategoryClick = { category ->
-                                                            if (category == ConditionCategory.MENTAL_HEALTH) {
-                                                                showMentalWellness = true
+                                                    "opd_queue" -> {
+                                                        BackHandler { currentPatientScreen = "home" }
+                                                        OpdQueueScreen(
+                                                            patient = effectivePatient,
+                                                            opdTokens = allOpdTokens.filter { it.patientId == effectivePatient.id },
+                                                            onBackClick = { currentPatientScreen = "home" },
+                                                            onBookToken = { token ->
+                                                                coroutineScope.launch {
+                                                                    repository.bookOpdToken(token)
+                                                                }
                                                             }
-                                                        },
-                                                        onLogCondition = { record ->
-                                                            coroutineScope.launch {
-                                                                repository.logCondition(record)
+                                                        )
+                                                    }
+                                                    "blood_bank" -> {
+                                                        BackHandler { currentPatientScreen = "home" }
+                                                        BloodBankScreen(
+                                                            bloodStock = allBloodStock,
+                                                            onBackClick = { currentPatientScreen = "home" }
+                                                        )
+                                                    }
+                                                    "appointments" -> {
+                                                        BackHandler { currentPatientScreen = "home" }
+                                                        AppointmentsScreen(
+                                                            appointments = allAppointments.filter { it.patientId == effectivePatient.id },
+                                                            onRequestNew = { currentPatientScreen = "home" },
+                                                            onBackClick = { currentPatientScreen = "home" },
+                                                            onCheckIn = { apptId ->
+                                                                patientQueueViewModel.checkIn(apptId)
+                                                                currentPatientScreen = "queue_status"
+                                                            },
+                                                            onViewLiveQueue = { currentPatientScreen = "queue_status" }
+                                                        )
+                                                    }
+                                                    "queue_status" -> {
+                                                        BackHandler { currentPatientScreen = "home" }
+                                                        val patientQueueEntry by patientQueueViewModel.queueEntry.collectAsStateWithLifecycle()
+                                                        val patientPos by patientQueueViewModel.position.collectAsStateWithLifecycle()
+                                                        val patientWaitMin by patientQueueViewModel.estimatedWaitMinutes.collectAsStateWithLifecycle()
+                                                        QueueStatusScreen(
+                                                            entry = patientQueueEntry,
+                                                            position = patientPos,
+                                                            estimatedWaitMinutes = patientWaitMin,
+                                                            onBackClick = { currentPatientScreen = "home" },
+                                                            onCancelEntry = { entryId ->
+                                                                patientQueueViewModel.cancelQueueEntry(entryId)
                                                             }
-                                                        },
-                                                        onTriggerSos = {
-                                                            coroutineScope.launch {
-                                                                repository.triggerEmergencySos(effectivePatient, null, null)
+                                                        )
+                                                    }
+                                                    else -> {
+                                                        if (activeProxyPatient != null) {
+                                                            BackHandler {
+                                                                appStateHolder.clearProxy()
+                                                                appStateHolder.switchRole(UserRole.ASHA)
                                                             }
-                                                        },
-                                                        onSavePrescription = { rx ->
-                                                            coroutineScope.launch {
-                                                                repository.savePrescription(rx)
+                                                        } else {
+                                                            BackHandler {
+                                                                appStateHolder.logout()
                                                             }
                                                         }
-                                                    )
+
+                                                        PatientHomeScreen(
+                                                            patient = effectivePatient,
+                                                            notices = notices,
+                                                            prescriptions = allPrescriptions.filter { it.patientId == effectivePatient.id },
+                                                            schemes = schemes,
+                                                            familyMembers = familyMembers,
+                                                            onCategoryClick = { category ->
+                                                                if (category == ConditionCategory.MENTAL_HEALTH) {
+                                                                    currentPatientScreen = "mental_wellness"
+                                                                }
+                                                            },
+                                                            onLogCondition = { record ->
+                                                                coroutineScope.launch {
+                                                                    repository.logCondition(record)
+                                                                }
+                                                            },
+                                                            onTriggerSos = {
+                                                                coroutineScope.launch {
+                                                                    repository.triggerEmergencySos(effectivePatient, null, null)
+                                                                }
+                                                            },
+                                                            onSavePrescription = { rx ->
+                                                                coroutineScope.launch {
+                                                                    repository.savePrescription(rx)
+                                                                }
+                                                            },
+                                                            onNavigateToLabReports = { currentPatientScreen = "lab_reports" },
+                                                            onNavigateToOpdQueue = { currentPatientScreen = "opd_queue" },
+                                                            onNavigateToBloodBank = { currentPatientScreen = "blood_bank" },
+                                                            onNavigateToAppointments = { currentPatientScreen = "appointments" },
+                                                            onNavigateToLiveQueue = { currentPatientScreen = "queue_status" }
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -334,10 +425,10 @@ fun VitalSenseNavGraph(
                                         }
 
                                         UserRole.DOCTOR -> {
-                                            val activeCase = selectedDoctorCase
+                                            var currentDoctorScreen by remember { mutableStateOf("home") }
 
                                             AnimatedContent(
-                                                targetState = activeCase,
+                                                targetState = selectedDoctorCase,
                                                 transitionSpec = {
                                                     if (targetState != null) {
                                                         slideInHorizontally(tween(240)) { it / 4 } + fadeIn(tween(220)) togetherWith
@@ -393,40 +484,115 @@ fun VitalSenseNavGraph(
                                                                 targetSpecialty = targetSpecialty,
                                                                 referralNotes = referralNotes
                                                             )
+                                                        },
+                                                        onOrderLabTest = { report ->
+                                                            coroutineScope.launch {
+                                                                repository.saveLabReport(report)
+                                                            }
+                                                        },
+                                                        onIssueMedicalCertificate = { cert ->
+                                                            coroutineScope.launch {
+                                                                repository.saveMedicalCertificate(cert)
+                                                            }
                                                         }
                                                     )
                                                 } else {
-                                                    BackHandler {
-                                                        appStateHolder.logout()
-                                                    }
-
-                                                    DoctorHomeScreen(
-                                                        doctor = activeDoctor,
-                                                        cases = doctorCases,
-                                                        appointments = doctorAppointments,
-                                                        dispensaryStock = doctorDispensaryStock,
-                                                        patients = patients,
-                                                        notices = notices,
-                                                        allConditions = allConditions,
-                                                        allPrescriptions = allPrescriptions,
-                                                        onSelectCase = { record ->
-                                                            doctorViewModel.selectCase(record)
-                                                        },
-                                                        onAcceptAppointment = { apptId ->
-                                                            doctorViewModel.acceptAppointment(apptId)
-                                                        },
-                                                        onDeclineAppointment = { apptId ->
-                                                            doctorViewModel.declineAppointment(apptId)
-                                                        },
-                                                        onProposeAppointment = { patId, patName, date, slot ->
-                                                            doctorViewModel.proposeAppointment(
-                                                                patientId = patId,
-                                                                patientName = patName,
-                                                                dateFormatted = date,
-                                                                timeSlot = slot
+                                                    when (currentDoctorScreen) {
+                                                        "ot_scheduler" -> {
+                                                            BackHandler { currentDoctorScreen = "home" }
+                                                            OtSchedulerScreen(
+                                                                bookings = allOtBookings,
+                                                                onBackClick = { currentDoctorScreen = "home" },
+                                                                onBookSurgery = { booking ->
+                                                                    coroutineScope.launch {
+                                                                        repository.saveOtSurgeryBooking(booking)
+                                                                    }
+                                                                }
                                                             )
                                                         }
-                                                    )
+                                                        "ipd_beds" -> {
+                                                            BackHandler { currentDoctorScreen = "home" }
+                                                            IpdBedTrackerScreen(
+                                                                beds = allIpdBeds,
+                                                                patients = patients,
+                                                                onBackClick = { currentDoctorScreen = "home" },
+                                                                onSaveBed = { bed ->
+                                                                    coroutineScope.launch {
+                                                                        repository.saveIpdBed(bed)
+                                                                    }
+                                                                }
+                                                            )
+                                                        }
+                                                        "referrals" -> {
+                                                            BackHandler { currentDoctorScreen = "home" }
+                                                            ExternalReferralScreen(
+                                                                referrals = allExternalReferrals,
+                                                                patients = patients,
+                                                                onBackClick = { currentDoctorScreen = "home" },
+                                                                onIssueReferral = { ref ->
+                                                                    coroutineScope.launch {
+                                                                        repository.saveExternalReferral(ref)
+                                                                    }
+                                                                }
+                                                            )
+                                                        }
+                                                        "live_queue" -> {
+                                                            BackHandler { currentDoctorScreen = "home" }
+                                                            val doctorQueue by doctorViewModel.todaysQueue.collectAsStateWithLifecycle()
+                                                            val doctorSlotConfig by doctorViewModel.todaySlotConfig.collectAsStateWithLifecycle()
+                                                            DoctorQueueScreen(
+                                                                doctor = activeDoctor,
+                                                                todaysQueue = doctorQueue,
+                                                                slotConfig = doctorSlotConfig,
+                                                                patients = patients,
+                                                                onBackClick = { currentDoctorScreen = "home" },
+                                                                onCallNext = { doctorViewModel.callNext() },
+                                                                onStartConsultation = { doctorViewModel.startConsultation(it) },
+                                                                onCompleteConsultation = { id, notes -> doctorViewModel.completeConsultation(id, notes) },
+                                                                onMarkNoShow = { doctorViewModel.markNoShow(it) },
+                                                                onSkip = { doctorViewModel.skipEntry(it) },
+                                                                onPrioritize = { doctorViewModel.prioritizeEntry(it) },
+                                                                onAddWalkIn = { id, name -> doctorViewModel.addWalkInPatient(id, name) },
+                                                                onUpdateSlotConfig = { cap, open, start, end -> doctorViewModel.updateSlotConfig(cap, open, start, end) }
+                                                            )
+                                                        }
+                                                        else -> {
+                                                            BackHandler {
+                                                                appStateHolder.logout()
+                                                            }
+
+                                                            DoctorHomeScreen(
+                                                                doctor = activeDoctor,
+                                                                cases = doctorCases,
+                                                                appointments = doctorAppointments,
+                                                                dispensaryStock = doctorDispensaryStock,
+                                                                patients = patients,
+                                                                notices = notices,
+                                                                allConditions = allConditions,
+                                                                onSelectCase = { record ->
+                                                                    doctorViewModel.selectCase(record)
+                                                                },
+                                                                onAcceptAppointment = { apptId ->
+                                                                    doctorViewModel.acceptAppointment(apptId)
+                                                                },
+                                                                onDeclineAppointment = { apptId ->
+                                                                    doctorViewModel.declineAppointment(apptId)
+                                                                },
+                                                                onProposeAppointment = { patId, patName, date, slot ->
+                                                                    doctorViewModel.proposeAppointment(
+                                                                        patientId = patId,
+                                                                        patientName = patName,
+                                                                        dateFormatted = date,
+                                                                        timeSlot = slot
+                                                                    )
+                                                                },
+                                                                onNavigateToOtScheduler = { currentDoctorScreen = "ot_scheduler" },
+                                                                onNavigateToIpdBeds = { currentDoctorScreen = "ipd_beds" },
+                                                                onNavigateToExternalReferrals = { currentDoctorScreen = "referrals" },
+                                                                onNavigateToLiveQueue = { currentDoctorScreen = "live_queue" }
+                                                            )
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -466,6 +632,70 @@ fun VitalSenseNavGraph(
                                                             }
                                                         )
                                                     }
+                                                    "ipd_beds" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        IpdBedTrackerScreen(
+                                                            beds = allIpdBeds,
+                                                            patients = patients,
+                                                            onBackClick = { currentAdminScreen = "home" },
+                                                            onSaveBed = { bed ->
+                                                                coroutineScope.launch {
+                                                                    repository.saveIpdBed(bed)
+                                                                }
+                                                            }
+                                                        )
+                                                    }
+                                                    "ot_scheduler" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        OtSchedulerScreen(
+                                                            bookings = allOtBookings,
+                                                            onBackClick = { currentAdminScreen = "home" },
+                                                            onBookSurgery = { booking ->
+                                                                coroutineScope.launch {
+                                                                    repository.saveOtSurgeryBooking(booking)
+                                                                }
+                                                            }
+                                                        )
+                                                    }
+                                                    "referrals" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        ExternalReferralScreen(
+                                                            referrals = allExternalReferrals,
+                                                            patients = patients,
+                                                            onBackClick = { currentAdminScreen = "home" },
+                                                            onIssueReferral = { ref ->
+                                                                coroutineScope.launch {
+                                                                    repository.saveExternalReferral(ref)
+                                                                }
+                                                            }
+                                                        )
+                                                    }
+                                                    "biomedical" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        BioMedicalScreen(
+                                                            equipmentList = allBioMedicalEquipment,
+                                                            onBackClick = { currentAdminScreen = "home" },
+                                                            onUpdateEquipment = { eq ->
+                                                                coroutineScope.launch {
+                                                                    repository.saveBioMedicalEquipment(eq)
+                                                                }
+                                                            }
+                                                        )
+                                                    }
+                                                    "queue_oversight" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        val adminSummaries by adminQueueOversightViewModel.allDoctorSummaries.collectAsStateWithLifecycle()
+                                                        val selectedDocId by adminQueueOversightViewModel.selectedDoctorId.collectAsStateWithLifecycle()
+                                                        val selectedDocQueue by adminQueueOversightViewModel.selectedDoctorQueue.collectAsStateWithLifecycle()
+                                                        QueueOversightScreen(
+                                                            summaries = adminSummaries,
+                                                            selectedDoctorId = selectedDocId,
+                                                            selectedDoctorQueue = selectedDocQueue,
+                                                            onSelectDoctor = { adminQueueOversightViewModel.selectDoctor(it) },
+                                                            onClearSelectedDoctor = { adminQueueOversightViewModel.clearSelectedDoctor() },
+                                                            onBackClick = { currentAdminScreen = "home" }
+                                                        )
+                                                    }
                                                     else -> {
                                                         BackHandler {
                                                             appStateHolder.logout()
@@ -479,7 +709,12 @@ fun VitalSenseNavGraph(
                                                                 adminViewModel.sendBroadcast(title, message, village)
                                                             },
                                                             onNavigateToDispensary = { currentAdminScreen = "dispensary_restock" },
-                                                            onNavigateToDiseaseTrends = { currentAdminScreen = "disease_trends" }
+                                                            onNavigateToDiseaseTrends = { currentAdminScreen = "disease_trends" },
+                                                            onNavigateToIpdBeds = { currentAdminScreen = "ipd_beds" },
+                                                            onNavigateToOtScheduler = { currentAdminScreen = "ot_scheduler" },
+                                                            onNavigateToExternalReferrals = { currentAdminScreen = "referrals" },
+                                                            onNavigateToBioMedical = { currentAdminScreen = "biomedical" },
+                                                            onNavigateToQueueOversight = { currentAdminScreen = "queue_oversight" }
                                                         )
                                                     }
                                                 }

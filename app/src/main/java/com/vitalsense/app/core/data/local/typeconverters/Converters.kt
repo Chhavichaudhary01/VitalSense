@@ -55,4 +55,25 @@ class Converters {
         val listType = object : TypeToken<List<VaccineInfo>>() {}.type
         return gson.fromJson(value, listType) ?: emptyList()
     }
+
+    @TypeConverter
+    fun fromLabTestItemList(value: List<LabTestItem>): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toLabTestItemList(value: String): List<LabTestItem> {
+        val listType = object : TypeToken<List<LabTestItem>>() {}.type
+        return gson.fromJson(value, listType) ?: emptyList()
+    }
+
+    @TypeConverter
+    fun fromQueueEntrySource(value: QueueEntrySource): String = value.name
+
+    @TypeConverter
+    fun toQueueEntrySource(value: String): QueueEntrySource = runCatching { QueueEntrySource.valueOf(value) }.getOrDefault(QueueEntrySource.WALK_IN)
+
+    @TypeConverter
+    fun fromQueueEntryStatus(value: QueueEntryStatus): String = value.name
+
+    @TypeConverter
+    fun toQueueEntryStatus(value: String): QueueEntryStatus = runCatching { QueueEntryStatus.valueOf(value) }.getOrDefault(QueueEntryStatus.WAITING)
 }

@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.Patient
 import com.vitalsense.app.core.data.model.UserRole
 import com.vitalsense.app.core.ui.theme.*
@@ -36,57 +37,65 @@ fun TopRoleSwitcherBar(
         modifier = modifier
             .fillMaxWidth()
             .background(GlumeBackground)
+            .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
     ) {
-        // Main App Header Row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        // Floating Top Island Header (NagarSeva Design System)
+        Surface(
+            shape = PillShape,
+            color = GlumeSurfaceCard,
+            border = BorderStroke(1.dp, GlumeBorder),
+            shadowElevation = 3.dp,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            // App Logo & Role Scoped User Info
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.sm, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                modifier = Modifier.weight(1f, fill = false)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(GlumeSurfaceElevated),
-                    contentAlignment = Alignment.Center
+                // App Logo & Role Scoped User Info
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    Text(
-                        text = when (currentRole) {
-                            UserRole.PATIENT -> "👤"
-                            UserRole.ASHA -> "🤝"
-                            UserRole.DOCTOR -> "🩺"
-                            UserRole.ADMIN -> "🛡️"
-                        },
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(GlumePrimaryPurple),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = when (currentRole) {
+                                UserRole.PATIENT -> "🧑"
+                                UserRole.ASHA -> "🩺"
+                                UserRole.DOCTOR -> "👨‍⚕️"
+                                UserRole.ADMIN -> "🛡️"
+                            },
+                            fontSize = 18.sp
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = if (activeUserName.isNotBlank()) activeUserName else strings.appName,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = when (currentRole) {
+                                UserRole.PATIENT -> strings.patientPortal
+                                UserRole.ASHA -> strings.ashaPortal
+                                UserRole.DOCTOR -> strings.doctorPortal
+                                UserRole.ADMIN -> strings.adminPortal
+                            },
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = GlumePrimaryPurpleLight
+                        )
+                    }
                 }
-                Column {
-                    Text(
-                        text = if (activeUserName.isNotBlank()) activeUserName else strings.appName,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = GlumeTextPrimary,
-                        maxLines = 1
-                    )
-                    Text(
-                        text = when (currentRole) {
-                            UserRole.PATIENT -> strings.patientPortal
-                            UserRole.ASHA -> strings.ashaPortal
-                            UserRole.DOCTOR -> strings.doctorPortal
-                            UserRole.ADMIN -> strings.adminPortal
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = GlumeTextSecondary
-                    )
-                }
-            }
 
             // Right Actions: Language Toggle, Connectivity Pill & Logout
             Row(
@@ -165,6 +174,7 @@ fun TopRoleSwitcherBar(
                 }
             }
         }
+    }
 
         // ASHA Proxy Indicator Banner
         AnimatedVisibility(

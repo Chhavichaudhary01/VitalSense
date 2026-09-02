@@ -74,4 +74,61 @@ interface VitalSenseRepository {
     
     fun getAshaMedicines(): Flow<List<AshaMedicine>>
     suspend fun saveAshaMedicine(medicine: AshaMedicine)
+
+    // --- Diagnostic Lab Reports ---
+    fun getLabReports(): Flow<List<LabReport>>
+    fun getLabReportsForPatient(patientId: String): Flow<List<LabReport>>
+    suspend fun saveLabReport(report: LabReport)
+
+    // --- Live OPD Queue Tokens ---
+    fun getOpdTokens(): Flow<List<OpdToken>>
+    fun getOpdTokensForPatient(patientId: String): Flow<List<OpdToken>>
+    suspend fun bookOpdToken(token: OpdToken)
+
+    // --- Medical Certificates ---
+    fun getMedicalCertificates(): Flow<List<MedicalCertificate>>
+    fun getMedicalCertificatesForPatient(patientId: String): Flow<List<MedicalCertificate>>
+    suspend fun saveMedicalCertificate(certificate: MedicalCertificate)
+
+    // --- Blood Bank Inventory ---
+    fun getBloodStock(): Flow<List<BloodStockItem>>
+    suspend fun updateBloodStock(item: BloodStockItem)
+
+    // --- Family Linkage ---
+    fun getFamilyMembers(primaryPatientId: String): Flow<List<FamilyMember>>
+
+    // --- In-Patient Care (IPD) Beds ---
+    fun getIpdBeds(): Flow<List<IpdBed>>
+    suspend fun saveIpdBed(bed: IpdBed)
+
+    // --- Operation Theatre (OT) Surgery Bookings ---
+    fun getOtSurgeryBookings(): Flow<List<OtSurgeryBooking>>
+    suspend fun saveOtSurgeryBooking(booking: OtSurgeryBooking)
+
+    // --- External Hospital Referrals ---
+    fun getExternalReferrals(): Flow<List<ExternalReferral>>
+    fun getExternalReferralsForPatient(patientId: String): Flow<List<ExternalReferral>>
+    suspend fun saveExternalReferral(referral: ExternalReferral)
+
+    // --- Bio-Medical Equipment ---
+    fun getBioMedicalEquipment(): Flow<List<BioMedicalEquipment>>
+    suspend fun saveBioMedicalEquipment(equipment: BioMedicalEquipment)
+
+    // --- Live Clinic Queue & Day Slots ---
+    fun observeDoctorQueue(doctorId: String, date: String): Flow<List<QueueEntry>>
+    fun observePatientQueueEntry(patientId: String, date: String): Flow<QueueEntry?>
+    fun observeDoctorSlots(doctorId: String, date: String): Flow<List<DoctorDaySlotConfig>>
+    fun observeAllDoctorQueueSummaries(date: String): Flow<List<DoctorQueueSummary>>
+
+    suspend fun defineDoctorSlot(slot: DoctorDaySlotConfig)
+    suspend fun checkInAppointment(appointmentId: String): QueueEntry
+    suspend fun joinWalkInQueue(doctorId: String, doctorName: String, patientId: String, patientName: String): QueueEntry
+    suspend fun callNext(doctorId: String, date: String)
+    suspend fun startConsultation(entryId: String)
+    suspend fun completeConsultation(entryId: String, outcomeNotes: String?)
+    suspend fun markNoShow(entryId: String)
+    suspend fun skipEntry(entryId: String)
+    suspend fun prioritizeEntry(entryId: String)
+    suspend fun cancelQueueEntry(entryId: String)
 }
+

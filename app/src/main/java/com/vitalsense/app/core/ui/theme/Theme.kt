@@ -5,78 +5,83 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 
-// --- Glume Dark Color Scheme (Default for Doctor, ASHA, Admin) ---
-private val GlumeDarkColorScheme = darkColorScheme(
-    primary = GlumePrimaryPurple,
-    onPrimary = GlumeTextPrimary,
-    primaryContainer = GlumePrimaryPurpleContainer,
-    onPrimaryContainer = GlumePrimaryPurpleLight,
+// --- NagarSeva Dark Color Scheme ---
+private val NagarSevaDarkColorScheme = darkColorScheme(
+    primary = NagarSevaPrimary,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF312E81),
+    onPrimaryContainer = NagarSevaPrimaryLight,
 
-    secondary = GlumeSurfaceElevated,
-    onSecondary = GlumeTextPrimary,
-    secondaryContainer = GlumeSurfaceSubtle,
-    onSecondaryContainer = GlumeTextSecondary,
+    secondary = NagarSevaElevatedDark,
+    onSecondary = NagarSevaTextPrimaryDark,
+    secondaryContainer = NagarSevaElevatedDark,
+    onSecondaryContainer = NagarSevaTextSecondaryDark,
 
-    tertiary = GlumeSuccessMint,
-    onTertiary = GlumeTextPrimary,
-    tertiaryContainer = GlumeSuccessContainer,
-    onTertiaryContainer = GlumeSuccessText,
+    tertiary = NagarSevaStatusNormal,
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFF064E3B),
+    onTertiaryContainer = NagarSevaStatusNormal,
 
-    background = GlumeBackground,
-    onBackground = GlumeTextPrimary,
+    background = NagarSevaCanvasDark,
+    onBackground = NagarSevaTextPrimaryDark,
 
-    surface = GlumeSurfaceCard,
-    onSurface = GlumeTextPrimary,
-    surfaceVariant = GlumeSurfaceElevated,
-    onSurfaceVariant = GlumeTextSecondary,
+    surface = NagarSevaSurfaceDark,
+    onSurface = NagarSevaTextPrimaryDark,
+    surfaceVariant = NagarSevaElevatedDark,
+    onSurfaceVariant = NagarSevaTextSecondaryDark,
 
-    error = GlumeAlertCoral,
-    onError = GlumeTextPrimary,
-    errorContainer = GlumeAlertContainer,
-    onErrorContainer = GlumeAlertText,
+    error = NagarSevaStatusUrgent,
+    onError = Color.White,
+    errorContainer = Color(0xFF7F1D1D),
+    onErrorContainer = NagarSevaStatusUrgent,
 
-    outline = GlumeBorder,
-    outlineVariant = GlumeBorderSubtle
+    outline = NagarSevaBorderDark,
+    outlineVariant = NagarSevaBorderDark
 )
 
-// --- Patient High-Contrast Light Color Scheme (Optional Sunlight Mode) ---
-private val PatientLightColorScheme = lightColorScheme(
-    primary = GlumePrimaryPurple,
-    onPrimary = GlumeTextPrimary,
-    primaryContainer = GlumePrimaryPurpleContainer,
-    onPrimaryContainer = GlumePrimaryPurple,
+// --- NagarSeva Light Color Scheme (Default) ---
+private val NagarSevaLightColorScheme = lightColorScheme(
+    primary = NagarSevaPrimary,
+    onPrimary = Color.White,
+    primaryContainer = NagarSevaPrimaryContainer,
+    onPrimaryContainer = NagarSevaPrimary,
 
-    secondary = PatientLightCardElevated,
-    onSecondary = PatientLightTextPrimary,
-    secondaryContainer = PatientLightCardElevated,
-    onSecondaryContainer = PatientLightTextSecondary,
+    secondary = NagarSevaElevatedLight,
+    onSecondary = NagarSevaTextPrimaryLight,
+    secondaryContainer = NagarSevaElevatedLight,
+    onSecondaryContainer = NagarSevaTextSecondaryLight,
 
-    tertiary = GlumeSuccessMint,
-    onTertiary = PatientLightTextPrimary,
+    tertiary = NagarSevaStatusNormal,
+    onTertiary = Color.White,
+    tertiaryContainer = NagarSevaStatusNormalContainer,
+    onTertiaryContainer = NagarSevaStatusNormalText,
 
-    background = PatientLightBackground,
-    onBackground = PatientLightTextPrimary,
+    background = NagarSevaCanvasLight,
+    onBackground = NagarSevaTextPrimaryLight,
 
-    surface = PatientLightCard,
-    onSurface = PatientLightTextPrimary,
-    surfaceVariant = PatientLightCardElevated,
-    onSurfaceVariant = PatientLightTextSecondary,
+    surface = NagarSevaSurfaceLight,
+    onSurface = NagarSevaTextPrimaryLight,
+    surfaceVariant = NagarSevaElevatedLight,
+    onSurfaceVariant = NagarSevaTextSecondaryLight,
 
-    error = GlumeAlertCoral,
-    onError = GlumeTextPrimary,
+    error = NagarSevaStatusUrgent,
+    onError = Color.White,
+    errorContainer = NagarSevaStatusUrgentContainer,
+    onErrorContainer = NagarSevaStatusUrgentText,
 
-    outline = PatientLightBorder,
-    outlineVariant = PatientLightBorder
+    outline = NagarSevaBorderLight,
+    outlineVariant = NagarSevaBorderLight
 )
 
 @Composable
 fun VitalSenseTheme(
     language: AppLanguage = AppLanguage.ENGLISH,
-    usePatientLightMode: Boolean = false,
+    usePatientLightMode: Boolean = true, // Default to Presentation Light Mode for clarity
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (usePatientLightMode) PatientLightColorScheme else GlumeDarkColorScheme
+    val colorScheme = if (usePatientLightMode) NagarSevaLightColorScheme else NagarSevaDarkColorScheme
 
     CompositionLocalProvider(
         LocalSpacing provides VitalSenseSpacing(),
