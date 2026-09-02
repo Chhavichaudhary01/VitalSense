@@ -62,7 +62,7 @@ fun AshaHomeScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
 
     var clearedSosIds by remember { mutableStateOf(DismissedNoticeHelper.getClearedSosIds(context)) }
-    var dismissedAdvisoryIds by remember { mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "asha")) }
+    var dismissedAdvisoryIds by remember(asha.id) { mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "asha")) }
     var sosToClear by remember { mutableStateOf<BroadcastNotice?>(null) }
 
     val emergencySosAlerts = remember(notices, clearedSosIds) {
@@ -407,7 +407,10 @@ fun AshaHomeScreen(
         } else {
             items(patients) { patient ->
                 val isHighRisk = patient.currentRiskLevel == SeverityLevel.HIGH || patient.currentRiskLevel == SeverityLevel.SEVERE
-                val isAssignedToThisAsha = patient.ashaWorkerId == asha.id
+                val isAssignedToThisAsha = patient.ashaWorkerId == asha.id ||
+                    patient.villageName in asha.assignedVillages ||
+                    asha.assignedVillages.any { it.equals(patient.villageName, ignoreCase = true) } ||
+                    patient.villageId in asha.assignedVillages
                 val isSosInFlight = loadingSosPatientId == patient.id
 
                 VitalSenseCard(
@@ -596,13 +599,34 @@ fun AshaHomeScreen(
         }
 
         // 9. District Health Advisories
-        if (adminAdvisories.isNotEmpty()) {
+        if (adminAdvisories.isNotEmpty() || dismissedAdvisoryIds.isNotEmpty()) {
             item {
-                Text(
-                    text = strings.districtAdvisories,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = GlumeTextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = strings.districtAdvisories,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = GlumeTextPrimary
+                    )
+                    if (dismissedAdvisoryIds.isNotEmpty()) {
+                        TextButton(
+                            onClick = {
+                                DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                dismissedAdvisoryIds = emptySet()
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "🔄 Restore (${dismissedAdvisoryIds.size})",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = NagarSevaPrimary
+                            )
+                        }
+                    }
+                }
             }
 
             items(adminAdvisories) { notice ->

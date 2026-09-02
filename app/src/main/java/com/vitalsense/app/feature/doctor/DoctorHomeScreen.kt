@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.feature.doctor.components.DashboardAccordionItem
 import com.vitalsense.app.feature.doctor.components.PatientHistoryDialog
 import com.vitalsense.app.feature.doctor.components.ScheduleAppointmentDialog
 import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
@@ -54,6 +55,13 @@ fun DoctorHomeScreen(
     var activeTeleConsultationPatient by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var restockToastMessage by remember { mutableStateOf<String?>(null) }
+
+    // Accordion expansion states
+    var expandedSos by remember { mutableStateOf(false) }
+    var expandedTriage by remember { mutableStateOf(true) }
+    var expandedAppointments by remember { mutableStateOf(false) }
+    var expandedDispensary by remember { mutableStateOf(false) }
+    var expandedPatientRecords by remember { mutableStateOf(false) }
 
     val pendingCases = cases.filter { it.status == CaseStatus.PENDING_REVIEW || it.status == CaseStatus.IN_PROGRESS }
     val respondedCases = cases.count { it.status == CaseStatus.RESPONDED || it.status == CaseStatus.CLOSED }
@@ -97,6 +105,33 @@ fun DoctorHomeScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = GlumeTextSecondary
                 )
+            }
+        }
+
+        // Success banner for restock reminder
+        if (restockToastMessage != null) {
+            item {
+                Surface(
+                    shape = PillShape,
+                    color = GlumeSuccessContainer,
+                    border = BorderStroke(1.dp, GlumeSuccessMint),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = restockToastMessage ?: "",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeSuccessMint
+                        )
+                        IconButton(onClick = { restockToastMessage = null }, modifier = Modifier.size(24.dp)) {
+                            Text("✕", color = GlumeSuccessMint, fontSize = 12.sp)
+                        }
+                    }
+                }
             }
         }
 
@@ -309,360 +344,81 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 4. Emergency Patient SOS Alerts (With Subtle Coral Glow)
-        if (emergencySosAlerts.isNotEmpty()) {
-            item {
-                Text(
-                    text = "${strings.emergencyPatientAlerts} (${emergencySosAlerts.size})",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = GlumeAlertCoral
-                )
-            }
-
-            items(emergencySosAlerts) { sos ->
-                VitalSenseCard(
-                    backgroundColor = GlumeAlertContainer,
-                    border = BorderStroke(1.dp, GlumeAlertCoral.copy(alpha = 0.5f))
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = sos.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = GlumeAlertText
-                            )
-                            Surface(
-                                shape = PillShape,
-                                color = GlumeAlertCoral
-                            ) {
-                                Text(
-                                    text = strings.highPriority,
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = GlumeTextPrimary
-                                    ),
-                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
-                                )
-                            }
-                        }
-                        Text(
-                            text = sos.message,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = GlumeTextPrimary
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${strings.village}: ${sos.targetVillage ?: "General"}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = GlumeTextSecondary,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Button(
-                                onClick = { sosToClear = sos },
-                                shape = PillShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = "Mark Emergency Clear",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 5. Specialist Triage Queue Section
+        // ━━━ ACCORDION DROPDOWN MENU ━━━
+        // 4. Emergency Patients SOS Alerts Accordion
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            DashboardAccordionItem(
+                icon = "🚨",
+                iconBackgroundColor = GlumeAlertCoral,
+                title = "Emergency Patients SOS Alerts",
+                subtitle = "Instant SOS alerts for critical cases to notify ASHA workers, doctors, and nearby facilities.",
+                expanded = expandedSos,
+                onToggle = { expandedSos = !expandedSos }
             ) {
-                Text(
-                    text = "${strings.specialistQueue} (${cases.size})",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = GlumeTextPrimary
-                )
-                Text(
-                    text = "${doctor.specialty.displayName} Stream",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = GlumeTextSecondary
-                )
-            }
-        }
-
-        if (cases.isEmpty()) {
-            item {
-                VitalSenseCard {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(Spacing.md),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-                    ) {
-                        Text(text = "🎉", fontSize = 32.sp)
-                        Text(
-                            text = strings.noPendingCases,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = GlumeTextSecondary
-                        )
-                    }
-                }
-            }
-        } else {
-            items(cases) { record ->
-                val isSevere = record.severity == SeverityLevel.SEVERE || record.severity == SeverityLevel.HIGH
-                val isMentalHealth = record.category == ConditionCategory.MENTAL_HEALTH || record.requestedDoctorType == DoctorSpecialty.PSYCHOLOGIST
-
-                VitalSenseCard(
-                    backgroundColor = if (isSevere) GlumeAlertContainer else GlumeSurfaceCard,
-                    border = BorderStroke(1.dp, if (isSevere) GlumeAlertCoral.copy(alpha = 0.4f) else GlumeBorder)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = record.patientName,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = GlumeTextPrimary
-                                )
-                                Text(
-                                    text = "${strings.village}: ${record.villageName} · ${record.category.displayName}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = GlumeTextSecondary
-                                )
-                            }
-                            SeverityBadge(severity = record.severity)
-                        }
-
-                        if (isMentalHealth) {
-                            Surface(shape = PillShape, color = GlumePrimaryPurpleContainer) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
-                                ) {
-                                    Text(text = "🧠", style = MaterialTheme.typography.labelSmall)
-                                    Text(
-                                        text = "Mental Health Referral",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = GlumePrimaryPurpleLight
-                                    )
-                                }
-                            }
-                        }
-
-                        Text(
-                            text = "${strings.symptoms} ${record.notes}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = GlumeTextPrimary
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Status Pill
-                            Surface(
-                                shape = PillShape,
-                                color = GlumeSurfaceElevated
-                            ) {
-                                Text(
-                                    text = record.status.displayName,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 4.dp),
-                                    color = GlumeTextSecondary
-                                )
-                            }
-
-                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                                OutlinedButton(
-                                    onClick = {
-                                        selectedPatientForHistory = patients.find { it.id == record.patientId }
-                                            ?: Patient(
-                                                id = record.patientId,
-                                                name = record.patientName,
-                                                age = 30,
-                                                gender = "Not specified",
-                                                phone = "N/A",
-                                                villageId = "vil_1",
-                                                villageName = record.villageName,
-                                                ashaWorkerId = "asha_1",
-                                                ashaWorkerName = "ASHA Assigned",
-                                                currentRiskLevel = record.severity,
-                                                lastCondition = record.notes,
-                                                lastVisitDate = "Recent",
-                                                nextAppointmentDate = null,
-                                                emergencyContact = "108"
-                                            )
-                                    },
-                                    shape = PillShape,
-                                    border = BorderStroke(1.dp, GlumeBorder),
-                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
-                                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
-                                ) {
-                                    Text(text = strings.history, style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
-                                }
-
-                                Button(
-                                    onClick = { onSelectCase(record) },
-                                    shape = PillShape,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = GlumePrimaryPurple,
-                                        contentColor = GlumeTextPrimary
-                                    ),
-                                    contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.xxs),
-                                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
-                                ) {
-                                    Text(text = strings.review, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 6. Section: Upcoming Consultations
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${strings.upcomingConsultations} (${appointments.size})",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = GlumeTextPrimary
-                )
-
-                Button(
-                    onClick = { showScheduleDialog = true },
-                    shape = PillShape,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = GlumePrimaryPurple,
-                        contentColor = GlumeTextPrimary
-                    ),
-                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
-                    modifier = Modifier.defaultMinSize(minHeight = 34.dp)
-                ) {
-                    Text(text = strings.proposeAppt, style = MaterialTheme.typography.labelSmall)
-                }
-            }
-        }
-
-        if (appointments.isEmpty()) {
-            item {
-                VitalSenseCard {
+                if (emergencySosAlerts.isEmpty()) {
                     Text(
-                        text = "No appointments scheduled.",
+                        text = "No active SOS alerts.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = GlumeTextSecondary
                     )
-                }
-            }
-        } else {
-            items(appointments) { appointment ->
-                val isPending = appointment.status.contains("Pending", ignoreCase = true)
-                VitalSenseCard(
-                    backgroundColor = if (isPending) GlumeWarningContainer else GlumeSurfaceCard
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                } else {
+                    emergencySosAlerts.forEach { sos ->
+                        VitalSenseCard(
+                            backgroundColor = GlumeAlertContainer,
+                            border = BorderStroke(1.dp, GlumeAlertCoral.copy(alpha = 0.5f))
                         ) {
-                            Column {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = sos.title,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = GlumeAlertText
+                                    )
+                                    Surface(
+                                        shape = PillShape,
+                                        color = GlumeAlertCoral
+                                    ) {
+                                        Text(
+                                            text = strings.highPriority,
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = GlumeTextPrimary
+                                            ),
+                                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = appointment.patientName,
-                                    style = MaterialTheme.typography.titleMedium,
+                                    text = sos.message,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = GlumeTextPrimary
                                 )
-                                Text(
-                                    text = "${appointment.dateFormatted} at ${appointment.timeSlot}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = GlumeTextSecondary
-                                )
-                            }
-                            Surface(
-                                shape = PillShape,
-                                color = if (isPending) GlumeWarningContainer else GlumeSuccessContainer
-                            ) {
-                                Text(
-                                    text = appointment.status,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp),
-                                    color = if (isPending) GlumeWarningAmber else GlumeSuccessText
-                                )
-                            }
-                        }
-
-                        if (isPending) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.xs, Alignment.End),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                TextButton(
-                                    onClick = { onDeclineAppointment(appointment.id) },
-                                    shape = PillShape
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("Decline", color = GlumeAlertCoral, style = MaterialTheme.typography.labelSmall)
-                                }
-                                Button(
-                                    onClick = { onAcceptAppointment(appointment.id) },
-                                    shape = PillShape,
-                                    colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint),
-                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
-                                    modifier = Modifier.defaultMinSize(minHeight = 32.dp)
-                                ) {
-                                    Text("Accept ✓", color = GlumeBackground, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                                }
-                            }
-                        } else {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Button(
-                                    onClick = {
-                                        activeTeleConsultationPatient = appointment.patientName
-                                    },
-                                    shape = PillShape,
-                                    colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
-                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
-                                    modifier = Modifier.defaultMinSize(minHeight = 32.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    Text(
+                                        text = "${strings.village}: ${sos.targetVillage ?: "General"}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextSecondary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Button(
+                                        onClick = { sosToClear = sos },
+                                        shape = PillShape,
+                                        colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                                     ) {
-                                        Text("📹", fontSize = 12.sp)
                                         Text(
-                                            text = "Join Tele-Consultation Call",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = Color.White,
-                                                fontWeight = FontWeight.Bold
-                                            )
+                                            text = "Mark Emergency Clear",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
                                         )
                                     }
                                 }
@@ -673,18 +429,306 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 7. Section: Dispensary Stock Check
+        // 5. Specialist Triage Queue Accordion
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            DashboardAccordionItem(
+                icon = "👤",
+                iconBackgroundColor = GlumePrimaryPurple,
+                title = "Specialist Triage Queue",
+                subtitle = "Prioritized queue for specialist review and triage based on severity and urgency.",
+                expanded = expandedTriage,
+                onToggle = { expandedTriage = !expandedTriage }
             ) {
-                Text(
-                    text = strings.dispensaryStock,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = GlumeTextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${cases.size} cases · ${doctor.specialty.displayName} Stream",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = GlumeTextSecondary
+                    )
+                }
+
+                if (cases.isEmpty()) {
+                    VitalSenseCard {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(Spacing.md),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            Text(text = "🎉", fontSize = 32.sp)
+                            Text(
+                                text = strings.noPendingCases,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = GlumeTextSecondary
+                            )
+                        }
+                    }
+                } else {
+                    cases.forEach { record ->
+                        val isSevere = record.severity == SeverityLevel.SEVERE || record.severity == SeverityLevel.HIGH
+                        val isMentalHealth = record.category == ConditionCategory.MENTAL_HEALTH || record.requestedDoctorType == DoctorSpecialty.PSYCHOLOGIST
+
+                        VitalSenseCard(
+                            backgroundColor = if (isSevere) GlumeAlertContainer else GlumeSurfaceCard,
+                            border = BorderStroke(1.dp, if (isSevere) GlumeAlertCoral.copy(alpha = 0.4f) else GlumeBorder)
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = record.patientName,
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = GlumeTextPrimary
+                                        )
+                                        Text(
+                                            text = "${strings.village}: ${record.villageName} · ${record.category.displayName}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = GlumeTextSecondary
+                                        )
+                                    }
+                                    SeverityBadge(severity = record.severity)
+                                }
+
+                                if (isMentalHealth) {
+                                    Surface(shape = PillShape, color = GlumePrimaryPurpleContainer) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
+                                        ) {
+                                            Text(text = "🧠", style = MaterialTheme.typography.labelSmall)
+                                            Text(
+                                                text = "Mental Health Referral",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = GlumePrimaryPurpleLight
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Text(
+                                    text = "${strings.symptoms} ${record.notes}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = GlumeTextPrimary
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        shape = PillShape,
+                                        color = GlumeSurfaceElevated
+                                    ) {
+                                        Text(
+                                            text = record.status.displayName,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 4.dp),
+                                            color = GlumeTextSecondary
+                                        )
+                                    }
+
+                                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                        OutlinedButton(
+                                            onClick = {
+                                                selectedPatientForHistory = patients.find { it.id == record.patientId }
+                                                    ?: Patient(
+                                                        id = record.patientId,
+                                                        name = record.patientName,
+                                                        age = 30,
+                                                        gender = "Not specified",
+                                                        phone = "N/A",
+                                                        villageId = "vil_1",
+                                                        villageName = record.villageName,
+                                                        ashaWorkerId = "asha_1",
+                                                        ashaWorkerName = "ASHA Assigned",
+                                                        currentRiskLevel = record.severity,
+                                                        lastCondition = record.notes,
+                                                        lastVisitDate = "Recent",
+                                                        nextAppointmentDate = null,
+                                                        emergencyContact = "108"
+                                                    )
+                                            },
+                                            shape = PillShape,
+                                            border = BorderStroke(1.dp, GlumeBorder),
+                                            contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                            modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                                        ) {
+                                            Text(text = strings.history, style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                                        }
+
+                                        Button(
+                                            onClick = { onSelectCase(record) },
+                                            shape = PillShape,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = GlumePrimaryPurple,
+                                                contentColor = GlumeTextPrimary
+                                            ),
+                                            contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.xxs),
+                                            modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                                        ) {
+                                            Text(text = strings.review, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 6. Scheduled Appointments Accordion
+        item {
+            DashboardAccordionItem(
+                icon = "📅",
+                iconBackgroundColor = Color(0xFF3B82F6),
+                title = "Scheduled Appointments",
+                subtitle = "Manage upcoming and past appointments with patients and specialists.",
+                expanded = expandedAppointments,
+                onToggle = { expandedAppointments = !expandedAppointments }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = { showScheduleDialog = true },
+                        shape = PillShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GlumePrimaryPurple,
+                            contentColor = GlumeTextPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                        modifier = Modifier.defaultMinSize(minHeight = 34.dp)
+                    ) {
+                        Text(text = strings.proposeAppt, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+
+                if (appointments.isEmpty()) {
+                    VitalSenseCard {
+                        Text(
+                            text = "No appointments scheduled.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = GlumeTextSecondary
+                        )
+                    }
+                } else {
+                    appointments.forEach { appointment ->
+                        val isPending = appointment.status.contains("Pending", ignoreCase = true)
+                        VitalSenseCard(
+                            backgroundColor = if (isPending) GlumeWarningContainer else GlumeSurfaceCard
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = appointment.patientName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = GlumeTextPrimary
+                                        )
+                                        Text(
+                                            text = "${appointment.dateFormatted} at ${appointment.timeSlot}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = GlumeTextSecondary
+                                        )
+                                    }
+                                    Surface(
+                                        shape = PillShape,
+                                        color = if (isPending) GlumeWarningContainer else GlumeSuccessContainer
+                                    ) {
+                                        Text(
+                                            text = appointment.status,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp),
+                                            color = if (isPending) GlumeWarningAmber else GlumeSuccessText
+                                        )
+                                    }
+                                }
+
+                                if (isPending) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs, Alignment.End),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        TextButton(
+                                            onClick = { onDeclineAppointment(appointment.id) },
+                                            shape = PillShape
+                                        ) {
+                                            Text("Decline", color = GlumeAlertCoral, style = MaterialTheme.typography.labelSmall)
+                                        }
+                                        Button(
+                                            onClick = { onAcceptAppointment(appointment.id) },
+                                            shape = PillShape,
+                                            colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint),
+                                            contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                            modifier = Modifier.defaultMinSize(minHeight = 32.dp)
+                                        ) {
+                                            Text("Accept ✓", color = GlumeBackground, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                        }
+                                    }
+                                } else {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                activeTeleConsultationPatient = appointment.patientName
+                                            },
+                                            shape = PillShape,
+                                            colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
+                                            contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                            modifier = Modifier.defaultMinSize(minHeight = 32.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Text("📹", fontSize = 12.sp)
+                                                Text(
+                                                    text = "Join Tele-Consultation Call",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        color = Color.White,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 7. Dispensary Stock Accordion
+        item {
+            DashboardAccordionItem(
+                icon = "💊",
+                iconBackgroundColor = GlumeWarningAmber,
+                title = "Dispensary Stock",
+                subtitle = "Track medicine inventory, stock levels, and low stock alerts in real-time.",
+                expanded = expandedDispensary,
+                onToggle = { expandedDispensary = !expandedDispensary }
+            ) {
                 if (lowStockCount > 0) {
                     Surface(shape = PillShape, color = GlumeAlertContainer) {
                         Text(
@@ -694,96 +738,96 @@ fun DoctorHomeScreen(
                         )
                     }
                 }
-            }
-        }
 
-        items(dispensaryStock) { item ->
-            val isReminded = item.id in remindedMedicineIds
-            VitalSenseCard {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = item.medicineName,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = GlumeTextPrimary
-                            )
-                            Text(
-                                text = item.category,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = GlumeTextSecondary
-                            )
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                dispensaryStock.forEach { item ->
+                    val isReminded = item.id in remindedMedicineIds
+                    VitalSenseCard {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
-                            Text(
-                                text = "${item.availableQuantity} ${item.unit}",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (item.isLowStock) GlumeAlertCoral else GlumeTextPrimary
-                                )
-                            )
-                            if (item.isLowStock) {
-                                Surface(shape = PillShape, color = GlumeAlertContainer) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "LOW",
-                                        style = MaterialTheme.typography.labelSmall.copy(color = GlumeAlertCoral, fontWeight = FontWeight.Bold),
-                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                        text = item.medicineName,
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeTextPrimary
+                                    )
+                                    Text(
+                                        text = item.category,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextSecondary
                                     )
                                 }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                                ) {
+                                    Text(
+                                        text = "${item.availableQuantity} ${item.unit}",
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (item.isLowStock) GlumeAlertCoral else GlumeTextPrimary
+                                        )
+                                    )
+                                    if (item.isLowStock) {
+                                        Surface(shape = PillShape, color = GlumeAlertContainer) {
+                                            Text(
+                                                text = "LOW",
+                                                style = MaterialTheme.typography.labelSmall.copy(color = GlumeAlertCoral, fontWeight = FontWeight.Bold),
+                                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                        }
-                    }
 
-                    // Doctor Restock Action Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (isReminded) {
-                            Surface(
-                                shape = PillShape,
-                                color = GlumeSuccessContainer,
-                                border = BorderStroke(1.dp, GlumeSuccessMint.copy(alpha = 0.3f))
+                            // Doctor Restock Action Row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "✓ Admin Reminded",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = GlumeSuccessText
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                )
-                            }
-                        } else {
-                            OutlinedButton(
-                                onClick = {
-                                    DismissedNoticeHelper.recordRemindedMedicine(context, item.id)
-                                    remindedMedicineIds = remindedMedicineIds + item.id
-                                    onRemindAdminRestock(item)
-                                    AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
-                                    restockToastMessage = "Restock reminder sent to Admin for ${item.medicineName}!"
-                                },
-                                shape = PillShape,
-                                border = BorderStroke(1.dp, if (item.isLowStock) GlumeAlertCoral else NagarSevaPrimary),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = "🔔 Remind Admin",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (item.isLowStock) GlumeAlertCoral else NagarSevaPrimary
-                                )
+                                if (isReminded) {
+                                    Surface(
+                                        shape = PillShape,
+                                        color = GlumeSuccessContainer,
+                                        border = BorderStroke(1.dp, GlumeSuccessMint.copy(alpha = 0.3f))
+                                    ) {
+                                        Text(
+                                            text = "✓ Admin Reminded",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = GlumeSuccessText
+                                            ),
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                } else {
+                                    OutlinedButton(
+                                        onClick = {
+                                            DismissedNoticeHelper.recordRemindedMedicine(context, item.id)
+                                            remindedMedicineIds = remindedMedicineIds + item.id
+                                            onRemindAdminRestock(item)
+                                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                            restockToastMessage = "Restock reminder sent to Admin for ${item.medicineName}!"
+                                        },
+                                        shape = PillShape,
+                                        border = BorderStroke(1.dp, if (item.isLowStock) GlumeAlertCoral else NagarSevaPrimary),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "🔔 Remind Admin",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (item.isLowStock) GlumeAlertCoral else NagarSevaPrimary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -791,61 +835,112 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 8. Patient Records Directory
+        // 8. Patient Records Directory Accordion
         if (patients.isNotEmpty()) {
             item {
+                DashboardAccordionItem(
+                    icon = "📁",
+                    iconBackgroundColor = Color(0xFFEC4899),
+                    title = "Patient Record History",
+                    subtitle = "Access complete patient history including visits, prescriptions, and test reports.",
+                    expanded = expandedPatientRecords,
+                    onToggle = { expandedPatientRecords = !expandedPatientRecords }
+                ) {
+                    VitalSenseTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = strings.searchPatient,
+                        placeholder = strings.searchPlaceholder
+                    )
+
+                    val filteredPatients = patients.filter {
+                        it.name.contains(searchQuery, ignoreCase = true) ||
+                            it.villageName.contains(searchQuery, ignoreCase = true)
+                    }
+
+                    filteredPatients.forEach { pat ->
+                        VitalSenseCard {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = pat.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = GlumeTextPrimary
+                                    )
+                                    Text(
+                                        text = "${pat.villageName} · Age: ${pat.age} (${pat.gender}) · ${strings.ashaAssigned}: ${pat.ashaWorkerName}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextSecondary
+                                    )
+                                }
+                                Button(
+                                    onClick = { selectedPatientForHistory = pat },
+                                    shape = PillShape,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = GlumePrimaryPurpleContainer,
+                                        contentColor = GlumePrimaryPurpleLight
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                                ) {
+                                    Text(strings.history, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 9. District Health Advisories & Directives
+        if (adminDirectives.isNotEmpty()) {
+            item {
                 Text(
-                    text = strings.patientDirectory,
+                    text = "📢 ${strings.districtAdvisories}",
                     style = MaterialTheme.typography.headlineMedium,
                     color = GlumeTextPrimary
                 )
             }
 
-            item {
-                VitalSenseTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = strings.searchPatient,
-                    placeholder = strings.searchPlaceholder
-                )
-            }
-
-            val filteredPatients = patients.filter {
-                it.name.contains(searchQuery, ignoreCase = true) ||
-                it.villageName.contains(searchQuery, ignoreCase = true)
-            }
-
-            items(filteredPatients) { pat ->
-                VitalSenseCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = pat.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = GlumeTextPrimary
-                            )
-                            Text(
-                                text = "${pat.villageName} · Age: ${pat.age} (${pat.gender}) · ${strings.ashaAssigned}: ${pat.ashaWorkerName}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = GlumeTextSecondary
-                            )
-                        }
-                        Button(
-                            onClick = { selectedPatientForHistory = pat },
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = GlumePrimaryPurpleContainer,
-                                contentColor = GlumePrimaryPurpleLight
-                            ),
-                            contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
-                            modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+            items(adminDirectives) { directive ->
+                VitalSenseCard(
+                    backgroundColor = if (directive.isUrgent) GlumeAlertContainer else GlumeSurfaceCard
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(strings.history, style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                text = directive.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (directive.isUrgent) GlumeAlertCoral else GlumeTextPrimary
+                            )
+                            if (directive.isUrgent) {
+                                Surface(shape = PillShape, color = GlumeAlertCoral) {
+                                    Text(
+                                        text = "DIRECTIVE",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = GlumeTextPrimary),
+                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                    )
+                                }
+                            }
                         }
+                        Text(
+                            text = directive.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = GlumeTextPrimary
+                        )
+                        Text(
+                            text = "${strings.issuedBy} ${directive.senderName} (${directive.senderRole.name})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = GlumeTextSecondary
+                        )
                     }
                 }
             }
