@@ -31,7 +31,8 @@ fun QueueStatusScreen(
     position: Int,
     estimatedWaitMinutes: Long,
     onBackClick: () -> Unit,
-    onCancelEntry: (entryId: String) -> Unit
+    onCancelEntry: (entryId: String) -> Unit,
+    onJoinWalkIn: (() -> Unit)? = null
 ) {
     AdaptiveScreenContainer {
         Scaffold(
@@ -88,6 +89,19 @@ fun QueueStatusScreen(
                                 color = GlumeTextSecondary,
                                 textAlign = TextAlign.Center
                             )
+                            if (onJoinWalkIn != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = onJoinWalkIn,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
+                                    modifier = Modifier.touchSpring()
+                                ) {
+                                    Icon(Icons.Default.ConfirmationNumber, contentDescription = null, tint = Color.White)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Get Instant Token for Today", fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                            }
                         }
                     }
                 }

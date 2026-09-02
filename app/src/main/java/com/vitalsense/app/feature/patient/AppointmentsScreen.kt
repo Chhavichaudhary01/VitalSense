@@ -139,7 +139,7 @@ fun AppointmentsScreen(
                     }
                 } else {
                     items(appointments, key = { it.id }) { appt ->
-                        val isToday = appt.dateFormatted == today
+                        val canCheckIn = appt.dateFormatted == today || appt.status.contains("Confirm", ignoreCase = true)
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -148,7 +148,7 @@ fun AppointmentsScreen(
                             colors = CardDefaults.cardColors(containerColor = NagarSevaSurfaceLight),
                             border = BorderStroke(
                                 1.dp,
-                                if (isToday) NagarSevaPrimary.copy(alpha = 0.4f) else NagarSevaBorderLight
+                                if (canCheckIn) NagarSevaPrimary.copy(alpha = 0.4f) else NagarSevaBorderLight
                             ),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
@@ -183,7 +183,7 @@ fun AppointmentsScreen(
                                     )
                                 }
 
-                                if (isToday) {
+                                if (canCheckIn) {
                                     Button(
                                         onClick = { onCheckIn(appt.id) },
                                         modifier = Modifier

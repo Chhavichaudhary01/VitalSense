@@ -45,6 +45,7 @@ fun DoctorHomeScreen(
     onNavigateToExternalReferrals: () -> Unit = {},
     onNavigateToLiveQueue: () -> Unit = {},
     onRemindAdminRestock: (DispensaryItem) -> Unit = {},
+    todaysQueue: List<QueueEntry> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -262,12 +263,32 @@ fun DoctorHomeScreen(
                                 Text("🩺", fontSize = 22.sp)
                             }
                         }
-                        Column {
-                            Text(
-                                text = "Live OPD & Walk-In Queue",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = GlumeTextPrimary
-                            )
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Live OPD & Walk-In Queue",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumeTextPrimary
+                                )
+                                val waitingCount = todaysQueue.count { it.status == QueueEntryStatus.WAITING }
+                                if (waitingCount > 0) {
+                                    Surface(
+                                        shape = PillShape,
+                                        color = NagarSevaStatusProgressBg,
+                                        border = BorderStroke(1.dp, NagarSevaStatusProgress)
+                                    ) {
+                                        Text(
+                                            text = "$waitingCount waiting",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = NagarSevaStatusProgress,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
                             Text(
                                 text = "Call next, prioritize cases & manage consultations",
                                 style = MaterialTheme.typography.bodySmall,

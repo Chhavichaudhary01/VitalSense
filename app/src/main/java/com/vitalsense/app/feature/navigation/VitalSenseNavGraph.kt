@@ -289,6 +289,9 @@ fun VitalSenseNavGraph(
                                                             onBackClick = { currentPatientScreen = "home" },
                                                             onCancelEntry = { entryId ->
                                                                 patientQueueViewModel.cancelQueueEntry(entryId)
+                                                            },
+                                                            onJoinWalkIn = {
+                                                                patientQueueViewModel.joinWalkIn("doc_rajesh", "Dr. Rajesh Varma")
                                                             }
                                                         )
                                                     }
@@ -497,6 +500,9 @@ fun VitalSenseNavGraph(
                                                         }
                                                     )
                                                 } else {
+                                                    val doctorQueue by doctorViewModel.todaysQueue.collectAsStateWithLifecycle()
+                                                    val doctorSlotConfig by doctorViewModel.todaySlotConfig.collectAsStateWithLifecycle()
+
                                                     when (currentDoctorScreen) {
                                                         "ot_scheduler" -> {
                                                             BackHandler { currentDoctorScreen = "home" }
@@ -538,8 +544,6 @@ fun VitalSenseNavGraph(
                                                         }
                                                         "live_queue" -> {
                                                             BackHandler { currentDoctorScreen = "home" }
-                                                            val doctorQueue by doctorViewModel.todaysQueue.collectAsStateWithLifecycle()
-                                                            val doctorSlotConfig by doctorViewModel.todaySlotConfig.collectAsStateWithLifecycle()
                                                             DoctorQueueScreen(
                                                                 doctor = activeDoctor,
                                                                 todaysQueue = doctorQueue,
@@ -569,6 +573,7 @@ fun VitalSenseNavGraph(
                                                                 patients = patients,
                                                                 notices = notices,
                                                                 allConditions = allConditions,
+                                                                todaysQueue = doctorQueue,
                                                                 onSelectCase = { record ->
                                                                     doctorViewModel.selectCase(record)
                                                                 },

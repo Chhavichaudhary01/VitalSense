@@ -72,7 +72,7 @@ fun PatientHomeScreen(
 
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    var dismissedAdvisoryIds by remember {
+    var dismissedAdvisoryIds by remember(patient.id) {
         mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "patient"))
     }
 
@@ -642,13 +642,34 @@ fun PatientHomeScreen(
         }
 
         // 5. District Health Advisories
-        if (adminAdvisories.isNotEmpty()) {
+        if (adminAdvisories.isNotEmpty() || dismissedAdvisoryIds.isNotEmpty()) {
             item {
-                Text(
-                    text = strings.districtAdvisories,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = textPrimaryColor
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = strings.districtAdvisories,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = textPrimaryColor
+                    )
+                    if (dismissedAdvisoryIds.isNotEmpty()) {
+                        TextButton(
+                            onClick = {
+                                DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                dismissedAdvisoryIds = emptySet()
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "🔄 Restore (${dismissedAdvisoryIds.size})",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = NagarSevaPrimary
+                            )
+                        }
+                    }
+                }
             }
 
             items(adminAdvisories) { advisory ->

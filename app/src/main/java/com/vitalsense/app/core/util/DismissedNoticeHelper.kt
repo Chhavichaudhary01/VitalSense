@@ -24,6 +24,15 @@ object DismissedNoticeHelper {
         prefs.edit().putStringSet("$KEY_DISMISSED_ADVISORIES$role", current).apply()
     }
 
+    fun clearDismissedAdvisories(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        prefs.all.keys.filter { it.startsWith(KEY_DISMISSED_ADVISORIES) }.forEach { key ->
+            editor.remove(key)
+        }
+        editor.apply()
+    }
+
     fun getClearedSosIds(context: Context): Set<String> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getStringSet(KEY_CLEARED_SOS, emptySet()) ?: emptySet()

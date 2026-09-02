@@ -781,6 +781,38 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 )
             )
         }
+
+        // Bridge to live doctor queue HUD
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val matchedDoctor = _doctors.value.find { doc ->
+            doc.name.contains("Rajesh", ignoreCase = true) || doc.name.equals(token.doctorName, ignoreCase = true)
+        } ?: _doctors.value.first()
+
+        val numericToken = token.tokenNumber.filter { it.isDigit() }.toIntOrNull() ?: (_queueEntries.value.size + 1)
+
+        val queueEntry = QueueEntry(
+            id = "queue_opd_${token.id}",
+            doctorId = matchedDoctor.id,
+            doctorName = matchedDoctor.name,
+            dateFormatted = today,
+            tokenNumber = numericToken,
+            provisionalToken = false,
+            appointmentId = null,
+            patientId = token.patientId,
+            patientName = token.patientName,
+            source = QueueEntrySource.WALK_IN,
+            status = QueueEntryStatus.WAITING,
+            priorityFlag = false,
+            checkedInAt = System.currentTimeMillis(),
+            isPendingSync = false
+        )
+
+        _queueEntries.update { current ->
+            if (current.none { it.id == queueEntry.id }) current + queueEntry else current
+        }
+        scope.launch {
+            dao.upsertQueueEntry(queueEntry.toEntity())
+        }
     }
 
     // --- Medical Certificates ---
@@ -962,7 +994,10 @@ class VitalSenseRepositoryImpl @Inject constructor(
         }
 
         return _queueEntries.map { list ->
-            val forDoctor = list.filter { it.doctorId == doctorId && it.dateFormatted == date }
+            val forDoctor = list.filter { 
+                (it.doctorId == doctorId || (doctorId == "doc_rajesh" && it.doctorName.contains("Rajesh", ignoreCase = true))) && 
+                (it.dateFormatted == date || it.dateFormatted == "Today" || it.dateFormatted.startsWith(date.take(7)))
+            }
             val (waiting, nonWaiting) = forDoctor.partition { it.status == QueueEntryStatus.WAITING }
             com.vitalsense.app.core.util.QueueEtaCalculator.sortWaitingEntries(waiting) +
                 nonWaiting.sortedBy { it.checkedInAt }
@@ -971,7 +1006,11 @@ class VitalSenseRepositoryImpl @Inject constructor(
 
     override fun observePatientQueueEntry(patientId: String, date: String): Flow<QueueEntry?> {
         return _queueEntries.map { list ->
-            list.firstOrNull { it.patientId == patientId && it.dateFormatted == date }
+            list.firstOrNull { 
+                it.patientId == patientId && 
+                (it.dateFormatted == date || it.dateFormatted == "Today" || it.dateFormatted.startsWith(date.take(7))) &&
+                it.status != QueueEntryStatus.COMPLETED
+            }
         }
     }
 

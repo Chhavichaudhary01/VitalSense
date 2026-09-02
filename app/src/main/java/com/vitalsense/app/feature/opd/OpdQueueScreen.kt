@@ -411,10 +411,10 @@ fun BookOpdTokenDialog(
     onConfirmBook: (OpdToken) -> Unit
 ) {
     var selectedDept by remember { mutableStateOf("General Medicine") }
-    var selectedDoctor by remember { mutableStateOf("Dr. Rajesh Kumar") }
+    var selectedDoctor by remember { mutableStateOf("Dr. Rajesh Varma") }
 
     val departments = listOf(
-        "General Medicine" to "Dr. Rajesh Kumar",
+        "General Medicine" to "Dr. Rajesh Varma",
         "Maternal & Antenatal Care" to "Dr. Priya (MO)",
         "Orthopedics & Trauma Surgery" to "Dr. Ayushman Dev Singh",
         "Pediatrics & Child Care" to "Dr. S. K. Verma"
