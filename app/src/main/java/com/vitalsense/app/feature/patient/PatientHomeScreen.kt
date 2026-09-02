@@ -101,7 +101,7 @@ fun PatientHomeScreen(
                 .fillMaxSize()
                 .padding(horizontal = Spacing.md),
             verticalArrangement = Arrangement.spacedBy(Spacing.md),
-            contentPadding = PaddingValues(top = Spacing.sm, bottom = 96.dp)
+            contentPadding = PaddingValues(top = Spacing.sm, bottom = 140.dp)
         ) {
         // 1. Personalized Greeting (NagarSeva Modern Typography)
         item {
