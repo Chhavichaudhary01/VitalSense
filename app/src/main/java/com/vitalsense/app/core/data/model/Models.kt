@@ -359,7 +359,7 @@ data class QueueEntry(
     val dateFormatted: String,
     val tokenNumber: Int,
     val provisionalToken: Boolean = false, // true until an offline check-in is reconciled with the server
-    val appointmentId: String?,            // null for walk-ins
+    val appointmentId: String? = null,            // null for walk-ins
     val patientId: String,
     val patientName: String,
     val source: QueueEntrySource,

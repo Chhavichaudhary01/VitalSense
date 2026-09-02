@@ -1,18 +1,29 @@
 package com.vitalsense.app.feature.auth
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.local.seed.SeedDataProvider
@@ -20,6 +31,8 @@ import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.util.AudioGuidanceHelper
+import com.vitalsense.app.core.ui.util.touchSpring
+
 
 @Composable
 fun LoginScreen(
@@ -32,85 +45,33 @@ fun LoginScreen(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
-    var selectedRole by remember { mutableStateOf(UserRole.DOCTOR) } // Default to Doctor to showcase Glume UI
+    val context = androidx.compose.ui.platform.LocalContext.current
 
-    // Form inputs
-    var phoneInput by remember { mutableStateOf("") }
-    var ashaIdInput by remember { mutableStateOf("") }
-    var pinInput by remember { mutableStateOf("") }
-    var doctorEmailInput by remember { mutableStateOf("") }
-    var doctorPasswordInput by remember { mutableStateOf("") }
-    var adminPasscodeInput by remember { mutableStateOf("") }
+    // expandedRole controls whether 4 title cards are shown (null) or a selected ID card is expanded
+    var expandedRole by remember { mutableStateOf<UserRole?>(null) }
+    var isSignUpMode by remember { mutableStateOf(false) }
+
+    // Patient Form States
+    var patientEmailOrPhone by remember { mutableStateOf("") }
+    var patientPassword by remember { mutableStateOf("") }
+
+    // Doctor Form States
+    var doctorIdInput by remember { mutableStateOf("DOC-101") }
+    var doctorPassword by remember { mutableStateOf("docpass123") }
+
+    // ASHA Form States
+    var ashaIdInput by remember { mutableStateOf("ASHA-401") }
+    var ashaPinInput by remember { mutableStateOf("1234") }
+
+    // Admin Form States
+    var adminEmailInput by remember { mutableStateOf("admin@vitalsense.gov.in") }
+    var adminPasswordInput by remember { mutableStateOf("adminpass") }
+
     var showAshaQrClaimDialog by remember { mutableStateOf(false) }
-    var pendingSelectedRole by remember { mutableStateOf<UserRole?>(null) }
-    var showRoleConfirmDialog by remember { mutableStateOf(false) }
 
     val samplePatients = remember { SeedDataProvider.initialPatients }
     val sampleAshas = remember { SeedDataProvider.initialAshaWorkers }
     val sampleDoctors = remember { SeedDataProvider.initialDoctors }
-
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    // Double-Confirmation Dialog for Role Selection as per UX Architecture §1.3
-    if (showRoleConfirmDialog && pendingSelectedRole != null) {
-        val role = pendingSelectedRole!!
-        val roleName = when (role) {
-            UserRole.PATIENT -> if (currentLanguage == AppLanguage.HINDI) "मरीज़ (Patient)" else "Patient"
-            UserRole.ASHA -> if (currentLanguage == AppLanguage.HINDI) "आशा स्वास्थ्य कार्यकर्ता (Health Worker)" else "ASHA Health Worker"
-            UserRole.DOCTOR -> if (currentLanguage == AppLanguage.HINDI) "डॉक्टर (Doctor)" else "Doctor"
-            UserRole.ADMIN -> if (currentLanguage == AppLanguage.HINDI) "ज़िला प्रशासक (Admin)" else "District Admin"
-        }
-
-        VitalSenseDialog(
-            onDismissRequest = { showRoleConfirmDialog = false },
-            title = if (currentLanguage == AppLanguage.HINDI) "भूमिका चयन पुष्टि" else "Confirm Role Selection",
-            icon = { Text("✅", fontSize = 22.sp) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        selectedRole = role
-                        showRoleConfirmDialog = false
-                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
-                    },
-                    shape = PillShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint),
-                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
-                ) {
-                    Text(
-                        text = if (currentLanguage == AppLanguage.HINDI) "✅ हाँ, सही है (Yes, Correct)" else "✅ Yes, Correct",
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                        color = GlumeBackground
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showRoleConfirmDialog = false },
-                    shape = PillShape,
-                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
-                ) {
-                    Text(
-                        text = if (currentLanguage == AppLanguage.HINDI) "🔁 फिर से चुनें (Choose Again)" else "🔁 Choose Again",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = GlumeTextSecondary
-                    )
-                }
-            }
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Text(
-                    text = if (currentLanguage == AppLanguage.HINDI) "आपने चुना है: $roleName" else "You have chosen: $roleName",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = GlumeTextPrimary
-                )
-                Text(
-                    text = if (currentLanguage == AppLanguage.HINDI) "क्या आप इस भूमिका के साथ आगे बढ़ना चाहते हैं?" else "Do you want to proceed with this role experience?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = GlumeTextSecondary
-                )
-            }
-        }
-    }
 
     if (showAshaQrClaimDialog) {
         com.vitalsense.app.feature.auth.components.AshaQrClaimDialog(
@@ -125,62 +86,102 @@ fun LoginScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(GlumeBackground)
             .padding(horizontal = Spacing.md),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
         contentPadding = PaddingValues(top = Spacing.md, bottom = Spacing.xxl)
     ) {
-        // 1. Minimal Header & Quick Nav Links (3 Items Max: 🩺 For Patients, 🧑‍⚕️ For ASHA, 📞 108 Help)
+        // 1. App Header & Quick Language Switcher
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(NagarSevaPrimary),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(VitalSenseTealPrimary),
-                            contentAlignment = Alignment.Center
+                        Text(text = "🫀", fontSize = 20.sp)
+                    }
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(text = "🫀", fontSize = 20.sp)
-                        }
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = "VitalSense",
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                color = GlumeTextPrimary
+                            )
+                            Surface(
+                                shape = PillShape,
+                                color = NagarSevaPrimary.copy(alpha = 0.12f)
+                            ) {
                                 Text(
-                                    text = "VitalSense",
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    text = "सेहतसेतु",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = NagarSevaPrimary
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
-                                Surface(
-                                    shape = PillShape,
-                                    color = VitalSenseTealContainer
-                                ) {
-                                    Text(
-                                        text = "सेहतसेतु",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = VitalSenseTealPrimary
-                                        ),
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
-                                }
                             }
+                        }
+                        Text(
+                            text = if (currentLanguage == AppLanguage.HINDI) "डिजिटल स्वास्थ्य नेटवर्क" else "Digital Health Network",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = GlumeTextSecondary
+                        )
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    // Audio guidance chip
+                    Surface(
+                        onClick = {
+                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                            val speech = if (currentLanguage == AppLanguage.HINDI)
+                                "नमस्ते। कृपया अपना लॉगिन रोल चुनें: मरीज़, डॉक्टर, आशा कार्यकर्ता या व्यवस्थापक।"
+                            else
+                                "Welcome to VitalSense. Please select your role to proceed: Patient, Doctor, ASHA Worker, or Administrator."
+                            AudioGuidanceHelper.speak(context, speech, currentLanguage)
+                        },
+                        shape = PillShape,
+                        color = GlumeSurfaceCard,
+                        border = BorderStroke(1.dp, GlumeBorder),
+                        modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text("🔊", fontSize = 13.sp)
+                            Text(
+                                text = if (currentLanguage == AppLanguage.HINDI) "सुनें" else "Listen",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
+                            )
                         }
                     }
 
-                    // Reactive Language Switcher
+                    // Language toggle
                     Surface(
                         onClick = onToggleLanguage,
                         shape = PillShape,
-                        color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                        color = GlumeSurfaceCard,
+                        border = BorderStroke(1.dp, GlumeBorder),
                         modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                     ) {
                         Row(
@@ -188,94 +189,11 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(text = "🌐", fontSize = 14.sp)
+                            Text(text = "🌐", fontSize = 13.sp)
                             Text(
                                 text = currentLanguage.displayName,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-
-                // 3 Nav Shortcut Chips (Glanceable Navigation)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    Surface(
-                        onClick = {
-                            selectedRole = UserRole.PATIENT
-                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
-                        },
-                        shape = PillShape,
-                        color = if (selectedRole == UserRole.PATIENT) VitalSenseTealContainer else MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, if (selectedRole == UserRole.PATIENT) VitalSenseTealPrimary else MaterialTheme.colorScheme.outline),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(vertical = 6.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("🩺 ", fontSize = 12.sp)
-                            Text(
-                                text = if (currentLanguage == AppLanguage.HINDI) "मरीज़" else "Patients",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (selectedRole == UserRole.PATIENT) VitalSenseTealPrimary else MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                        }
-                    }
-
-                    Surface(
-                        onClick = {
-                            selectedRole = UserRole.ASHA
-                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
-                        },
-                        shape = PillShape,
-                        color = if (selectedRole == UserRole.ASHA) VitalSenseTealContainer else MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, if (selectedRole == UserRole.ASHA) VitalSenseTealPrimary else MaterialTheme.colorScheme.outline),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(vertical = 6.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("🧑‍⚕️ ", fontSize = 12.sp)
-                            Text(
-                                text = if (currentLanguage == AppLanguage.HINDI) "आशा" else "ASHA",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (selectedRole == UserRole.ASHA) VitalSenseTealPrimary else MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                        }
-                    }
-
-                    Surface(
-                        onClick = {
-                            com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(context, "108")
-                        },
-                        shape = PillShape,
-                        color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, GlumeAlertCoral.copy(alpha = 0.5f)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(vertical = 6.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("📞 ", fontSize = 12.sp)
-                            Text(
-                                text = if (currentLanguage == AppLanguage.HINDI) "108 मदद" else "108 Help",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = GlumeAlertCoral
-                                )
+                                color = GlumeTextPrimary
                             )
                         }
                     }
@@ -283,493 +201,989 @@ fun LoginScreen(
             }
         }
 
-        // 2. THE LOW-LITERACY HERO CARD (Clean Presentation Design)
+        // Animated Switch between 4-Role Title Cards and Expanded ID Card View
         item {
-            VitalSenseCard(
-                backgroundColor = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    // Offline Badge
-                    Surface(
-                        shape = PillShape,
-                        color = VitalSenseTealContainer,
-                        border = BorderStroke(1.dp, VitalSenseTealPrimary.copy(alpha = 0.3f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text("🛡️", fontSize = 12.sp)
-                            Text(
-                                text = if (currentLanguage == AppLanguage.HINDI) "100% ऑफ़लाइन सक्षम · Works Zero-Internet" else "100% Offline Ready · Works Zero-Internet",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = VitalSenseTealPrimary
-                                )
-                            )
-                        }
-                    }
-
-                    // Headline (<=6 words, emoji-anchored, large type)
-                    Text(
-                        text = if (currentLanguage == AppLanguage.HINDI) "🫀 आपकी सेहत, एक नज़र में" else "🫀 Your health, at a glance",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 24.sp,
-                            lineHeight = 30.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-
-                    // Spoken-language Subhead
-                    Text(
-                        text = if (currentLanguage == AppLanguage.HINDI)
-                            "ग्रामीण और दूरदराज क्षेत्रों के लिए ऑफ़लाइन टेलीमेडिसिन और स्वास्थ्य निगरानी।"
-                        else
-                            "Zero-internet telemedicine & vital signs tracking designed for rural communities.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-
-                    // Action Buttons (56dp height touch targets)
-                    Row(
+            AnimatedContent(
+                targetState = expandedRole,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(280)) togetherWith fadeOut(animationSpec = tween(200))
+                },
+                label = "RoleExpansionTransition"
+            ) { activeRole ->
+                if (activeRole == null) {
+                    // INITIAL VIEW: 4 Title Cards for Role Selection
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
-                        // 1. Primary CTA: Quick Start / Demo Login
-                        Button(
-                            onClick = {
-                                when (selectedRole) {
-                                    UserRole.PATIENT -> onPatientLogin(samplePatients.first())
-                                    UserRole.ASHA -> onAshaLogin(sampleAshas.first())
-                                    UserRole.DOCTOR -> onDoctorLogin(sampleDoctors.first())
-                                    UserRole.ADMIN -> onAdminLogin()
-                                }
-                            },
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = VitalSenseTealPrimary),
-                            modifier = Modifier.weight(1.2f).height(52.dp)
+                        // Title & Prompt Header
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = Spacing.xs),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
                         ) {
                             Text(
-                                text = if (currentLanguage == AppLanguage.HINDI) "📲 शुरू करें" else "📲 Get Started",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color.White
+                                text = if (currentLanguage == AppLanguage.HINDI) "अपनी भूमिका चुनें" else "Choose Your Role",
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 24.sp
+                                ),
+                                color = GlumeTextPrimary,
+                                textAlign = TextAlign.Center
                             )
-                        }
-
-                        // 2. Secondary Ghost Button: 'Listen to this'
-                        OutlinedButton(
-                            onClick = {
-                                AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
-                                val speech = if (currentLanguage == AppLanguage.HINDI)
-                                    "नमस्ते। वाइटलसेंस में आपका स्वागत है। आपकी सेहत, एक नज़र में। यह ऐप बिना इंटरनेट के भी आपकी धड़कन, ऑक्सीजन और स्वास्थ्य की पूरी देखभाल करता है।"
+                            Text(
+                                text = if (currentLanguage == AppLanguage.HINDI)
+                                    "सेवाओं और अपने स्वास्थ्य डैशबोर्ड तक पहुँचने के लिए एक कार्ड चुनें"
                                 else
-                                    "Welcome to VitalSense. Your health, at a glance. Offline health monitoring for rural families."
-                                AudioGuidanceHelper.speak(context, speech, currentLanguage)
-                            },
-                            shape = PillShape,
-                            border = BorderStroke(1.dp, VitalSenseTealPrimary.copy(alpha = 0.5f)),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surface),
-                            modifier = Modifier.weight(1f).height(52.dp)
+                                    "Select a role card to expand your credentials and sign in",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = GlumeTextSecondary,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        // 4 Interactive Title Cards (2x2 Grid with high contrast elevation & badges)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text("🔊", fontSize = 16.sp)
-                                Text(
-                                    text = if (currentLanguage == AppLanguage.HINDI) "इसे सुनें" else "Listen",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = VitalSenseTealPrimary
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 3. 4-Role Selector Cards (2x2 Grid)
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    RoleCard(
-                        role = UserRole.PATIENT,
-                        title = strings.rolePatient,
-                        desc = strings.rolePatientDesc,
-                        icon = "🧑",
-                        isSelected = selectedRole == UserRole.PATIENT,
-                        onClick = {
-                            pendingSelectedRole = UserRole.PATIENT
-                            showRoleConfirmDialog = true
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                    RoleCard(
-                        role = UserRole.ASHA,
-                        title = strings.roleAsha,
-                        desc = strings.roleAshaDesc,
-                        icon = "🩺",
-                        isSelected = selectedRole == UserRole.ASHA,
-                        onClick = {
-                            pendingSelectedRole = UserRole.ASHA
-                            showRoleConfirmDialog = true
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    RoleCard(
-                        role = UserRole.DOCTOR,
-                        title = strings.roleDoctor,
-                        desc = strings.roleDoctorDesc,
-                        icon = "👨‍⚕️",
-                        isSelected = selectedRole == UserRole.DOCTOR,
-                        onClick = {
-                            pendingSelectedRole = UserRole.DOCTOR
-                            showRoleConfirmDialog = true
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                    RoleCard(
-                        role = UserRole.ADMIN,
-                        title = strings.roleAdmin,
-                        desc = strings.roleAdminDesc,
-                        icon = "🛡️",
-                        isSelected = selectedRole == UserRole.ADMIN,
-                        onClick = {
-                            pendingSelectedRole = UserRole.ADMIN
-                            showRoleConfirmDialog = true
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-
-        // 4. Role Credentials Form & 1-Tap Demo Login
-        item {
-            VitalSenseCard(
-                backgroundColor = GlumeSurfaceCard
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    Text(
-                        text = when (selectedRole) {
-                            UserRole.PATIENT -> strings.patientSignIn
-                            UserRole.ASHA -> strings.ashaSignIn
-                            UserRole.DOCTOR -> strings.doctorSignIn
-                            UserRole.ADMIN -> strings.adminSignIn
-                        },
-                        style = MaterialTheme.typography.titleLarge,
-                        color = GlumeTextPrimary
-                    )
-
-                    when (selectedRole) {
-                        UserRole.PATIENT -> {
-                            VitalSenseTextField(
-                                value = phoneInput,
-                                onValueChange = { phoneInput = it },
-                                label = strings.mobileNumber,
-                                placeholder = "+91 98111 22334"
+                            RoleTitleCard(
+                                title = if (currentLanguage == AppLanguage.HINDI) "मरीज़" else "Patient",
+                                roleTag = "PATIENT PORTAL",
+                                subtitle = if (currentLanguage == AppLanguage.HINDI) "पर्चे, ओपीडी टोकन और अपॉइंटमेंट" else "Prescriptions, OPD tokens & consults",
+                                avatarEmoji = "🧑",
+                                accentColor = NagarSevaPrimaryVariant,
+                                onClick = {
+                                    AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                    expandedRole = UserRole.PATIENT
+                                    isSignUpMode = false
+                                },
+                                modifier = Modifier.weight(1f)
                             )
-                            VitalSenseTextField(
-                                value = ashaIdInput,
-                                onValueChange = { ashaIdInput = it },
-                                label = strings.ashaHelperIdOptional,
-                                placeholder = "e.g. ASHA-7701"
+                            RoleTitleCard(
+                                title = if (currentLanguage == AppLanguage.HINDI) "डॉक्टर" else "Doctor",
+                                roleTag = "CLINICAL DESK",
+                                subtitle = if (currentLanguage == AppLanguage.HINDI) "मरीज़ कतार, ई-पर्चे और नैदानिक समीक्षा" else "Patient queues, e-prescriptions & review",
+                                avatarEmoji = "👨‍⚕️",
+                                accentColor = NagarSevaPrimary,
+                                onClick = {
+                                    AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                    expandedRole = UserRole.DOCTOR
+                                    isSignUpMode = false
+                                },
+                                modifier = Modifier.weight(1f)
                             )
-                            VitalSenseButton(
-                                text = strings.logInAsPatient,
-                                onClick = { onPatientLogin(samplePatients.first()) },
-                                style = ButtonStyle.PRIMARY
-                            )
-
-                            OutlinedButton(
-                                onClick = { showAshaQrClaimDialog = true },
-                                modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp),
-                                shape = PillShape,
-                                border = BorderStroke(1.dp, GlumePrimaryPurple)
-                            ) {
-                                Text(
-                                    text = "🪪 " + (if (currentLanguage == AppLanguage.HINDI) "आशा स्वास्थ्य कार्ड स्कैन करें (QR Claim)" else "Scan ASHA Health Card (QR Claim)"),
-                                    color = GlumePrimaryPurpleLight,
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                                )
-                            }
-
-                            // 1-Tap Demo Logins for Evaluators
-                            Text(
-                                text = strings.quickDemoLogin,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = GlumeTextSecondary
-                            )
-                            samplePatients.forEach { patient ->
-                                Surface(
-                                    onClick = { onPatientLogin(patient) },
-                                    shape = PillShape,
-                                    color = GlumeSurfaceElevated,
-                                    border = BorderStroke(1.dp, GlumeBorder),
-                                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "${patient.name} (${patient.villageName})",
-                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = GlumeTextPrimary
-                                        )
-                                        SeverityBadge(severity = patient.currentRiskLevel)
-                                    }
-                                }
-                            }
                         }
 
-                        UserRole.ASHA -> {
-                            VitalSenseTextField(
-                                value = ashaIdInput,
-                                onValueChange = { ashaIdInput = it },
-                                label = strings.uniqueAshaId,
-                                placeholder = "e.g. ASHA-7701"
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            RoleTitleCard(
+                                title = if (currentLanguage == AppLanguage.HINDI) "आशा कार्यकर्ता" else "ASHA Worker",
+                                roleTag = "FIELD OPS",
+                                subtitle = if (currentLanguage == AppLanguage.HINDI) "घर-घर स्वास्थ्य सर्वे, ऑफलाइन सिंक व SOS" else "Door-to-door vitals, offline sync & SOS",
+                                avatarEmoji = "🩺",
+                                accentColor = NagarSevaStatusProgress,
+                                onClick = {
+                                    AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                    expandedRole = UserRole.ASHA
+                                    isSignUpMode = false
+                                },
+                                modifier = Modifier.weight(1f)
                             )
-                            VitalSenseTextField(
-                                value = pinInput,
-                                onValueChange = { pinInput = it },
-                                label = strings.securityPin,
-                                placeholder = "••••",
-                                visualTransformation = PasswordVisualTransformation()
+                            RoleTitleCard(
+                                title = if (currentLanguage == AppLanguage.HINDI) "व्यवस्थापक" else "Administrator",
+                                roleTag = "DISTRICT COMMAND",
+                                subtitle = if (currentLanguage == AppLanguage.HINDI) "रोग निगरानी, बिस्तर/OT डेस्क व दवा पुनःपूर्ति" else "Surveillance, bed/OT roster & restock",
+                                avatarEmoji = "🛡️",
+                                accentColor = GlumeAlertCoral,
+                                onClick = {
+                                    AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                    expandedRole = UserRole.ADMIN
+                                    isSignUpMode = false
+                                },
+                                modifier = Modifier.weight(1f)
                             )
-                            VitalSenseButton(
-                                text = strings.logInAsAsha,
-                                onClick = { onAshaLogin(sampleAshas.first()) },
-                                style = ButtonStyle.PRIMARY
-                            )
-
-                            Text(
-                                text = strings.quickDemoLogin,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = GlumeTextSecondary
-                            )
-                            sampleAshas.forEach { asha ->
-                                Surface(
-                                    onClick = { onAshaLogin(asha) },
-                                    shape = PillShape,
-                                    color = GlumeSurfaceElevated,
-                                    border = BorderStroke(1.dp, GlumeBorder),
-                                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "${asha.name} (${asha.ashaUniqueId})",
-                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = GlumeTextPrimary
-                                        )
-                                        Text(
-                                            text = "${asha.activePatientCount} patients",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = GlumeTextSecondary
-                                        )
-                                    }
-                                }
-                            }
                         }
 
-                        UserRole.DOCTOR -> {
-                            VitalSenseTextField(
-                                value = doctorEmailInput,
-                                onValueChange = { doctorEmailInput = it },
-                                label = strings.doctorEmail,
-                                placeholder = "dr.rajesh@vitalsense.org"
-                            )
-                            VitalSenseTextField(
-                                value = doctorPasswordInput,
-                                onValueChange = { doctorPasswordInput = it },
-                                label = strings.password,
-                                placeholder = "••••••••",
-                                visualTransformation = PasswordVisualTransformation()
-                            )
-                            VitalSenseButton(
-                                text = strings.logInAsDoctor,
-                                onClick = { onDoctorLogin(sampleDoctors.first()) },
-                                style = ButtonStyle.PRIMARY
-                            )
-
-                            Text(
-                                text = strings.quickDemoLogin,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = GlumeTextSecondary
-                            )
-                            sampleDoctors.forEach { doc ->
-                                Surface(
-                                    onClick = { onDoctorLogin(doc) },
-                                    shape = PillShape,
-                                    color = GlumeSurfaceElevated,
-                                    border = BorderStroke(1.dp, GlumeBorder),
-                                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = doc.name,
-                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = GlumeTextPrimary
-                                        )
-                                        Text(
-                                            text = doc.specialty.displayName,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = GlumePrimaryPurpleLight
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        UserRole.ADMIN -> {
-                            VitalSenseTextField(
-                                value = adminPasscodeInput,
-                                onValueChange = { adminPasscodeInput = it },
-                                label = strings.adminPasscode,
-                                placeholder = "ADMIN-RAMPUR-2026",
-                                visualTransformation = PasswordVisualTransformation()
-                            )
-                            VitalSenseButton(
-                                text = strings.logInAsAdmin,
-                                onClick = onAdminLogin,
-                                style = ButtonStyle.PRIMARY
-                            )
-
-                            Text(
-                                text = strings.quickDemoLogin,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = GlumeTextSecondary
-                            )
+                        // Bottom Help & Zero-Internet Indicator
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = Spacing.xs),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Surface(
-                                onClick = onAdminLogin,
                                 shape = PillShape,
-                                color = GlumeSurfaceElevated,
-                                border = BorderStroke(1.dp, GlumeBorder),
-                                modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
+                                color = NagarSevaStatusNormalContainer,
+                                border = BorderStroke(1.dp, NagarSevaStatusNormal.copy(alpha = 0.3f))
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
+                                    Text("⚡", fontSize = 11.sp)
                                     Text(
-                                        text = "District Chief Medical Officer (Rampur)",
-                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                        color = GlumeTextPrimary
-                                    )
-                                    Text(
-                                        text = "Full Access",
+                                        text = if (currentLanguage == AppLanguage.HINDI) "ऑफ़लाइन सक्षम" else "Zero-Internet Ready",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = GlumeSuccessText
+                                        color = NagarSevaStatusNormalText
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = {
+                                    com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(context, "108")
+                                },
+                                shape = PillShape,
+                                color = GlumeAlertContainer,
+                                border = BorderStroke(1.dp, GlumeAlertCoral.copy(alpha = 0.4f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text("📞", fontSize = 11.sp)
+                                    Text(
+                                        text = "108 Ambulance",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeAlertCoral
                                     )
                                 }
                             }
                         }
                     }
-                }
-            }
-        }
+                } else {
+                    // DYNAMICALLY EXPANDED ID CARD VIEW
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
+                        // Change Role Back Button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                    expandedRole = null
+                                },
+                                shape = PillShape,
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back",
+                                        tint = NagarSevaPrimary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = if (currentLanguage == AppLanguage.HINDI) "← भूमिका बदलें" else "← Change Role",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = NagarSevaPrimary
+                                    )
+                                }
+                            }
 
-        // 5. Offline resilience badge
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = strings.offlineBanner,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = GlumeTextSecondary
-                )
+                            Surface(
+                                shape = PillShape,
+                                color = when (activeRole) {
+                                    UserRole.PATIENT -> NagarSevaPrimaryVariant.copy(alpha = 0.12f)
+                                    UserRole.DOCTOR -> NagarSevaPrimary.copy(alpha = 0.12f)
+                                    UserRole.ASHA -> NagarSevaStatusProgress.copy(alpha = 0.12f)
+                                    UserRole.ADMIN -> GlumeAlertCoral.copy(alpha = 0.12f)
+                                }
+                            ) {
+                                Text(
+                                    text = when (activeRole) {
+                                        UserRole.PATIENT -> "PATIENT ID"
+                                        UserRole.DOCTOR -> "DOCTOR ID"
+                                        UserRole.ASHA -> "ASHA CREDENTIAL"
+                                        UserRole.ADMIN -> "ADMINISTRATOR ID"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = when (activeRole) {
+                                        UserRole.PATIENT -> NagarSevaPrimaryVariant
+                                        UserRole.DOCTOR -> NagarSevaPrimary
+                                        UserRole.ASHA -> NagarSevaStatusProgress
+                                        UserRole.ADMIN -> GlumeAlertCoral
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+
+                        // Physical Credential ID Card Container (Horizontal Layout: Left ID Badge, Right Sign-In)
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(8.dp, shape = RoundedCornerShape(20.dp), spotColor = Color.Black.copy(alpha = 0.08f)),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = GlumeSurfaceCard),
+                            border = BorderStroke(1.5.dp, GlumeBorder)
+                        ) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                // Top Lanyard Hole Accent
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(width = 36.dp, height = 6.dp)
+                                            .clip(PillShape)
+                                            .background(GlumeBorder)
+                                    )
+                                }
+
+                                // Main Horizontal ID Split
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
+                                    // LEFT COLUMN: Physical Credential ID Badge
+                                    PhysicalCredentialBadge(
+                                        role = activeRole,
+                                        language = currentLanguage,
+                                        samplePatient = samplePatients.first(),
+                                        sampleDoctor = sampleDoctors.first(),
+                                        sampleAsha = sampleAshas.first(),
+                                        modifier = Modifier.weight(0.38f)
+                                    )
+
+                                    // Vertical Divider
+                                    Box(
+                                        modifier = Modifier
+                                            .width(1.dp)
+                                            .fillMaxHeight()
+                                            .background(GlumeBorder)
+                                    )
+
+                                    // RIGHT COLUMN: Role-Specific Sign-In Options (On the same horizontal level)
+                                    Column(
+                                        modifier = Modifier.weight(0.62f),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        when (activeRole) {
+                                            UserRole.PATIENT -> {
+                                                PatientSignInOptions(
+                                                    language = currentLanguage,
+                                                    emailOrPhone = patientEmailOrPhone,
+                                                    onEmailOrPhoneChange = { patientEmailOrPhone = it },
+                                                    password = patientPassword,
+                                                    onPasswordChange = { patientPassword = it },
+                                                    isSignUpMode = isSignUpMode,
+                                                    onToggleSignUp = { isSignUpMode = !isSignUpMode },
+                                                    onSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onPatientLogin(samplePatients.first())
+                                                    },
+                                                    onGoogleSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onPatientLogin(samplePatients.first())
+                                                    },
+                                                    onDemoSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onPatientLogin(samplePatients.first())
+                                                    },
+                                                    onScanQrClaim = { showAshaQrClaimDialog = true }
+                                                )
+                                            }
+
+                                            UserRole.DOCTOR -> {
+                                                DoctorSignInOptions(
+                                                    language = currentLanguage,
+                                                    doctorId = doctorIdInput,
+                                                    onDoctorIdChange = { doctorIdInput = it },
+                                                    password = doctorPassword,
+                                                    onPasswordChange = { doctorPassword = it },
+                                                    onSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onDoctorLogin(sampleDoctors.first())
+                                                    },
+                                                    onDemoSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onDoctorLogin(sampleDoctors.first())
+                                                    }
+                                                )
+                                            }
+
+                                            UserRole.ASHA -> {
+                                                AshaSignInOptions(
+                                                    language = currentLanguage,
+                                                    ashaId = ashaIdInput,
+                                                    onAshaIdChange = { ashaIdInput = it },
+                                                    pin = ashaPinInput,
+                                                    onPinChange = { ashaPinInput = it },
+                                                    onSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onAshaLogin(sampleAshas.first())
+                                                    },
+                                                    onDemoSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onAshaLogin(sampleAshas.first())
+                                                    }
+                                                )
+                                            }
+
+                                            UserRole.ADMIN -> {
+                                                AdminSignInOptions(
+                                                    language = currentLanguage,
+                                                    email = adminEmailInput,
+                                                    onEmailChange = { adminEmailInput = it },
+                                                    password = adminPasswordInput,
+                                                    onPasswordChange = { adminPasswordInput = it },
+                                                    isSignUpMode = isSignUpMode,
+                                                    onToggleSignUp = { isSignUpMode = !isSignUpMode },
+                                                    onSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onAdminLogin()
+                                                    },
+                                                    onDemoSignIn = {
+                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        onAdminLogin()
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+// -------------------------------------------------------------------------------------
+// 1. Role Title Card (Initial 4-Card Selector)
+// -------------------------------------------------------------------------------------
 @Composable
-private fun RoleCard(
-    role: UserRole,
+private fun RoleTitleCard(
     title: String,
-    desc: String,
-    icon: String,
-    isSelected: Boolean,
+    roleTag: String,
+    subtitle: String,
+    avatarEmoji: String,
+    accentColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.defaultMinSize(minHeight = 90.dp),
-        shape = CardShape,
-        color = if (isSelected) GlumePrimaryPurpleContainer else GlumeSurfaceCard,
-        shadowElevation = 0.dp,
-        border = if (isSelected) BorderStroke(1.5.dp, GlumePrimaryPurple) else BorderStroke(1.dp, GlumeBorder)
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 150.dp)
+            .clickable(onClick = onClick)
+            .touchSpring(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = GlumeSurfaceCard),
+        border = BorderStroke(1.dp, GlumeBorder),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing.sm),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = icon, style = MaterialTheme.typography.titleLarge)
-                if (isSelected) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(GlumePrimaryPurple),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "✓", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    }
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(accentColor.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = avatarEmoji, fontSize = 24.sp)
+                }
+
+                Surface(
+                    shape = PillShape,
+                    color = accentColor.copy(alpha = 0.12f)
+                ) {
+                    Text(
+                        text = roleTag,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.sp
+                        ),
+                        color = accentColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
                 }
             }
-            Column {
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = if (isSelected) GlumePrimaryPurpleLight else GlumeTextPrimary
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = desc,
-                    style = MaterialTheme.typography.labelSmall,
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                     color = GlumeTextSecondary,
-                    maxLines = 1
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Enter →",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = accentColor
+                )
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------------------------------
+// 2. Physical Credential ID Badge (Left Column of Expanded View)
+// -------------------------------------------------------------------------------------
+@Composable
+private fun PhysicalCredentialBadge(
+    role: UserRole,
+    language: AppLanguage,
+    samplePatient: Patient,
+    sampleDoctor: Doctor,
+    sampleAsha: AshaWorker,
+    modifier: Modifier = Modifier
+) {
+    val accentColor = when (role) {
+        UserRole.PATIENT -> NagarSevaPrimaryVariant
+        UserRole.DOCTOR -> NagarSevaPrimary
+        UserRole.ASHA -> NagarSevaStatusProgress
+        UserRole.ADMIN -> GlumeAlertCoral
+    }
+
+    val badgeName = when (role) {
+        UserRole.PATIENT -> samplePatient.name
+        UserRole.DOCTOR -> sampleDoctor.name
+        UserRole.ASHA -> sampleAsha.name
+        UserRole.ADMIN -> "Dr. V. K. Gupta"
+    }
+
+    val badgeId = when (role) {
+        UserRole.PATIENT -> "ABHA-${samplePatient.id.uppercase()}"
+        UserRole.DOCTOR -> sampleDoctor.specialty.displayName
+        UserRole.ASHA -> sampleAsha.ashaUniqueId
+        UserRole.ADMIN -> "DIRECTOR HEALTH"
+    }
+
+    val avatarEmoji = when (role) {
+        UserRole.PATIENT -> "🧑"
+        UserRole.DOCTOR -> "👨‍⚕️"
+        UserRole.ASHA -> "🩺"
+        UserRole.ADMIN -> "🛡️"
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp)),
+        color = GlumeSurfaceElevated,
+        border = BorderStroke(1.dp, GlumeBorder)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Header: Official Seal Label
+            Text(
+                text = "SMART HEALTH ID",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 8.5.sp,
+                    letterSpacing = 0.5.sp
+                ),
+                color = GlumeTextSecondary
+            )
+
+            // Avatar Frame with Verified Badge
+            Box(contentAlignment = Alignment.BottomEnd) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(accentColor.copy(alpha = 0.2f), accentColor.copy(alpha = 0.05f))
+                            )
+                        )
+                        .padding(2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = avatarEmoji, fontSize = 30.sp)
+                }
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(NagarSevaStatusNormal),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "✓", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            // Credential Name & Role
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = badgeName,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                    color = GlumeTextPrimary,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Surface(
+                    shape = PillShape,
+                    color = accentColor.copy(alpha = 0.12f)
+                ) {
+                    Text(
+                        text = when (role) {
+                            UserRole.PATIENT -> "PATIENT"
+                            UserRole.DOCTOR -> "CHIEF DOCTOR"
+                            UserRole.ASHA -> "ASHA LEAD"
+                            UserRole.ADMIN -> "ADMIN"
+                        },
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 8.sp),
+                        color = accentColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+                Text(
+                    text = badgeId,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontFamily = FontFamily.Monospace),
+                    color = GlumeTextSecondary,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Simulated Barcode / Microchip Graphic
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(0.9f),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    repeat(14) { index ->
+                        Box(
+                            modifier = Modifier
+                                .width(if (index % 3 == 0) 2.5.dp else 1.2.dp)
+                                .height(16.dp)
+                                .background(GlumeTextSecondary.copy(alpha = 0.6f))
+                        )
+                    }
+                }
+                Text(
+                    text = "SECURE VERIFIED",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.5.sp, fontWeight = FontWeight.Bold),
+                    color = NagarSevaStatusNormalText
+                )
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------------------------------
+// 3. Role-Specific Sign-In Options (Right Column)
+// -------------------------------------------------------------------------------------
+
+// --- Patient Options ---
+@Composable
+private fun PatientSignInOptions(
+    language: AppLanguage,
+    emailOrPhone: String,
+    onEmailOrPhoneChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    isSignUpMode: Boolean,
+    onToggleSignUp: () -> Unit,
+    onSignIn: () -> Unit,
+    onGoogleSignIn: () -> Unit,
+    onDemoSignIn: () -> Unit,
+    onScanQrClaim: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = if (isSignUpMode) "Patient Registration" else "Patient Sign In",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
+            color = GlumeTextPrimary
+        )
+
+        OutlinedTextField(
+            value = emailOrPhone,
+            onValueChange = onEmailOrPhoneChange,
+            label = { Text(if (language == AppLanguage.HINDI) "मोबाइल / ईमेल" else "Mobile or Email", fontSize = 11.sp) },
+            placeholder = { Text("9811122334 / patient@vitalsense.org", fontSize = 11.sp) },
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            label = { Text(if (language == AppLanguage.HINDI) "पासवर्ड" else "Password", fontSize = 11.sp) },
+            placeholder = { Text("••••••••", fontSize = 11.sp) },
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Button(
+            onClick = onSignIn,
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimaryVariant),
+            modifier = Modifier.fillMaxWidth().height(42.dp)
+        ) {
+            Text(
+                text = if (isSignUpMode) "Create Patient Account" else "Sign In with Password",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+        }
+
+        // Google Sign In
+        OutlinedButton(
+            onClick = onGoogleSignIn,
+            shape = PillShape,
+            border = BorderStroke(1.dp, GlumeBorder),
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = GlumeSurfaceCard),
+            modifier = Modifier.fillMaxWidth().height(40.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text("🌐", fontSize = 14.sp)
+                Text(
+                    text = "Sign in with Google",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
+                )
+            }
+        }
+
+        // Instant Demo Sign In (1-Tap)
+        Button(
+            onClick = onDemoSignIn,
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaStatusNormal),
+            modifier = Modifier.fillMaxWidth().height(38.dp)
+        ) {
+            Text(
+                text = "⚡ Instant Demo Sign In",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+        }
+
+        // QR Claim Button
+        OutlinedButton(
+            onClick = onScanQrClaim,
+            shape = PillShape,
+            border = BorderStroke(1.dp, NagarSevaPrimary.copy(alpha = 0.5f)),
+            modifier = Modifier.fillMaxWidth().height(36.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+        ) {
+            Text(
+                text = "🪪 Scan ASHA Card (QR Claim)",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = NagarSevaPrimary
+            )
+        }
+
+        // Sign Up Toggle
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (isSignUpMode) "Already have an account? " else "New to VitalSense? ",
+                style = MaterialTheme.typography.labelSmall,
+                color = GlumeTextSecondary
+            )
+            Text(
+                text = if (isSignUpMode) "Sign In" else "Sign Up",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = NagarSevaPrimaryVariant,
+                modifier = Modifier.clickable(onClick = onToggleSignUp)
+            )
+        }
+    }
+}
+
+// --- Doctor Options ---
+@Composable
+private fun DoctorSignInOptions(
+    language: AppLanguage,
+    doctorId: String,
+    onDoctorIdChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    onSignIn: () -> Unit,
+    onDemoSignIn: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Doctor Consultation Desk",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
+            color = GlumeTextPrimary
+        )
+
+        OutlinedTextField(
+            value = doctorId,
+            onValueChange = onDoctorIdChange,
+            label = { Text("Unique Doctor ID", fontSize = 11.sp) },
+            placeholder = { Text("e.g. DOC-101", fontSize = 11.sp) },
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            label = { Text("Password", fontSize = 11.sp) },
+            placeholder = { Text("••••••••", fontSize = 11.sp) },
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Button(
+            onClick = onSignIn,
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
+            modifier = Modifier.fillMaxWidth().height(42.dp)
+        ) {
+            Text(
+                text = "Sign In with Doctor ID",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+        }
+
+        // Instant Demo Sign In (1-Tap)
+        Button(
+            onClick = onDemoSignIn,
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaStatusNormal),
+            modifier = Modifier.fillMaxWidth().height(38.dp)
+        ) {
+            Text(
+                text = "⚡ Instant Demo Sign In",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+        }
+    }
+}
+
+// --- ASHA Options ---
+@Composable
+private fun AshaSignInOptions(
+    language: AppLanguage,
+    ashaId: String,
+    onAshaIdChange: (String) -> Unit,
+    pin: String,
+    onPinChange: (String) -> Unit,
+    onSignIn: () -> Unit,
+    onDemoSignIn: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "ASHA Field Worker Desk",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
+            color = GlumeTextPrimary
+        )
+
+        OutlinedTextField(
+            value = ashaId,
+            onValueChange = onAshaIdChange,
+            label = { Text("Unique ASHA ID", fontSize = 11.sp) },
+            placeholder = { Text("e.g. ASHA-401", fontSize = 11.sp) },
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = pin,
+            onValueChange = onPinChange,
+            label = { Text("PIN / Passcode", fontSize = 11.sp) },
+            placeholder = { Text("••••", fontSize = 11.sp) },
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Button(
+            onClick = onSignIn,
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaStatusProgress),
+            modifier = Modifier.fillMaxWidth().height(42.dp)
+        ) {
+            Text(
+                text = "Sign In with ASHA ID",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+        }
+
+        // Instant Demo Sign In (1-Tap)
+        Button(
+            onClick = onDemoSignIn,
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaStatusNormal),
+            modifier = Modifier.fillMaxWidth().height(38.dp)
+        ) {
+            Text(
+                text = "⚡ Instant Demo Sign In",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+        }
+    }
+}
+
+// --- Admin Options ---
+@Composable
+private fun AdminSignInOptions(
+    language: AppLanguage,
+    email: String,
+    onEmailChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    isSignUpMode: Boolean,
+    onToggleSignUp: () -> Unit,
+    onSignIn: () -> Unit,
+    onDemoSignIn: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = if (isSignUpMode) "Request Admin Access" else "District Command Login",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
+            color = GlumeTextPrimary
+        )
+
+        OutlinedTextField(
+            value = email,
+            onValueChange = onEmailChange,
+            label = { Text("Official Gov Email", fontSize = 11.sp) },
+            placeholder = { Text("admin@vitalsense.gov.in", fontSize = 11.sp) },
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            label = { Text("Passcode", fontSize = 11.sp) },
+            placeholder = { Text("••••••••", fontSize = 11.sp) },
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Button(
+            onClick = onSignIn,
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
+            modifier = Modifier.fillMaxWidth().height(42.dp)
+        ) {
+            Text(
+                text = if (isSignUpMode) "Submit Access Request" else "Sign In to Command",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+        }
+
+        // Instant Demo Sign In (1-Tap)
+        Button(
+            onClick = onDemoSignIn,
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaStatusNormal),
+            modifier = Modifier.fillMaxWidth().height(38.dp)
+        ) {
+            Text(
+                text = "⚡ Instant Demo Sign In",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+        }
+
+        // Sign Up Toggle
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (isSignUpMode) "Already have admin access? " else "Need official access? ",
+                style = MaterialTheme.typography.labelSmall,
+                color = GlumeTextSecondary
+            )
+            Text(
+                text = if (isSignUpMode) "Sign In" else "Request Access",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = GlumeAlertCoral,
+                modifier = Modifier.clickable(onClick = onToggleSignUp)
+            )
         }
     }
 }

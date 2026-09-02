@@ -20,6 +20,8 @@ import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.asha.components.RegisterPatientDialog
 import com.vitalsense.app.feature.asha.components.SendNoticeDialog
+import com.vitalsense.app.core.util.DismissedNoticeHelper
+import com.vitalsense.app.core.util.AudioGuidanceHelper
 
 @Composable
 fun AshaHomeScreen(
@@ -49,8 +51,18 @@ fun AshaHomeScreen(
     val visitedPatients = patients.count { it.lastVisitDate.isNotBlank() && it.lastVisitDate != "Never" }
     val followUpFraction = if (totalPatients > 0) visitedPatients.toFloat() / totalPatients else 1.0f
 
-    val emergencySosAlerts = notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT }
-    val adminAdvisories = notices.filter { it.senderRole == UserRole.ADMIN }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    var clearedSosIds by remember { mutableStateOf(DismissedNoticeHelper.getClearedSosIds(context)) }
+    var dismissedAdvisoryIds by remember { mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "asha")) }
+    var sosToClear by remember { mutableStateOf<BroadcastNotice?>(null) }
+
+    val emergencySosAlerts = remember(notices, clearedSosIds) {
+        notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT && it.id !in clearedSosIds }
+    }
+    val adminAdvisories = remember(notices, dismissedAdvisoryIds) {
+        notices.filter { it.senderRole == UserRole.ADMIN && it.id !in dismissedAdvisoryIds }
+    }
 
     LazyColumn(
         modifier = modifier
@@ -445,11 +457,31 @@ fun AshaHomeScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = GlumeTextPrimary
                         )
-                        Text(
-                            text = "From: ${sos.senderName} · Village: ${sos.targetVillage ?: "General"}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = GlumeTextSecondary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "From: ${sos.senderName} · Village: ${sos.targetVillage ?: "General"}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Button(
+                                onClick = { sosToClear = sos },
+                                shape = PillShape,
+                                colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Mark Emergency Clear",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -478,11 +510,32 @@ fun AshaHomeScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = GlumeTextPrimary
                         )
-                        Text(
-                            text = "${strings.issuedBy} ${notice.senderName} (${notice.senderRole.name})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = GlumeTextSecondary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${strings.issuedBy} ${notice.senderName} (${notice.senderRole.name})",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(
+                                onClick = {
+                                    DismissedNoticeHelper.dismissAdvisory(context, "asha", notice.id)
+                                    dismissedAdvisoryIds = dismissedAdvisoryIds + notice.id
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                shape = PillShape
+                            ) {
+                                Text(
+                                    text = "✕ Dismiss",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = NagarSevaPrimary
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -518,6 +571,53 @@ fun AshaHomeScreen(
                 onSendNotice(notice)
                 showSendNoticeDialog = false
                 successMessage = "✓ Broadcast advisory sent to village!"
+            }
+        )
+    }
+
+    if (sosToClear != null) {
+        AlertDialog(
+            onDismissRequest = { sosToClear = null },
+            title = {
+                Text(
+                    text = "Confirm Emergency Resolved",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure this emergency alert for ${sosToClear?.senderName} has been addressed and the patient is safe?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = GlumeTextSecondary
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val id = sosToClear!!.id
+                        DismissedNoticeHelper.clearSos(context, id)
+                        clearedSosIds = clearedSosIds + id
+                        sosToClear = null
+                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint),
+                    shape = PillShape
+                ) {
+                    Text(
+                        text = "Yes, Mark Clear & Dismiss",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { sosToClear = null },
+                    shape = PillShape
+                ) {
+                    Text("Cancel", color = GlumeTextSecondary)
+                }
             }
         )
     }

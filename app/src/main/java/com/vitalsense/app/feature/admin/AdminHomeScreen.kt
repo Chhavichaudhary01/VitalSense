@@ -22,6 +22,10 @@ import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.admin.components.DistrictOutbreakMapView
+import com.vitalsense.app.core.util.DismissedNoticeHelper
+import com.vitalsense.app.core.util.AudioGuidanceHelper
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.math.max
 
 @Composable
@@ -47,7 +51,24 @@ fun AdminHomeScreen(
     var selectedMapVillage by remember { mutableStateOf<Village?>(villages.firstOrNull()) }
     var isFormError by remember { mutableStateOf(false) }
 
-    val adminIssuedDirectives = notices.filter { it.senderRole == UserRole.ADMIN }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var dismissedDirectiveIds by remember {
+        mutableStateOf(DismissedNoticeHelper.getDismissedDirectiveIds(context))
+    }
+    var dismissedRestockReminderIds by remember {
+        mutableStateOf(DismissedNoticeHelper.getDismissedRestockReminderIds(context))
+    }
+
+    val adminIssuedDirectives = remember(notices, dismissedDirectiveIds) {
+        notices.filter { it.senderRole == UserRole.ADMIN && it.id !in dismissedDirectiveIds }
+    }
+    val doctorRestockReminders = remember(notices, dismissedRestockReminderIds) {
+        notices.filter {
+            it.senderRole == UserRole.DOCTOR &&
+                (it.title.contains("Restock Reminder", ignoreCase = true) || it.title.contains("Restock", ignoreCase = true)) &&
+                it.id !in dismissedRestockReminderIds
+        }
+    }
     val totalActiveCases = villages.sumOf { it.activeCases }
     val totalPopulation = villages.sumOf { it.population }
     val outbreakCount = villages.count { it.highRiskCount > 0 }
@@ -76,6 +97,141 @@ fun AdminHomeScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = GlumeTextSecondary
                 )
+            }
+        }
+
+        // 1.1 Doctor Restock Reminders Alert (High-Priority Action Required)
+        if (doctorRestockReminders.isNotEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .touchSpring(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = NagarSevaStatusProgressContainer),
+                    border = BorderStroke(1.5.dp, NagarSevaStatusProgress.copy(alpha = 0.5f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("🔔", fontSize = 20.sp)
+                                Column {
+                                    Text(
+                                        text = "Doctor Restock Reminders (${doctorRestockReminders.size})",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeTextPrimary
+                                    )
+                                    Text(
+                                        text = "Doctors have flagged low dispensary medicines",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextSecondary
+                                    )
+                                }
+                            }
+                            Surface(shape = PillShape, color = NagarSevaStatusProgress) {
+                                Text(
+                                    text = "RESTOCK",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+
+                        doctorRestockReminders.forEach { reminder ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = GlumeSurfaceCard),
+                                border = BorderStroke(1.dp, GlumeBorder)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = reminder.title,
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = GlumeTextPrimary,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(
+                                            text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(reminder.timestamp)),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = GlumeTextSecondary
+                                        )
+                                    }
+                                    Text(
+                                        text = reminder.message,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextPrimary
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Button(
+                                            onClick = onNavigateToDispensary,
+                                            shape = PillShape,
+                                            colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = "📦 Restock Now",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        OutlinedButton(
+                                            onClick = {
+                                                DismissedNoticeHelper.dismissRestockReminder(context, reminder.id)
+                                                dismissedRestockReminderIds = dismissedRestockReminderIds + reminder.id
+                                                AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                            },
+                                            shape = PillShape,
+                                            border = BorderStroke(1.dp, GlumeBorder),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = "✕ Dismiss Reminder",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = GlumeTextSecondary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -422,11 +578,32 @@ fun AdminHomeScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = GlumeTextPrimary
                         )
-                        Text(
-                            text = "Target: ${directive.targetVillage ?: "All Villages"} · Sender: ${directive.senderName}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = GlumeTextSecondary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Target: ${directive.targetVillage ?: "All Villages"} · Sender: ${directive.senderName}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(
+                                onClick = {
+                                    DismissedNoticeHelper.dismissDirective(context, directive.id)
+                                    dismissedDirectiveIds = dismissedDirectiveIds + directive.id
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                shape = PillShape
+                            ) {
+                                Text(
+                                    text = "✕ Dismiss",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = NagarSevaPrimary
+                                )
+                            }
+                        }
                     }
                 }
             }

@@ -60,6 +60,12 @@ class DoctorViewModel @Inject constructor(
         _selectedCase.value = null
     }
 
+    fun sendNotice(notice: BroadcastNotice) {
+        viewModelScope.launch {
+            repository.sendNotice(notice)
+        }
+    }
+
     /**
      * Submit free-text medical response attached to the case (§2.2, §4.2, §4.4)
      */

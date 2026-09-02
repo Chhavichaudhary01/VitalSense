@@ -27,6 +27,7 @@ import com.vitalsense.app.feature.patient.components.HealthCardDialog
 import com.vitalsense.app.feature.patient.components.GovernmentSchemesDialog
 import com.vitalsense.app.feature.patient.components.SensorPairingDialog
 import com.vitalsense.app.feature.patient.components.SmartEmergencyDialog
+import com.vitalsense.app.core.util.DismissedNoticeHelper
 
 @Composable
 fun PatientHomeScreen(
@@ -69,11 +70,18 @@ fun PatientHomeScreen(
     // Toggle to evaluate Glume Dark Mode vs Sunlight High-Contrast Mode for Patient
     var isSunlightMode by remember { mutableStateOf(false) }
 
-    val adminAdvisories = notices.filter {
-        it.senderRole == UserRole.ADMIN || it.targetRole == "ALL" || it.targetRole == "PATIENT"
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    var dismissedAdvisoryIds by remember {
+        mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "patient"))
     }
 
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val adminAdvisories = remember(notices, dismissedAdvisoryIds) {
+        notices.filter {
+            (it.senderRole == UserRole.ADMIN || it.targetRole == "ALL" || it.targetRole == "PATIENT") &&
+                it.id !in dismissedAdvisoryIds
+        }
+    }
 
     // Colors dynamically adapt based on Dark vs Sunlight High-Contrast Mode
     val bgColor = if (isSunlightMode) PatientLightBackground else GlumeBackground
@@ -677,11 +685,32 @@ fun PatientHomeScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = textPrimaryColor
                         )
-                        Text(
-                            text = "${strings.issuedBy} ${advisory.senderName} (${advisory.senderRole.name})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = textSecondaryColor
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${strings.issuedBy} ${advisory.senderName} (${advisory.senderRole.name})",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = textSecondaryColor,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(
+                                onClick = {
+                                    DismissedNoticeHelper.dismissAdvisory(context, "patient", advisory.id)
+                                    dismissedAdvisoryIds = dismissedAdvisoryIds + advisory.id
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                shape = PillShape
+                            ) {
+                                Text(
+                                    text = "✕ Dismiss",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = if (advisory.isUrgent) GlumeAlertText else NagarSevaPrimary
+                                )
+                            }
+                        }
                     }
                 }
             }

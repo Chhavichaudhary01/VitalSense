@@ -16,6 +16,7 @@ import com.vitalsense.app.core.ui.components.ButtonStyle
 import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.util.DismissedNoticeHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,6 +49,7 @@ fun AdminDispensaryRestockScreen(
         containerColor = GlumeBackground,
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
+        val context = androidx.compose.ui.platform.LocalContext.current
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -75,6 +77,7 @@ fun AdminDispensaryRestockScreen(
                                 availableQuantity = newQuantity,
                                 lastRestockDateFormatted = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())
                             )
+                            DismissedNoticeHelper.clearRemindedMedicine(context, item.id)
                             onSaveItem(updatedItem)
                         }
                     )

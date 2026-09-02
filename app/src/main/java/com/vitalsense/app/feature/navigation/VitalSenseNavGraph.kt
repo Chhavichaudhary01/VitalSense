@@ -589,7 +589,22 @@ fun VitalSenseNavGraph(
                                                                 onNavigateToOtScheduler = { currentDoctorScreen = "ot_scheduler" },
                                                                 onNavigateToIpdBeds = { currentDoctorScreen = "ipd_beds" },
                                                                 onNavigateToExternalReferrals = { currentDoctorScreen = "referrals" },
-                                                                onNavigateToLiveQueue = { currentDoctorScreen = "live_queue" }
+                                                                onNavigateToLiveQueue = { currentDoctorScreen = "live_queue" },
+                                                                onRemindAdminRestock = { item ->
+                                                                    doctorViewModel.sendNotice(
+                                                                        BroadcastNotice(
+                                                                            id = "restock_${item.id}_${System.currentTimeMillis()}",
+                                                                            senderRole = UserRole.DOCTOR,
+                                                                            senderName = activeDoctor.name,
+                                                                            targetRole = "ADMIN",
+                                                                            targetVillage = "Dispensary",
+                                                                            title = "⚠️ Restock Reminder: ${item.medicineName}",
+                                                                            message = "Dr. ${activeDoctor.name} has flagged ${item.medicineName} (${item.category}) as low on stock (${item.availableQuantity} ${item.unit} remaining). Please perform inventory restock.",
+                                                                            timestamp = System.currentTimeMillis(),
+                                                                            isUrgent = true
+                                                                        )
+                                                                    )
+                                                                }
                                                             )
                                                         }
                                                     }

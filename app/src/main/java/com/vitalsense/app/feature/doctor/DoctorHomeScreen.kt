@@ -23,6 +23,8 @@ import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.doctor.components.PatientHistoryDialog
 import com.vitalsense.app.feature.doctor.components.ScheduleAppointmentDialog
 import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
+import com.vitalsense.app.core.util.DismissedNoticeHelper
+import com.vitalsense.app.core.util.AudioGuidanceHelper
 
 @Composable
 fun DoctorHomeScreen(
@@ -42,6 +44,7 @@ fun DoctorHomeScreen(
     onNavigateToIpdBeds: () -> Unit = {},
     onNavigateToExternalReferrals: () -> Unit = {},
     onNavigateToLiveQueue: () -> Unit = {},
+    onRemindAdminRestock: (DispensaryItem) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -49,6 +52,7 @@ fun DoctorHomeScreen(
     var selectedPatientForHistory by remember { mutableStateOf<Patient?>(null) }
     var activeTeleConsultationPatient by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
+    var restockToastMessage by remember { mutableStateOf<String?>(null) }
 
     val pendingCases = cases.filter { it.status == CaseStatus.PENDING_REVIEW || it.status == CaseStatus.IN_PROGRESS }
     val respondedCases = cases.count { it.status == CaseStatus.RESPONDED || it.status == CaseStatus.CLOSED }
@@ -58,7 +62,14 @@ fun DoctorHomeScreen(
     val severeCount = cases.count { it.severity == SeverityLevel.SEVERE || it.severity == SeverityLevel.HIGH }
     val lowStockCount = dispensaryStock.count { it.isLowStock }
 
-    val emergencySosAlerts = notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var clearedSosIds by remember { mutableStateOf(DismissedNoticeHelper.getClearedSosIds(context)) }
+    var remindedMedicineIds by remember { mutableStateOf(DismissedNoticeHelper.getRemindedMedicineIds(context)) }
+    var sosToClear by remember { mutableStateOf<BroadcastNotice?>(null) }
+
+    val emergencySosAlerts = remember(notices, clearedSosIds) {
+        notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT && it.id !in clearedSosIds }
+    }
     val adminDirectives = notices.filter { it.senderRole == UserRole.ADMIN }
 
     LazyColumn(
@@ -322,11 +333,31 @@ fun DoctorHomeScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = GlumeTextPrimary
                         )
-                        Text(
-                            text = "${strings.village}: ${sos.targetVillage ?: "General"}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = GlumeTextSecondary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${strings.village}: ${sos.targetVillage ?: "General"}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Button(
+                                onClick = { sosToClear = sos },
+                                shape = PillShape,
+                                colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Mark Emergency Clear",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -646,41 +677,91 @@ fun DoctorHomeScreen(
         }
 
         items(dispensaryStock) { item ->
+            val isReminded = item.id in remindedMedicineIds
             VitalSenseCard {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Column {
-                        Text(
-                            text = item.medicineName,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = GlumeTextPrimary
-                        )
-                        Text(
-                            text = item.category,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = GlumeTextSecondary
-                        )
-                    }
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "${item.availableQuantity} ${item.unit}",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = if (item.isLowStock) GlumeAlertCoral else GlumeTextPrimary
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = item.medicineName,
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
                             )
-                        )
-                        if (item.isLowStock) {
-                            Surface(shape = PillShape, color = GlumeAlertContainer) {
+                            Text(
+                                text = item.category,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary
+                            )
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            Text(
+                                text = "${item.availableQuantity} ${item.unit}",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (item.isLowStock) GlumeAlertCoral else GlumeTextPrimary
+                                )
+                            )
+                            if (item.isLowStock) {
+                                Surface(shape = PillShape, color = GlumeAlertContainer) {
+                                    Text(
+                                        text = "LOW",
+                                        style = MaterialTheme.typography.labelSmall.copy(color = GlumeAlertCoral, fontWeight = FontWeight.Bold),
+                                        modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Doctor Restock Action Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (isReminded) {
+                            Surface(
+                                shape = PillShape,
+                                color = GlumeSuccessContainer,
+                                border = BorderStroke(1.dp, GlumeSuccessMint.copy(alpha = 0.3f))
+                            ) {
                                 Text(
-                                    text = "LOW",
-                                    style = MaterialTheme.typography.labelSmall.copy(color = GlumeAlertCoral, fontWeight = FontWeight.Bold),
-                                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                    text = "✓ Admin Reminded",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = GlumeSuccessText
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = {
+                                    DismissedNoticeHelper.recordRemindedMedicine(context, item.id)
+                                    remindedMedicineIds = remindedMedicineIds + item.id
+                                    onRemindAdminRestock(item)
+                                    AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                    restockToastMessage = "Restock reminder sent to Admin for ${item.medicineName}!"
+                                },
+                                shape = PillShape,
+                                border = BorderStroke(1.dp, if (item.isLowStock) GlumeAlertCoral else NagarSevaPrimary),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "🔔 Remind Admin",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (item.isLowStock) GlumeAlertCoral else NagarSevaPrimary
                                 )
                             }
                         }
@@ -778,6 +859,53 @@ fun DoctorHomeScreen(
             onDismiss = { activeTeleConsultationPatient = null },
             onEndCall = { notes ->
                 activeTeleConsultationPatient = null
+            }
+        )
+    }
+
+    if (sosToClear != null) {
+        AlertDialog(
+            onDismissRequest = { sosToClear = null },
+            title = {
+                Text(
+                    text = "Confirm Emergency Resolved",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = "Confirm that emergency clinical action has been taken and patient ${sosToClear?.senderName} is stabilized?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = GlumeTextSecondary
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val id = sosToClear!!.id
+                        DismissedNoticeHelper.clearSos(context, id)
+                        clearedSosIds = clearedSosIds + id
+                        sosToClear = null
+                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint),
+                    shape = PillShape
+                ) {
+                    Text(
+                        text = "Yes, Mark Clear & Dismiss",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { sosToClear = null },
+                    shape = PillShape
+                ) {
+                    Text("Cancel", color = GlumeTextSecondary)
+                }
             }
         )
     }
