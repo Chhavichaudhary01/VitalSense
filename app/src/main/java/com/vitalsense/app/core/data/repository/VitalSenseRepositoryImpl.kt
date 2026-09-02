@@ -7,6 +7,11 @@ import com.vitalsense.app.core.data.local.seed.SeedDataProvider
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.data.remote.FirestoreDataSource
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Job
+import java.util.concurrent.ConcurrentHashMap
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -24,7 +29,12 @@ class VitalSenseRepositoryImpl @Inject constructor(
 
     private val gson = Gson()
     private val dao = database.vitalSenseDao()
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e("VitalSenseRepo", "Recovered from background coroutine exception: ${throwable.message}", throwable)
+    }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + exceptionHandler)
+    private val activeQueueJobs = ConcurrentHashMap<String, Job>()
+    private val activeSlotJobs = ConcurrentHashMap<String, Job>()
 
     // In-memory reactive state caches for instant UI response (zero lag on stage)
     private val _villages = MutableStateFlow(SeedDataProvider.initialVillages)
@@ -931,20 +941,23 @@ class VitalSenseRepositoryImpl @Inject constructor(
     // --- Live Clinic Queue & Day Slots ---
 
     override fun observeDoctorQueue(doctorId: String, date: String): Flow<List<QueueEntry>> {
-        scope.launch {
-            try {
-                firestoreDataSource.observeDoctorQueueStream(doctorId, date).collect { remoteEntries ->
-                    if (remoteEntries.isNotEmpty()) {
-                        _queueEntries.update { current ->
-                            val remoteMap = remoteEntries.associateBy { it.id }
-                            current.map { local -> remoteMap[local.id] ?: local } +
-                                remoteEntries.filter { remote -> current.none { it.id == remote.id } }
+        val key = "$doctorId-$date"
+        if (activeQueueJobs[key]?.isActive != true) {
+            activeQueueJobs[key] = scope.launch {
+                try {
+                    firestoreDataSource.observeDoctorQueueStream(doctorId, date).collect { remoteEntries ->
+                        if (remoteEntries.isNotEmpty()) {
+                            _queueEntries.update { current ->
+                                val remoteMap = remoteEntries.associateBy { it.id }
+                                current.map { local -> remoteMap[local.id] ?: local } +
+                                    remoteEntries.filter { remote -> current.none { it.id == remote.id } }
+                            }
+                            dao.upsertQueueEntries(remoteEntries.map { it.toEntity() })
                         }
-                        dao.upsertQueueEntries(remoteEntries.map { it.toEntity() })
                     }
+                } catch (e: Exception) {
+                    // Offline fallback
                 }
-            } catch (e: Exception) {
-                // Offline fallback
             }
         }
 
@@ -963,15 +976,18 @@ class VitalSenseRepositoryImpl @Inject constructor(
     }
 
     override fun observeDoctorSlots(doctorId: String, date: String): Flow<List<DoctorDaySlotConfig>> {
-        scope.launch {
-            try {
-                firestoreDataSource.observeDoctorSlotsStream(doctorId, date).collect { remoteSlots ->
-                    if (remoteSlots.isNotEmpty()) {
-                        _doctorSlots.update { remoteSlots }
+        val key = "$doctorId-$date"
+        if (activeSlotJobs[key]?.isActive != true) {
+            activeSlotJobs[key] = scope.launch {
+                try {
+                    firestoreDataSource.observeDoctorSlotsStream(doctorId, date).collect { remoteSlots ->
+                        if (remoteSlots.isNotEmpty()) {
+                            _doctorSlots.update { remoteSlots }
+                        }
                     }
+                } catch (e: Exception) {
+                    // Offline
                 }
-            } catch (e: Exception) {
-                // Offline
             }
         }
         return _doctorSlots.map { list -> list.filter { it.doctorId == doctorId && it.dateFormatted == date } }
@@ -1240,4 +1256,4 @@ class VitalSenseRepositoryImpl @Inject constructor(
             isPendingSync = isPendingSync
         )
     }
-}
+}

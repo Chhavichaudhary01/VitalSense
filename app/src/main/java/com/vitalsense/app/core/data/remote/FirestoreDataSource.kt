@@ -188,8 +188,7 @@ class FirestoreDataSource @Inject constructor(
     fun getConditionRecordsStream(): Flow<List<ConditionRecord>> = callbackFlow {
         val listener = conditionsCollection.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Log.w(TAG, "Condition records stream error: ${error.message}")
-                close(error)
+                Log.w(TAG, "Condition records stream transient error: ${error.message}")
                 return@addSnapshotListener
             }
             if (snapshot != null) {
@@ -234,8 +233,7 @@ class FirestoreDataSource @Inject constructor(
     fun getBroadcastNoticesStream(): Flow<List<BroadcastNotice>> = callbackFlow {
         val listener = noticesCollection.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Log.w(TAG, "Broadcast notices stream error: ${error.message}")
-                close(error)
+                Log.w(TAG, "Broadcast notices stream transient error: ${error.message}")
                 return@addSnapshotListener
             }
             if (snapshot != null) {
@@ -354,8 +352,7 @@ class FirestoreDataSource @Inject constructor(
             .whereEqualTo("dateFormatted", date)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.w(TAG, "Doctor queue snapshot error: ${error.message}")
-                    close(error)
+                    Log.w(TAG, "Doctor queue snapshot transient error: ${error.message}")
                     return@addSnapshotListener
                 }
                 val list = snapshot?.documents?.mapNotNull { doc ->
@@ -393,7 +390,7 @@ class FirestoreDataSource @Inject constructor(
             .whereEqualTo("dateFormatted", date)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    Log.w(TAG, "Patient queue snapshot transient error: ${error.message}")
                     return@addSnapshotListener
                 }
                 val doc = snapshot?.documents?.firstOrNull()
@@ -432,7 +429,7 @@ class FirestoreDataSource @Inject constructor(
             .whereEqualTo("dateFormatted", date)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    Log.w(TAG, "Doctor slots snapshot transient error: ${error.message}")
                     return@addSnapshotListener
                 }
                 val list = snapshot?.documents?.mapNotNull { doc ->
@@ -458,7 +455,7 @@ class FirestoreDataSource @Inject constructor(
             .whereEqualTo("dateFormatted", date)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    Log.w(TAG, "All queue entries snapshot transient error: ${error.message}")
                     return@addSnapshotListener
                 }
                 val list = snapshot?.documents?.mapNotNull { doc ->

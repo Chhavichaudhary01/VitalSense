@@ -25,13 +25,12 @@ class SyncWorker(
     private val gson = Gson()
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        Log.d(TAG, "🔄 VitalSense SyncWorker started. Flushing pending offline outbox records...")
-        val database = VitalSenseDatabase.getDatabase(applicationContext)
-        val dao = database.vitalSenseDao()
-        val firestore = FirebaseFirestore.getInstance()
-        val firestoreDataSource = FirestoreDataSource(firestore)
-
         try {
+            Log.d(TAG, "🔄 VitalSense SyncWorker started. Flushing pending offline outbox records...")
+            val database = VitalSenseDatabase.getDatabase(applicationContext)
+            val dao = database.vitalSenseDao()
+            val firestore = FirebaseFirestore.getInstance()
+            val firestoreDataSource = FirestoreDataSource(firestore)
             val pendingRecords = dao.getPendingOutboxRecords()
             Log.d(TAG, "Found ${pendingRecords.size} pending outbox items to synchronize.")
 
