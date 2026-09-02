@@ -74,12 +74,15 @@ fun DoctorHomeScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     var clearedSosIds by remember { mutableStateOf(DismissedNoticeHelper.getClearedSosIds(context)) }
     var remindedMedicineIds by remember { mutableStateOf(DismissedNoticeHelper.getRemindedMedicineIds(context)) }
+    var dismissedAdvisoryIds by remember(doctor.id) { mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "doctor")) }
     var sosToClear by remember { mutableStateOf<BroadcastNotice?>(null) }
 
     val emergencySosAlerts = remember(notices, clearedSosIds) {
         notices.filter { it.isUrgent && it.senderRole == UserRole.PATIENT && it.id !in clearedSosIds }
     }
-    val adminDirectives = notices.filter { it.senderRole == UserRole.ADMIN }
+    val adminDirectives = remember(notices, dismissedAdvisoryIds) {
+        notices.filter { it.senderRole == UserRole.ADMIN && it.id !in dismissedAdvisoryIds }
+    }
 
     LazyColumn(
         modifier = modifier
@@ -897,13 +900,34 @@ fun DoctorHomeScreen(
         }
 
         // 9. District Health Advisories & Directives
-        if (adminDirectives.isNotEmpty()) {
+        if (adminDirectives.isNotEmpty() || dismissedAdvisoryIds.isNotEmpty()) {
             item {
-                Text(
-                    text = "📢 ${strings.districtAdvisories}",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = GlumeTextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "📢 ${strings.districtAdvisories}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = GlumeTextPrimary
+                    )
+                    if (dismissedAdvisoryIds.isNotEmpty()) {
+                        TextButton(
+                            onClick = {
+                                DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                dismissedAdvisoryIds = emptySet()
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "🔄 Restore (${dismissedAdvisoryIds.size})",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = NagarSevaPrimary
+                            )
+                        }
+                    }
+                }
             }
 
             items(adminDirectives) { directive ->
@@ -936,11 +960,32 @@ fun DoctorHomeScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = GlumeTextPrimary
                         )
-                        Text(
-                            text = "${strings.issuedBy} ${directive.senderName} (${directive.senderRole.name})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = GlumeTextSecondary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${strings.issuedBy} ${directive.senderName} (${directive.senderRole.name})",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(
+                                onClick = {
+                                    DismissedNoticeHelper.dismissAdvisory(context, "doctor", directive.id)
+                                    dismissedAdvisoryIds = dismissedAdvisoryIds + directive.id
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                shape = PillShape
+                            ) {
+                                Text(
+                                    text = "✕ Dismiss",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = NagarSevaPrimary
+                                )
+                            }
+                        }
                     }
                 }
             }
