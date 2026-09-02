@@ -37,9 +37,10 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         ExternalReferralEntity::class,
         BioMedicalEquipmentEntity::class,
         DoctorDaySlotEntity::class,
-        QueueEntryEntity::class
+        QueueEntryEntity::class,
+        NearbyPharmacyCacheEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -90,6 +91,22 @@ abstract class VitalSenseDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `nearby_pharmacy_cache` (
+                        `placeId` TEXT NOT NULL PRIMARY KEY,
+                        `name` TEXT NOT NULL,
+                        `address` TEXT NOT NULL,
+                        `latitude` REAL NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `phoneNumber` TEXT,
+                        `cachedAt` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): VitalSenseDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -97,7 +114,7 @@ abstract class VitalSenseDatabase : RoomDatabase() {
                     VitalSenseDatabase::class.java,
                     "vitalsense_database"
                 )
-                    .addMigrations(MIGRATION_5_6)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -52,6 +52,7 @@ fun PatientHomeScreen(
     var showSmartEmergencyDialog by remember { mutableStateOf(false) }
     var showSensorPairingDialog by remember { mutableStateOf(false) }
     var showPrescriptionUploadDialog by remember { mutableStateOf(false) }
+    var selectedMedicineForNearby by remember { mutableStateOf<com.vitalsense.app.core.data.model.PrescribedMedicine?>(null) }
 
     // Live vitals readings as per UX Architecture §3.2
     var heartRate by remember { mutableStateOf(76) }
@@ -616,20 +617,50 @@ fun PatientHomeScreen(
                         }
 
                         rx.medicines.forEach { med ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp)
                             ) {
-                                Text(
-                                    text = "• ${med.name} (${med.dosage})",
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = textPrimaryColor
-                                )
-                                Text(
-                                    text = "${med.frequency} · ${med.duration}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = textSecondaryColor
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "• ${med.name} (${med.dosage})",
+                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                            color = textPrimaryColor
+                                        )
+                                        Text(
+                                            text = "${med.frequency} · ${med.duration}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = textSecondaryColor
+                                        )
+                                        if (med.hasAlternativeAvailable) {
+                                            Text(
+                                                text = "💡 Doctor suggested alternative available",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = GlumeAlertCoral
+                                            )
+                                        }
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = { selectedMedicineForNearby = med },
+                                        modifier = Modifier.height(34.dp),
+                                        shape = PillShape,
+                                        border = BorderStroke(1.dp, NagarSevaPrimary),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "📍 Find nearby",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = NagarSevaPrimary
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -885,6 +916,14 @@ fun PatientHomeScreen(
         GovernmentSchemesDialog(
             schemes = schemes,
             onDismiss = { showSchemesDialog = false }
+        )
+    }
+
+    selectedMedicineForNearby?.let { med ->
+        FindMedicineNearbySheet(
+            patient = patient,
+            medicine = med,
+            onDismiss = { selectedMedicineForNearby = null }
         )
     }
 }

@@ -12,14 +12,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.vitalsense.app.core.data.local.VitalSenseDatabase
+import com.vitalsense.app.core.data.medicine.*
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
+import kotlinx.coroutines.delay
+
+sealed class AvailabilityCheckState {
+    object Idle : AvailabilityCheckState()
+    object Checking : AvailabilityCheckState()
+    data class Available(val count: Int, val stores: List<StoreAvailabilityResult>) : AvailabilityCheckState()
+    data class Unavailable(
+        val medicine: Medicine?,
+        val candidateSubstitutes: List<Pair<Medicine, Int>> // (substitute, availableStoresCount)
+    ) : AvailabilityCheckState()
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,13 +43,51 @@ fun PrescriptionComposerDialog(
     caseId: String,
     dispensaryStock: List<DispensaryItem>,
     onDismiss: () -> Unit,
-    onIssuePrescription: (medicines: List<PrescribedMedicine>, instructions: String) -> Unit
+    onIssuePrescription: (medicines: List<PrescribedMedicine>, instructions: String) -> Unit,
+    medicineRepoOverride: MedicineAvailabilityRepository? = null
 ) {
+    val context = LocalContext.current
+    val medicineRepo = remember {
+        medicineRepoOverride ?: run {
+            val db = VitalSenseDatabase.getDatabase(context)
+            MedicineAvailabilityRepositoryImpl(db, context)
+        }
+    }
+
+    val patientLat = when (patient?.villageId) {
+        "v_sundarpura" -> 26.8467
+        "v_kalyanpur" -> 26.8821
+        "v_bhimnagar" -> 26.8150
+        else -> 26.8467
+    }
+    val patientLng = when (patient?.villageId) {
+        "v_sundarpura" -> 80.9462
+        "v_kalyanpur" -> 80.9812
+        "v_bhimnagar" -> 80.9120
+        else -> 80.9462
+    }
+
     var instructions by remember { mutableStateOf("Take medications after meals as directed. Drink plenty of boiled lukewarm water.") }
     val medicinesList = remember {
         mutableStateListOf(
-            PrescribedMedicine("Amoxicillin 500mg", "1 capsule", "3 times daily after food", "5 days", 15),
-            PrescribedMedicine("Paracetamol 650mg", "1 tablet", "SOS (if fever > 100°F)", "3 days", 6)
+            PrescribedMedicine(
+                name = "Amoxicillin 500mg",
+                dosage = "1 capsule",
+                frequency = "3 times daily after food",
+                duration = "5 days",
+                quantity = 15,
+                medicineId = "med_amoxicillin_500",
+                hasAlternativeAvailable = false
+            ),
+            PrescribedMedicine(
+                name = "Paracetamol 650mg",
+                dosage = "1 tablet",
+                frequency = "SOS (if fever > 100°F)",
+                duration = "3 days",
+                quantity = 6,
+                medicineId = "med_paracetamol_650",
+                hasAlternativeAvailable = false
+            )
         )
     }
 
@@ -45,6 +97,38 @@ fun PrescriptionComposerDialog(
     var newMedDuration by remember { mutableStateOf("5 days") }
     var newMedQuantity by remember { mutableStateOf("10") }
 
+    var availabilityState by remember { mutableStateOf<AvailabilityCheckState>(AvailabilityCheckState.Idle) }
+    var showAlternativeSuggestions by remember { mutableStateOf(false) }
+
+    // Check availability live as the doctor types
+    LaunchedEffect(newMedName) {
+        val trimmed = newMedName.trim()
+        if (trimmed.length < 3) {
+            availabilityState = AvailabilityCheckState.Idle
+            showAlternativeSuggestions = false
+            return@LaunchedEffect
+        }
+        delay(300)
+        availabilityState = AvailabilityCheckState.Checking
+        val matchedMed = medicineRepo.findMedicineByName(trimmed)
+        val medId = matchedMed?.id ?: trimmed
+        val results = medicineRepo.getNearbyStoresWithAvailability(medId, patientLat, patientLng)
+        val inStockCount = results.count { it.inStock }
+
+        if (inStockCount > 0) {
+            availabilityState = AvailabilityCheckState.Available(inStockCount, results)
+            showAlternativeSuggestions = false
+        } else {
+            val candidateSubs = if (matchedMed != null) {
+                medicineRepo.suggestAlternatives(matchedMed.id, results).map { sub ->
+                    val subResults = medicineRepo.getNearbyStoresWithAvailability(sub.id, patientLat, patientLng)
+                    Pair(sub, subResults.count { it.inStock })
+                }
+            } else emptyList()
+            availabilityState = AvailabilityCheckState.Unavailable(matchedMed, candidateSubs)
+        }
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -52,7 +136,7 @@ fun PrescriptionComposerDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.92f),
+                .fillMaxHeight(0.95f),
             shape = DialogShape,
             color = GlumeSurfaceCard,
             shadowElevation = 8.dp,
@@ -106,30 +190,60 @@ fun PrescriptionComposerDialog(
                             backgroundColor = GlumeSurfaceElevated,
                             border = BorderStroke(1.dp, GlumeBorder)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = med.name,
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = GlumeTextPrimary
-                                    )
-                                    Text(
-                                        text = "${med.dosage} · ${med.frequency} for ${med.duration}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = GlumeTextSecondary
-                                    )
-                                    Text(
-                                        text = "Qty to dispense: ${med.quantity} units",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = GlumePrimaryPurpleLight
-                                    )
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = med.name,
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = GlumeTextPrimary
+                                        )
+                                        Text(
+                                            text = "${med.dosage} · ${med.frequency} for ${med.duration}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = GlumeTextSecondary
+                                        )
+                                        Text(
+                                            text = "Qty to dispense: ${med.quantity} units",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = GlumePrimaryPurpleLight
+                                        )
+                                    }
+                                    IconButton(onClick = { medicinesList.removeAt(index) }) {
+                                        Text(text = "🗑️", fontSize = 16.sp)
+                                    }
                                 }
-                                IconButton(onClick = { medicinesList.removeAt(index) }) {
-                                    Text(text = "🗑️", fontSize = 16.sp)
+
+                                // Status Badge
+                                if (med.hasAlternativeAvailable) {
+                                    Surface(
+                                        shape = PillShape,
+                                        color = GlumeAlertContainer,
+                                        border = BorderStroke(1.dp, GlumeAlertCoral)
+                                    ) {
+                                        Text(
+                                            text = "⚠️ Out of stock near patient · Clinical override noted",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                            color = GlumeAlertText,
+                                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                        )
+                                    }
+                                } else {
+                                    Surface(
+                                        shape = PillShape,
+                                        color = GlumeSuccessContainer
+                                    ) {
+                                        Text(
+                                            text = "✅ Likely available near patient",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                            color = GlumeSuccessText,
+                                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -152,7 +266,7 @@ fun PrescriptionComposerDialog(
                                     value = newMedName,
                                     onValueChange = { newMedName = it },
                                     label = { Text("Medicine Name", color = GlumeTextSecondary) },
-                                    placeholder = { Text("e.g. Azithromycin 250mg", color = GlumeTextTertiary) },
+                                    placeholder = { Text("e.g. Paracetamol 650mg or Amoxicillin", color = GlumeTextTertiary) },
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = InputShape,
                                     colors = OutlinedTextFieldDefaults.colors(
@@ -164,6 +278,155 @@ fun PrescriptionComposerDialog(
                                         unfocusedTextColor = GlumeTextPrimary
                                     )
                                 )
+
+                                // Live Availability Indicator
+                                when (val state = availabilityState) {
+                                    is AvailabilityCheckState.Checking -> {
+                                        Text(
+                                            text = "🔍 Checking nearby pharmacy availability near ${patient?.villageName ?: "patient"}...",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = GlumeTextSecondary
+                                        )
+                                    }
+
+                                    is AvailabilityCheckState.Available -> {
+                                        Surface(
+                                            shape = PillShape,
+                                            color = GlumeSuccessContainer
+                                        ) {
+                                            Text(
+                                                text = "✅ Likely available at ${state.count} nearby pharmacies",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = GlumeSuccessText,
+                                                modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+
+                                    is AvailabilityCheckState.Unavailable -> {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(InputShape)
+                                                .background(GlumeAlertContainer)
+                                                .padding(Spacing.xs)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = "⚠️ Not found near patient's location",
+                                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                        color = GlumeAlertText
+                                                    )
+                                                    Text(
+                                                        text = "Likely out of stock at nearby stores in ${patient?.villageName ?: "this area"}.",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = GlumeTextSecondary
+                                                    )
+                                                }
+
+                                                if (state.candidateSubstitutes.isNotEmpty()) {
+                                                    Button(
+                                                        onClick = { showAlternativeSuggestions = !showAlternativeSuggestions },
+                                                        shape = PillShape,
+                                                        colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
+                                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = if (showAlternativeSuggestions) "Hide Options" else "Suggest Alternative",
+                                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                            color = GlumeTextPrimary
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            // Suggest Alternative Panel
+                                            if (showAlternativeSuggestions && state.candidateSubstitutes.isNotEmpty()) {
+                                                Spacer(modifier = Modifier.height(Spacing.xs))
+                                                Text(
+                                                    text = "Clinically Interchangeable Alternatives (${state.candidateSubstitutes.size}):",
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                    color = GlumeTextPrimary
+                                                )
+
+                                                state.candidateSubstitutes.forEach { (substitute, subInStockCount) ->
+                                                    Card(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(vertical = 3.dp),
+                                                        shape = InputShape,
+                                                        colors = CardDefaults.cardColors(containerColor = GlumeSurfaceElevated),
+                                                        border = BorderStroke(1.dp, GlumeBorder)
+                                                    ) {
+                                                        Column(modifier = Modifier.padding(Spacing.xs)) {
+                                                            Row(
+                                                                modifier = Modifier.fillMaxWidth(),
+                                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                                verticalAlignment = Alignment.CenterVertically
+                                                            ) {
+                                                                Column(modifier = Modifier.weight(1f)) {
+                                                                    Text(
+                                                                        text = substitute.name,
+                                                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                                                        color = GlumeTextPrimary
+                                                                    )
+                                                                    Text(
+                                                                        text = "Generic: ${substitute.genericName}",
+                                                                        style = MaterialTheme.typography.bodySmall,
+                                                                        color = GlumeTextSecondary
+                                                                    )
+                                                                    Text(
+                                                                        text = "Class: ${substitute.therapeuticClass} · ${substitute.commonUseDescription}",
+                                                                        style = MaterialTheme.typography.bodySmall,
+                                                                        color = GlumePrimaryPurpleLight
+                                                                    )
+                                                                    Text(
+                                                                        text = if (subInStockCount > 0) "✅ Likely in stock at $subInStockCount nearby stores" else "⚠️ Limited local stock",
+                                                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                                                        color = if (subInStockCount > 0) GlumeSuccessText else GlumeAlertText
+                                                                    )
+                                                                }
+
+                                                                Button(
+                                                                    onClick = {
+                                                                        newMedName = substitute.name
+                                                                        if (substitute.commonDosage.isNotBlank()) {
+                                                                            newMedDosage = substitute.commonDosage
+                                                                        }
+                                                                        showAlternativeSuggestions = false
+                                                                    },
+                                                                    shape = PillShape,
+                                                                    colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
+                                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                                                ) {
+                                                                    Text(
+                                                                        text = "Swap ✓",
+                                                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                                        color = GlumeTextPrimary
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                Text(
+                                                    text = "⚠️ Disclaimer: Suggestions are based on medicine category only — confirm clinical appropriateness before prescribing.",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = GlumeTextTertiary,
+                                                    modifier = Modifier.padding(top = 4.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    is AvailabilityCheckState.Idle -> { /* No check yet */ }
+                                }
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -236,16 +499,22 @@ fun PrescriptionComposerDialog(
                                 Button(
                                     onClick = {
                                         if (newMedName.isNotBlank()) {
+                                            val isUnavailable = availabilityState is AvailabilityCheckState.Unavailable
+                                            val matched = medicineRepo.findMedicineByName(newMedName.trim())
                                             medicinesList.add(
                                                 PrescribedMedicine(
                                                     name = newMedName.trim(),
                                                     dosage = newMedDosage.trim(),
                                                     frequency = newMedFrequency.trim(),
                                                     duration = newMedDuration.trim(),
-                                                    quantity = newMedQuantity.toIntOrNull() ?: 10
+                                                    quantity = newMedQuantity.toIntOrNull() ?: 10,
+                                                    medicineId = matched?.id,
+                                                    hasAlternativeAvailable = isUnavailable
                                                 )
                                             )
                                             newMedName = ""
+                                            availabilityState = AvailabilityCheckState.Idle
+                                            showAlternativeSuggestions = false
                                         }
                                     },
                                     shape = PillShape,

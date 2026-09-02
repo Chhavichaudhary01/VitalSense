@@ -350,3 +350,15 @@ data class QueueEntryEntity(
     val isPendingSync: Boolean
 )
 
+@Entity(tableName = "nearby_pharmacy_cache")
+data class NearbyPharmacyCacheEntity(
+    @PrimaryKey val placeId: String,
+    val name: String,
+    val address: String,
+    val latitude: Double,
+    val longitude: Double,
+    val phoneNumber: String?,
+    val cachedAt: Long
+)
+
+

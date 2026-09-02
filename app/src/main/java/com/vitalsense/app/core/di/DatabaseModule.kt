@@ -33,4 +33,13 @@ object DatabaseModule {
     ): VitalSenseRepository {
         return VitalSenseRepositoryImpl(database, firestoreDataSource, syncManager)
     }
+
+    @Provides
+    @Singleton
+    fun provideMedicineAvailabilityRepository(
+        database: VitalSenseDatabase,
+        @ApplicationContext context: Context
+    ): com.vitalsense.app.core.data.medicine.MedicineAvailabilityRepository {
+        return com.vitalsense.app.core.data.medicine.MedicineAvailabilityRepositoryImpl(database, context)
+    }
 }

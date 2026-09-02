@@ -260,6 +260,13 @@ interface VitalSenseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertDoctorSlot(slot: DoctorDaySlotEntity)
+
+    // --- Nearby Pharmacy Cache ---
+    @Query("SELECT * FROM nearby_pharmacy_cache")
+    suspend fun getAllCachedPharmacies(): List<NearbyPharmacyCacheEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCachedPharmacies(pharmacies: List<NearbyPharmacyCacheEntity>)
 }
 
 

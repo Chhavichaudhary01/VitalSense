@@ -81,7 +81,9 @@ data class PrescribedMedicine(
     val dosage: String,
     val frequency: String,
     val duration: String,
-    val quantity: Int
+    val quantity: Int,
+    val medicineId: String? = null,
+    val hasAlternativeAvailable: Boolean = false
 )
 
 data class Prescription(
