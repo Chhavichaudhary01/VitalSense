@@ -91,14 +91,18 @@ fun PatientHomeScreen(
     val textPrimaryColor = if (isSunlightMode) PatientLightTextPrimary else GlumeTextPrimary
     val textSecondaryColor = if (isSunlightMode) PatientLightTextSecondary else GlumeTextSecondary
 
-    LazyColumn(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(bgColor)
-            .padding(horizontal = Spacing.md),
-        verticalArrangement = Arrangement.spacedBy(Spacing.md),
-        contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+            contentPadding = PaddingValues(top = Spacing.sm, bottom = 140.dp)
+        ) {
         // 1. Personalized Greeting (NagarSeva Modern Typography)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
@@ -794,68 +798,31 @@ fun PatientHomeScreen(
             }
         }
 
-        // 7. Persistent Emergency SOS Banner (Single Full-Width Rounded Button/Card)
-        item {
-            Spacer(modifier = Modifier.height(Spacing.xxs))
-            Surface(
-                onClick = { showSmartEmergencyDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                shape = CardShape,
-                color = GlumeAlertCoral,
-                shadowElevation = 4.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.md, vertical = Spacing.md),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(CircleShape)
-                                .background(GlumeTextPrimary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "🚨", fontSize = 24.sp)
-                        }
-                        Column {
-                            Text(
-                                text = strings.emergencySos,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = GlumeTextPrimary
-                                )
-                            )
-                            Text(
-                                text = strings.emergencySosDesc,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = GlumeTextPrimary.copy(alpha = 0.9f)
-                                )
-                            )
-                        }
-                    }
-                    Surface(
-                        shape = PillShape,
-                        color = GlumeTextPrimary
-                    ) {
-                        Text(
-                            text = strings.trigger,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = GlumeAlertCoral
-                            ),
-                            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs)
-                        )
-                    }
-                }
-            }
-        }
+    }
+
+        // Floating Emergency SOS Button anchored to BottomEnd
+        ExtendedFloatingActionButton(
+            onClick = { showSmartEmergencyDialog = true },
+            icon = { Text(text = "🚨", fontSize = 20.sp) },
+            text = {
+                Text(
+                    text = strings.emergencySos,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
+                    )
+                )
+            },
+            containerColor = GlumeAlertCoral,
+            contentColor = GlumeTextPrimary,
+            shape = PillShape,
+            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp, pressedElevation = 12.dp),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(Spacing.md)
+                .navigationBarsPadding()
+                .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+        )
     }
 
     // Smart Emergency Dialog with 3s Countdown & Auto-GPS/SMS (UX Architecture §3.4)

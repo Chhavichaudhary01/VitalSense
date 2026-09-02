@@ -418,6 +418,9 @@ fun VitalSenseNavGraph(
                                                                     repository.savePrescription(rx)
                                                                 }
                                                             },
+                                                            onTriggerSosForPatient = { targetPatient ->
+                                                                repository.triggerEmergencySos(targetPatient, null, null)
+                                                            },
                                                             onImmunizationClick = { currentAshaScreen = "immunization" },
                                                             onDailyRoundsClick = { currentAshaScreen = "daily_rounds" },
                                                             onMedicineRestockClick = { currentAshaScreen = "medicine_restock" }

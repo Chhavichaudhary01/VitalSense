@@ -22,6 +22,7 @@ import com.vitalsense.app.feature.asha.components.RegisterPatientDialog
 import com.vitalsense.app.feature.asha.components.SendNoticeDialog
 import com.vitalsense.app.core.util.DismissedNoticeHelper
 import com.vitalsense.app.core.util.AudioGuidanceHelper
+import kotlinx.coroutines.launch
 
 @Composable
 fun AshaHomeScreen(
@@ -34,17 +35,24 @@ fun AshaHomeScreen(
     onSavePatient: (Patient) -> Unit = {},
     onSendNotice: (BroadcastNotice) -> Unit = {},
     onSavePrescription: (Prescription) -> Unit = {},
+    onTriggerSosForPatient: suspend (Patient) -> Boolean = { true },
     onImmunizationClick: () -> Unit = {},
     onDailyRoundsClick: () -> Unit = {},
     onMedicineRestockClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val coroutineScope = rememberCoroutineScope()
     var ocrTargetPatient by remember { mutableStateOf<Patient?>(null) }
 
     var showRegisterPatientDialog by remember { mutableStateOf(false) }
     var showSendNoticeDialog by remember { mutableStateOf(false) }
     var successMessage by remember { mutableStateOf<String?>(null) }
+
+    // Per-patient Emergency SOS state management
+    var sosConfirmationPatient by remember { mutableStateOf<Patient?>(null) }
+    var loadingSosPatientId by remember { mutableStateOf<String?>(null) }
+    var sosFailedPatient by remember { mutableStateOf<Patient?>(null) }
 
     val totalPatients = patients.size
     val highRiskPatients = patients.count { it.currentRiskLevel == SeverityLevel.HIGH || it.currentRiskLevel == SeverityLevel.SEVERE }
@@ -242,6 +250,66 @@ fun AshaHomeScreen(
             }
         }
 
+        // SOS Failure banner with Retry option
+        if (sosFailedPatient != null) {
+            item {
+                val failedPatient = sosFailedPatient!!
+                Surface(
+                    shape = PillShape,
+                    color = GlumeAlertContainer,
+                    border = BorderStroke(1.dp, GlumeAlertCoral),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("⚠️", fontSize = 14.sp)
+                            Text(
+                                text = "${strings.sosFailedForPatient} (${failedPatient.name})",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeAlertCoral
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            TextButton(
+                                onClick = {
+                                    val pToRetry = failedPatient
+                                    sosFailedPatient = null
+                                    loadingSosPatientId = pToRetry.id
+                                    coroutineScope.launch {
+                                        try {
+                                            val success = onTriggerSosForPatient(pToRetry)
+                                            loadingSosPatientId = null
+                                            if (success) {
+                                                successMessage = "✓ ${strings.sosDispatchedForPatient} ${pToRetry.name}!"
+                                            } else {
+                                                sosFailedPatient = pToRetry
+                                            }
+                                        } catch (e: Exception) {
+                                            loadingSosPatientId = null
+                                            sosFailedPatient = pToRetry
+                                        }
+                                    }
+                                }
+                            ) {
+                                Text(strings.retry, color = GlumeAlertCoral, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            }
+                            IconButton(onClick = { sosFailedPatient = null }, modifier = Modifier.size(24.dp)) {
+                                Text("✕", color = GlumeAlertCoral, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // 5. Quick Action Buttons (Glume Primary & Secondary Pill Buttons)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
@@ -339,6 +407,8 @@ fun AshaHomeScreen(
         } else {
             items(patients) { patient ->
                 val isHighRisk = patient.currentRiskLevel == SeverityLevel.HIGH || patient.currentRiskLevel == SeverityLevel.SEVERE
+                val isAssignedToThisAsha = patient.ashaWorkerId == asha.id
+                val isSosInFlight = loadingSosPatientId == patient.id
 
                 VitalSenseCard(
                     backgroundColor = if (isHighRisk) GlumeAlertContainer else GlumeSurfaceCard,
@@ -381,11 +451,48 @@ fun AshaHomeScreen(
 
                         HorizontalDivider(color = GlumeBorder, thickness = 1.dp)
 
-                        // Action Buttons: Proxy Mode & Scan Rx
+                        // Action Buttons: Per-Patient Emergency SOS, Scan Rx, & Proxy Mode
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // 1. Red Per-Patient Emergency SOS Action Button
+                            Button(
+                                onClick = { sosConfirmationPatient = patient },
+                                enabled = isAssignedToThisAsha && !isSosInFlight,
+                                shape = PillShape,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = GlumeAlertCoral,
+                                    contentColor = GlumeTextPrimary,
+                                    disabledContainerColor = GlumeAlertCoral.copy(alpha = 0.4f),
+                                    disabledContentColor = GlumeTextPrimary.copy(alpha = 0.6f)
+                                ),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                                modifier = Modifier
+                                    .defaultMinSize(minHeight = 40.dp, minWidth = 40.dp)
+                            ) {
+                                if (isSosInFlight) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        color = GlumeTextPrimary,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(text = "🚨", fontSize = 14.sp)
+                                        Text(
+                                            text = "SOS",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                        )
+                                    }
+                                }
+                            }
+
+                            // 2. Scan Rx Button
                             OutlinedButton(
                                 onClick = { ocrTargetPatient = patient },
                                 modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp),
@@ -395,9 +502,10 @@ fun AshaHomeScreen(
                                 Text(text = strings.scanRx, style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
                             }
 
+                            // 3. Proxy Mode Button
                             Button(
                                 onClick = { onSelectProxyPatient(patient) },
-                                modifier = Modifier.weight(1.3f).defaultMinSize(minHeight = 40.dp),
+                                modifier = Modifier.weight(1.2f).defaultMinSize(minHeight = 40.dp),
                                 shape = PillShape,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = GlumePrimaryPurple,
@@ -538,6 +646,70 @@ fun AshaHomeScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // Per-patient Emergency SOS Confirmation Dialog
+    sosConfirmationPatient?.let { targetPatient ->
+        VitalSenseDialog(
+            onDismissRequest = { sosConfirmationPatient = null },
+            title = strings.sosAlertForPatient,
+            icon = { Text("🚨", fontSize = 22.sp) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val pToTrigger = targetPatient
+                        sosConfirmationPatient = null
+                        loadingSosPatientId = pToTrigger.id
+                        coroutineScope.launch {
+                            try {
+                                val success = onTriggerSosForPatient(pToTrigger)
+                                loadingSosPatientId = null
+                                if (success) {
+                                    successMessage = "✓ ${strings.sosDispatchedForPatient} ${pToTrigger.name}!"
+                                } else {
+                                    sosFailedPatient = pToTrigger
+                                }
+                            } catch (e: Exception) {
+                                loadingSosPatientId = null
+                                sosFailedPatient = pToTrigger
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
+                    shape = PillShape,
+                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
+                ) {
+                    Text(strings.yesSendAlert, color = GlumeTextPrimary, style = MaterialTheme.typography.labelLarge)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { sosConfirmationPatient = null },
+                    shape = PillShape,
+                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
+                ) {
+                    Text(strings.cancel, color = GlumeTextSecondary, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(
+                    text = "${strings.confirmSosPatientMsg} ${targetPatient.name}?",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = GlumeTextPrimary
+                )
+                Text(
+                    text = "• ${strings.village}: ${targetPatient.villageName}\n• Age: ${targetPatient.age} (${targetPatient.gender})\n• Emergency Contact: ${targetPatient.phone}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GlumeTextSecondary
+                )
+                Text(
+                    text = "This will immediately dispatch a high-priority SOS alert to doctors and emergency response.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GlumeAlertCoral
+                )
             }
         }
     }
