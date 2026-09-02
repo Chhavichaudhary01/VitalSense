@@ -116,6 +116,11 @@ data class AppStrings(
     val scanRx: String,
     val proxyMode: String,
     val emergencyPatientAlerts: String,
+    val sosAlertForPatient: String,
+    val confirmSosPatientMsg: String,
+    val sosDispatchedForPatient: String,
+    val sosFailedForPatient: String,
+    val retry: String,
 
     // Doctor Home & Case Detail
     val pendingCases: String,
@@ -272,6 +277,11 @@ val EnglishStrings = AppStrings(
     scanRx = "📷 Scan Rx",
     proxyMode = "🤝 Proxy Mode",
     emergencyPatientAlerts = "🚨 Emergency Patient SOS Alerts",
+    sosAlertForPatient = "🚨 Emergency SOS Alert",
+    confirmSosPatientMsg = "Send emergency alert on behalf of",
+    sosDispatchedForPatient = "Emergency alert dispatched for",
+    sosFailedForPatient = "Failed to send emergency alert.",
+    retry = "Retry",
 
     pendingCases = "Pending",
     criticalCases = "Critical Cases",
@@ -425,6 +435,11 @@ val HindiStrings = AppStrings(
     scanRx = "📷 पर्ची स्कैन",
     proxyMode = "🤝 प्रॉक्सी मोड",
     emergencyPatientAlerts = "🚨 आपातकालीन मरीज़ अलर्ट",
+    sosAlertForPatient = "🚨 आपातकालीन एसओएस अलर्ट",
+    confirmSosPatientMsg = "मरीज़ की ओर से आपातकालीन अलर्ट भेजें:",
+    sosDispatchedForPatient = "मरीज़ के लिए आपातकालीन अलर्ट भेजा गया:",
+    sosFailedForPatient = "आपातकालीन अलर्ट भेजने में विफलता।",
+    retry = "पुनः प्रयास करें",
 
     pendingCases = "लंबित मामले",
     criticalCases = "गंभीर मामले",
