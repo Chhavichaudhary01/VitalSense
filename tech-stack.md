@@ -1,184 +1,98 @@
-# VitalSense — Tech Stack Document
+# 🛠️ VitalSense (SehatSetu) — Technology Stack Specification
 
-**Platform:** Native Android, built in Android Studio
-**Document status:** Draft v1.0 — prototype/MVP scoping
-
----
-
-## 1. Guiding Principles
-
-- **Offline-first**: local database is the source of truth for the UI; network is a sync layer, not a dependency for core reads.
-- **Single app, role-aware**: one codebase, one auth flow, role-driven navigation graph — not four separate apps glued together.
-- **Low-resource friendly**: rural users may have older devices, low RAM, and 2G/3G connectivity — keep payloads, animations, and background work light.
-- **Prototype-pragmatic**: use hardcoded/mocked data (dispensary stock, government schemes) where a real backend integration is out of scope for now, but structure code so mocks are swappable for real services later (repository pattern).
+**Problem Statement:** Smart India Hackathon (SIH) 26133  
+**Platform:** Native Android (Min SDK: 26, Target SDK: 34/35)  
+**Architecture:** Clean Architecture + MVVM + Offline-First Repository Pattern  
 
 ---
 
-## 2. Application Architecture
+## 1. Core Platform & Build Infrastructure
 
-- **Language**: Kotlin (100%), using modern Android conventions.
-- **Architecture pattern**: **MVVM** (Model-View-ViewModel) with a **Repository layer**, following official Android App Architecture guidance.
-- **UI toolkit**: **Jetpack Compose** (recommended) for faster iteration on an icon-heavy, highly visual, multi-role UI; XML/View system is a fallback if the team has more XML experience — either is viable, but Compose is preferred for the theming and localization flexibility needed here.
-- **Navigation**: Jetpack **Navigation Component** (Compose Navigation if using Compose), with a role-based navigation graph decided at login (Admin graph / ASHA graph / Doctor graph / Patient graph), sharing common screens (e.g., chat, health card) where logic overlaps.
-- **Dependency Injection**: **Hilt** (built on Dagger) for clean, testable module wiring across the many role-specific ViewModels/Repositories.
-- **Asynchronous work**: Kotlin **Coroutines + Flow** for all async operations (DB reads, network calls, sync jobs).
-
----
-
-## 3. Local Data & Offline Support
-
-- **Local database**: **Room** (SQLite abstraction) — stores patients, ASHA caseloads, condition entries, prescriptions, chats, cached map/doctor data, and queued outbound actions.
-- **Offline-first sync strategy**:
-  - Repository pattern: ViewModels only ever talk to Repositories, which decide whether to serve from Room (cache) or trigger a network fetch.
-  - **WorkManager** for background sync jobs — retries automatically under Android's constraints (network available, battery not low), ideal for intermittent rural connectivity.
-  - An **outbox pattern**: writes made offline (new symptom entry, chat message, uploaded prescription) are stored locally with a `pending_sync` flag and pushed when connectivity returns.
-  - Conflict resolution: last-write-wins for prototype, with a manual-review flag for high-sensitivity fields (e.g., severity level) if a conflict is detected.
-- **File/media caching**: uploaded images (prescriptions, reports) stored locally first (app-private storage), uploaded opportunistically; thumbnails cached for instant offline viewing.
-- **Cached "previously viewed" reports**: any report/prescription/chat the user has opened is guaranteed to be cached in Room + local file storage for offline re-access (per PRD §4.7).
+| Layer / Tool | Technology / Specification | Purpose & Rationale |
+| :--- | :--- | :--- |
+| **Language** | **Kotlin 1.9.22** | 100% idiomatic Kotlin with Coroutines, Flow, Sealed Interfaces, and Pattern Matching. |
+| **JDK Runtime** | **Java 21 LTS (OpenJDK / Eclipse Temurin)** | Modern JVM toolchain with virtual execution, pattern matching, and bytecode optimization. |
+| **Build System** | **Gradle 8.7 + Android Gradle Plugin 8.7.0** | Incremental builds, dependency constraint caching, and resource shrink optimization. |
+| **Annotation Processing** | **KAPT (Kotlin Annotation Processing Tool)** | Generates compile-time Room DAOs, Dagger-Hilt dependency injectors, and AndroidX metadata. |
+| **Base Activity** | **`ComponentActivity` (Jetpack Compose)** | Pure declarative Compose entrypoint, preventing AppCompat decor overhead and lifecycle collisions. |
 
 ---
 
-## 4. Backend & Cloud Services
-
-For a prototype/MVP with a small team, **Firebase** is recommended as the fastest path to a working multi-role, real-time backend without standing up custom infrastructure:
-
-| Need | Recommended Service |
-|---|---|
-| Authentication (role-based login) | **Firebase Authentication** (email/phone + custom claims for role: admin/asha/doctor/patient) |
-| Primary structured data (patients, cases, prescriptions, appointments, chats) | **Cloud Firestore** (NoSQL, real-time sync, offline persistence built in — pairs naturally with the offline-first requirement) |
-| File storage (prescription images, reports, chat attachments) | **Firebase Storage** |
-| Push notifications (instructions, notices, appointment updates) | **Firebase Cloud Messaging (FCM)** |
-| Background/serverless logic (e.g., aggregating heat-map data, triggering SOS SMS relay) | **Cloud Functions for Firebase** |
-| Analytics (usage patterns, drop-off points in onboarding) | **Firebase Analytics** |
-
-> **Note:** Firestore's native offline persistence complements, but does not replace, the local Room database — Room remains useful for app-specific derived/cached data (e.g., pre-rendered Health Card state, instruction "seen" flags) that shouldn't live in the remote schema.
-
-**Alternative** (if the team prefers full control / avoiding vendor lock-in): a custom REST/GraphQL backend (e.g., Node.js/Express or Django) with PostgreSQL + PostGIS (for map/geo queries) and a self-hosted object store (S3-compatible) — more setup effort, better long-term flexibility for a real dispensary/government-system integration. Recommended only if the team already has backend engineering capacity; otherwise Firebase is the faster prototype path.
-
----
-
-## 5. Maps & Location
-
-- **Google Maps SDK for Android** + **Places API** for the "nearest doctor/hospital" map view.
-- **Fused Location Provider API** (Google Play Services) for the patient's current location (used for map centering and SOS location sharing).
-- Offline consideration: cache last-fetched nearby facility list + basic map tile region if feasible; Maps SDK has limited offline support, so the fallback UX should clearly show "showing last known nearby facilities" when offline.
-
----
-
-## 6. AI / OCR for Prescription Digitization
-
-Goal: a patient uploads a photo of a physical prescription → app extracts the text → patient/ASHA reviews and edits before saving as structured data.
-
-Recommended approach for prototype:
-
-- **On-device text recognition**: **ML Kit Text Recognition (Google)** — free, works offline, good for extracting raw text from a photographed prescription without needing network access (fits the offline-first requirement).
-- **Structuring the extracted text** (turning raw OCR text into medicine name / dosage / quantity fields): a lightweight rules/heuristic parser for the prototype, with an option to call a **cloud LLM API (e.g., Anthropic Claude API)** when online for higher-accuracy structuring/translation of messy handwriting-derived text — falling back to manual entry/edit when offline or when confidence is low.
-- Always require a **human-in-the-loop confirmation step**: OCR output is pre-filled into an editable form, never auto-saved without review, since prescription accuracy is safety-critical.
-
----
-
-## 7. Emergency SOS & Messaging
-
-- **SMS**: Android `SmsManager` API (or a share/`Intent`-based fallback to the default SMS app) to guarantee SOS alerts work with **no data connectivity**, only cellular signal.
-- **In-app/push notification**: Firebase Cloud Messaging, used when data connectivity is available, as a faster/richer complement to SMS.
-- SOS payload includes patient identity, last known location (if available), and timestamp.
-- Required permissions: `SEND_SMS`, `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` — must be requested with clear, icon-based rationale screens given the target user's low digital literacy.
-
----
-
-## 8. Localization
-
-- Android's built-in **resource-based localization** (`strings.xml` per locale / `res/values-<lang>/`).
-- In-app **language switcher** (not just device-locale-based), since users may want to pick a regional language different from their device default.
-- All patient-facing instructional/help content authored in a translatable format (string resources or a CMS-style Firestore collection keyed by language code) so new languages can be added without a code release.
-
----
-
-## 9. Notifications & Chat
-
-- **Firebase Cloud Messaging** for admin broadcasts, ASHA notices, appointment reminders.
-- **Chat**: Firestore real-time listeners for ASHA↔Patient and relevant doctor threads, with local Room caching so chat history is viewable offline; new offline messages queue via the outbox pattern (§3) and send on reconnect.
-
----
-
-## 10. Data Visualization (Admin Heat Map)
-
-- A Compose-based custom heat map / choropleth view over villages/regions (color-coded by case density/severity), or **Google Maps heatmap layer** (`android-maps-utils` HeatmapTileProvider) if plotting over an actual geographic map is preferred over an abstract village-list view.
-- Aggregation of anonymized case data (condition category, severity, village) can be computed via a **Cloud Function** on write, keeping the heavy aggregation off-device.
-
----
-
-## 11. Security & Privacy
-
-- **Firebase Authentication** with custom claims for RBAC (`role: admin | asha | doctor | patient`), enforced via **Firestore Security Rules** so role permissions are checked server-side, not just hidden in the UI.
-- Sensitive health data encrypted at rest (Firestore/Storage default encryption) and in transit (TLS by default).
-- ASHA "proxy access" to a patient's data should be modeled explicitly in the data schema (e.g., an `authorizedHelpers` list on each patient record) and checked in security rules — not assumed from role alone.
-- Local Room database: consider **SQLCipher for Android** (encrypted SQLite) for at-rest protection of cached health data on-device, especially given shared/family device usage common in rural settings.
-
----
-
-## 12. Suggested Module/Package Structure
+## 2. Presentation & User Interface (UI/UX)
 
 ```
-com.vitalsense.app
-├── core/
-│   ├── di/                 (Hilt modules)
-│   ├── data/
-│   │   ├── local/          (Room DB, DAOs, entities)
-│   │   ├── remote/         (Firestore/Firebase or REST services)
-│   │   └── repository/     (Repository implementations — single source of truth per feature)
-│   ├── sync/                (WorkManager sync jobs, outbox pattern)
-│   ├── location/
-│   └── ui/theme/            (Compose theme, icon library, shared components)
-├── feature/
-│   ├── auth/                (login, role routing)
-│   ├── admin/                (villages, heatmap, broadcasts, review)
-│   ├── asha/                 (caseload, proxy actions, notices)
-│   ├── doctor/                (case review, prescriptions, appointments)
-│   ├── patient/
-│   │   ├── healthcard/
-│   │   ├── conditionentry/
-│   │   ├── prescriptions/      (upload, OCR, manual entry)
-│   │   ├── appointments/
-│   │   ├── map/
-│   │   ├── schemes/
-│   │   ├── mentalhealth/
-│   │   ├── sos/
-│   │   └── help/                (inline instructions + full manual)
-│   └── chat/
-└── MainActivity / NavGraph
+┌──────────────────────────────────────────────────────────┐
+│                   Jetpack Compose UI                     │
+├────────────────────────────┬─────────────────────────────┤
+│   Design Systems           │   Multilingual Engine       │
+│   • Glume Design (Cards)   │   • Dynamic Compose Tier    │
+│   • NagarSeva Theme (Gov)  │   • Android Per-App Locale  │
+│   • Sunlight Contrast Mode │   • Native Script Pickers   │
+└────────────────────────────┴─────────────────────────────┘
 ```
 
----
-
-## 13. Summary Stack Table
-
-| Layer | Technology |
-|---|---|
-| Language | Kotlin |
-| UI | Jetpack Compose |
-| Architecture | MVVM + Repository pattern |
-| DI | Hilt |
-| Async | Coroutines + Flow |
-| Local DB | Room (+ SQLCipher for encryption) |
-| Background sync | WorkManager (outbox pattern) |
-| Backend (recommended) | Firebase (Auth, Firestore, Storage, Cloud Functions, FCM) |
-| Maps | Google Maps SDK + Places API + Fused Location Provider |
-| OCR | ML Kit Text Recognition (on-device) + optional cloud LLM structuring when online |
-| SOS/SMS | Android `SmsManager` / SMS intent fallback |
-| Notifications | Firebase Cloud Messaging |
-| Localization | Android string resources + in-app language switcher |
-| Heat map | Google Maps heatmap layer (android-maps-utils) or custom Compose choropleth |
-| Security | Firebase Auth custom claims + Firestore Security Rules + local encryption |
+| Component | Technology | Implementation Details |
+| :--- | :--- | :--- |
+| **UI Toolkit** | **Jetpack Compose (BOM 2024.02.00)** | Fully reactive, declarative UI replacing legacy XML views for faster runtime rendering. |
+| **Design System** | **Material 3 (1.2.0) + Custom Design Tokens** | Custom Glume color palettes (`GlumePrimaryPurple`, `GlumeSuccessMint`, `GlumeAlertCoral`) with rounded pill shapes. |
+| **Daylight Visibility** | **Sunlight High-Contrast Mode** | Dynamic palette toggle optimizing screen contrast for outdoor ASHA field visits under direct sunlight. |
+| **Typography & A11y** | **Custom Scaled Typography + Touch Targets** | Strict adherence to minimum 48dp touch targets, high contrast ratios, and iconography cues for low-literacy users. |
+| **Localization Engine** | **Two-Tier 4-Language System** | Supports **English**, **हिन्दी (Hindi)**, **தமிழ் (Tamil)**, and **मराठी (Marathi)**: <br>• *Tier 1 (Compose Dynamic):* `interface AppStrings` via `LocalAppStrings` CompositionLocalProvider.<br>• *Tier 2 (OS Resources):* `res/values-*/strings.xml` + `locales_config.xml` for system notifications and workers. |
 
 ---
 
-## 14. Notes on Prototype vs. Production
+## 3. Architecture, Dependency Injection & State Management
 
-| Item | Prototype approach | Future production path |
-|---|---|---|
-| Dispensary/medicine stock | Hardcoded mock dataset in-app | Real-time API integration with dispensary inventory system |
-| Government schemes | Static curated content | Live feed from government open-data API |
-| SMS for SOS | Native Android SMS intent/`SmsManager` | Dedicated SMS gateway provider (e.g., Twilio, or telecom partnership) for reliability guarantees |
-| OCR structuring | Heuristic parser + optional cloud LLM call | Fine-tuned/purpose-built medical OCR model |
-| Backend | Firebase (fast to build, real-time, offline-friendly) | Evaluate custom backend if scale/compliance needs exceed Firebase's fit |
+| Concern | Technology | Architectural Role |
+| :--- | :--- | :--- |
+| **Architectural Pattern** | **MVVM + Clean Architecture** | Strict separation into Presentation (Compose), Domain (Models & Use Cases), and Data (Local & Remote Repositories). |
+| **Dependency Injection** | **Google Dagger Hilt 2.51** | Compile-time dependency injection across ViewModels, Repositories, Database DAOs, and Android Services. |
+| **Asynchronous Streaming** | **Kotlin Coroutines & StateFlow** | Cold Flows for Room database reactive observations; hot StateFlows for UI state updates. |
+| **Navigation** | **Single-Activity Compose Navigation** | Role-segmented navigation graph (`VitalSenseNavGraph`) switching between Patient, ASHA, Doctor, and Admin routes. |
+
+---
+
+## 4. Local Data & Offline-First Resilience
+
+VitalSense treats the **local database as the primary source of truth** for all reads. Network availability is treated as an opportunistic synchronization layer.
+
+| Component | Library / Pattern | Technical Specification |
+| :--- | :--- | :--- |
+| **Local Database** | **Android Room 2.6.1 (SQLite)** | High-performance relational storage for patients, vitals, appointments, prescriptions, IPD beds, OT surgeries, and equipment. |
+| **Sync Strategy** | **Outbox Pattern + WorkManager 2.9.0** | Offline writes are recorded with `syncState = PENDING_SYNC` and batched to Cloud Firestore when network connectivity is re-established. |
+| **Offline Health Card** | **Locally Cached ABHA Profile** | Complete demographic, QR code, and emergency contact data readable and renderable without internet access. |
+| **Secure Key Store** | **EncryptedSharedPreferences** | Hardware-backed AES-256-GCM encryption for active authentication tokens, user PINs, and session credentials. |
+
+---
+
+## 5. Cloud Backend & Remote Services
+
+| Capability | Cloud Service | Purpose & Usage |
+| :--- | :--- | :--- |
+| **Remote Database** | **Google Cloud Firestore** | NoSQL distributed database providing real-time multi-role updates across Doctors, Admins, and ASHAs. |
+| **Push Alerts** | **Firebase Cloud Messaging (FCM)** | High-priority broadcasts for disease outbreak notices, restock reminders, and appointment call invitations. |
+| **Blob Storage** | **Firebase Storage** | Encrypted bucket storage for prescription camera scans, digitized lab reports, and doctor reference documents. |
+| **Map Services** | **Google Maps Platform SDK** | Geolocation tracking of rural PHC clinics, village boundaries, and district disease epidemic clusters. |
+
+---
+
+## 6. ABDM & Digital Health Ecosystem (SIH 26133)
+
+| Component | Engine / Architecture | Capability |
+| :--- | :--- | :--- |
+| **ABHA ID Creation** | **`AbdmManager.kt`** | Simulates 14-digit ABHA ID (`14-XXXX-XXXX-XXXX`) and `@abdm` address creation via Aadhaar/biometric verification. |
+| **Consent Management** | **`ConsentManager.kt`** | Electronic Consent Artifacts conforming to ABDM M2/M3: date-bounded, revocable by patient, with emergency break-glass overrides. |
+| **FHIR Data Modeling** | **JSON Resource Schemas** | Standardized medical history, diagnostic encounters, and medication requests for longitudinal health records. |
+| **Audit Logging** | **`AuditLogEntity` + Room DAO** | Tamper-evident local logging of every health record access, consent grant, and proxy action. |
+
+---
+
+## 7. AI, Computer Vision & Telemedicine Hardware Interop
+
+| Capability | Framework / SDK | Implementation |
+| :--- | :--- | :--- |
+| **Prescription OCR** | **Google ML Kit Text Recognition** | On-device computer vision extracting medication names, dosages, and durations from physical handwritten paper slips. |
+| **Rule Triage Engine** | **`TriageEngine.kt`** | Clinical scoring algorithms categorizing patient vital signs (SpO2, Heart Rate, BP) into Low, Moderate, High, or Critical urgency tiers. |
+| **Tele-Consultation** | **WebRTC + Agora RTC SDK** | Adaptive low-bandwidth audio/video streaming with integrated live in-call Tele-Vitals HUD (`TeleConsultationModal`). |
+| **Audio Voice Guidance** | **Android Text-To-Speech (TTS)** | Multilingual spoken audio health verdicts for non-literate patients in all 4 supported regional languages. |
+| **Emergency Fallback** | **Android Telephony / SmsManager** | Cellular SMS dispatch with GPS latitude/longitude coordinates when cellular data/internet is completely dead. |\n
