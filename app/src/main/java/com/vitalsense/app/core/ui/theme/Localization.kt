@@ -241,7 +241,17 @@ data class AppStrings(
     val completeConsultation: String,
     val noShow: String,
     val skipPatient: String,
-    val prioritizePatient: String
+    val prioritizePatient: String,
+
+    // Doctor Analytics & Medical History
+    val triageBreakdownTitle: String,
+    val statTotal: String,
+    val statPending: String,
+    val statResolved: String,
+    val statReferred: String,
+    val medicalHistoryTitle: String,
+    val noMedicalHistory: String,
+    val medicalHistoryTab: String
 )
 
 val EnglishStrings = AppStrings(
@@ -456,7 +466,16 @@ val EnglishStrings = AppStrings(
     completeConsultation = "Complete Consultation",
     noShow = "Mark No-Show",
     skipPatient = "Skip",
-    prioritizePatient = "Prioritize"
+    prioritizePatient = "Prioritize",
+
+    triageBreakdownTitle = "Triage Severity Breakdown",
+    statTotal = "Total",
+    statPending = "Pending",
+    statResolved = "Resolved",
+    statReferred = "Referred",
+    medicalHistoryTitle = "Longitudinal Medical History",
+    noMedicalHistory = "No medical history recorded.",
+    medicalHistoryTab = "Medical History"
 )
 
 val HindiStrings = AppStrings(
@@ -671,7 +690,16 @@ val HindiStrings = AppStrings(
     completeConsultation = "परामर्श पूरा करें",
     noShow = "अनुपस्थित दर्ज करें",
     skipPatient = "आगे बढ़ें",
-    prioritizePatient = "प्राथमिकता दें"
+    prioritizePatient = "प्राथमिकता दें",
+
+    triageBreakdownTitle = "ट्राइएज गंभीरता विश्लेषण",
+    statTotal = "कुल",
+    statPending = "लंबित",
+    statResolved = "समाधानित",
+    statReferred = "रेफर किया",
+    medicalHistoryTitle = "रोगी का संपूर्ण चिकित्सा इतिहास",
+    noMedicalHistory = "कोई चिकित्सा इतिहास दर्ज नहीं है।",
+    medicalHistoryTab = "चिकित्सा इतिहास"
 )
 
 val TamilStrings = AppStrings(
@@ -886,7 +914,16 @@ val TamilStrings = AppStrings(
     completeConsultation = "ஆலோசனையை முடி",
     noShow = "வராதவராகப் பதிவு செய்",
     skipPatient = "தவிர்",
-    prioritizePatient = "முன்னுரிமை அளி"
+    prioritizePatient = "முன்னுரிமை அளி",
+
+    triageBreakdownTitle = "சிகிச்சை முன்னுரிமை பிரிவு",
+    statTotal = "மொத்தம்",
+    statPending = "நிலுவையில்",
+    statResolved = "தீர்க்கப்பட்டது",
+    statReferred = "பரிந்துரைக்கப்பட்டது",
+    medicalHistoryTitle = "நோயாளியின் மருத்துவ வரலாறு",
+    noMedicalHistory = "மருத்துவ வரலாறு எதுவும் பதிவு செய்யப்படவில்லை.",
+    medicalHistoryTab = "மருத்துவ வரலாறு"
 )
 
 val MarathiStrings = AppStrings(
@@ -1101,7 +1138,16 @@ val MarathiStrings = AppStrings(
     completeConsultation = "तपासणी पूर्ण करा",
     noShow = "गैरहजर नोंदवा",
     skipPatient = "पुढे जा",
-    prioritizePatient = "प्राधान्य द्या"
+    prioritizePatient = "प्राधान्य द्या",
+
+    triageBreakdownTitle = "ट्रायज तीव्रता विश्लेषण",
+    statTotal = "एकूण",
+    statPending = "प्रलंबित",
+    statResolved = "निराकरण",
+    statReferred = "रेफर केले",
+    medicalHistoryTitle = "रुग्णाचा संपूर्ण वैद्यकीय इतिहास",
+    noMedicalHistory = "कोणताही वैद्यकीय इतिहास नोंदवलेला नाही.",
+    medicalHistoryTab = "वैद्यकीय इतिहास"
 )
 
 val LocalAppStrings = staticCompositionLocalOf { EnglishStrings }

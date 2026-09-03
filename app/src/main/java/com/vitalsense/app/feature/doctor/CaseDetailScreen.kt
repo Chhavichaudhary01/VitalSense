@@ -616,7 +616,7 @@ fun CaseDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Longitudinal Medical History (${medicalHistory.size})",
+                            text = "${strings.medicalHistoryTitle} (${medicalHistory.size})",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -630,7 +630,7 @@ fun CaseDetailScreen(
                     if (isMedicalHistoryExpanded) {
                         if (medicalHistory.isEmpty()) {
                             Text(
-                                text = "No medical history recorded.",
+                                text = strings.noMedicalHistory,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary,
                                 modifier = Modifier.padding(top = Spacing.xs)

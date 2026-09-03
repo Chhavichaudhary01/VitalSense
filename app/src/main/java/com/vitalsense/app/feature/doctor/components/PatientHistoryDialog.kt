@@ -38,6 +38,7 @@ fun PatientHistoryDialog(
 
     val dateFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
     var selectedTab by remember { mutableStateOf(0) }
+    val strings = LocalAppStrings.current
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -126,7 +127,7 @@ fun PatientHistoryDialog(
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("Medical History") }
+                        text = { Text(strings.medicalHistoryTab) }
                     )
                 }
 
@@ -293,7 +294,7 @@ fun PatientHistoryDialog(
                     // Medical History Chronological Tab
                     if (medicalHistory.isEmpty()) {
                         Text(
-                            text = "No chronological history recorded yet.",
+                            text = strings.noMedicalHistory,
                             style = MaterialTheme.typography.bodySmall,
                             color = GlumeTextSecondary
                         )

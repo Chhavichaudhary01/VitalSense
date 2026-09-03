@@ -103,4 +103,14 @@
     <string name="request_more_info">Request More Info</string>
     <string name="specialist_findings">Specialist Findings</string>
     <string name="specialist_recommendations">Specialist Recommendations</string>
+
+    <!-- Doctor Analytics & Medical History -->
+    <string name="triage_breakdown_title">Triage Severity Breakdown</string>
+    <string name="stat_total">Total</string>
+    <string name="stat_pending">Pending</string>
+    <string name="stat_resolved">Resolved</string>
+    <string name="stat_referred">Referred</string>
+    <string name="medical_history_title">Longitudinal Medical History</string>
+    <string name="no_medical_history">No medical history recorded.</string>
+    <string name="medical_history_tab">Medical History</string>
 </resources>

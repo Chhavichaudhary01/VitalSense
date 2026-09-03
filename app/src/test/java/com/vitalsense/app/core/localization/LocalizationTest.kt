@@ -41,6 +41,8 @@ class LocalizationTest {
             assertTrue("videoCall must not be blank in ${lang.name}", strings.videoCall.isNotBlank())
             assertTrue("voiceCall must not be blank in ${lang.name}", strings.voiceCall.isNotBlank())
             assertTrue("liveQueueTitle must not be blank in ${lang.name}", strings.liveQueueTitle.isNotBlank())
+            assertTrue("triageBreakdownTitle must not be blank in ${lang.name}", strings.triageBreakdownTitle.isNotBlank())
+            assertTrue("medicalHistoryTitle must not be blank in ${lang.name}", strings.medicalHistoryTitle.isNotBlank())
         }
     }
 

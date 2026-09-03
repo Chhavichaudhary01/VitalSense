@@ -103,4 +103,14 @@
     <string name="request_more_info">अधिक जानकारी मांगें</string>
     <string name="specialist_findings">विशेषज्ञ रिपोर्ट</string>
     <string name="specialist_recommendations">विशेषज्ञ सुझाव</string>
+
+    <!-- Doctor Analytics & Medical History -->
+    <string name="triage_breakdown_title">ट्राइएज गंभीरता विश्लेषण</string>
+    <string name="stat_total">कुल</string>
+    <string name="stat_pending">लंबित</string>
+    <string name="stat_resolved">समाधानित</string>
+    <string name="stat_referred">रेफर किया</string>
+    <string name="medical_history_title">रोगी का संपूर्ण चिकित्सा इतिहास</string>
+    <string name="no_medical_history">कोई चिकित्सा इतिहास दर्ज नहीं है।</string>
+    <string name="medical_history_tab">चिकित्सा इतिहास</string>
 </resources>

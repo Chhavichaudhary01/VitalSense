@@ -103,4 +103,14 @@
     <string name="request_more_info">கூடுதல் தகவல் கோரு</string>
     <string name="specialist_findings">பரிசோதனை முடிவுகள்</string>
     <string name="specialist_recommendations">மருத்துவ ஆலோசனைகள்</string>
+
+    <!-- Doctor Analytics & Medical History -->
+    <string name="triage_breakdown_title">சிகிச்சை முன்னுரிமை பிரிவு</string>
+    <string name="stat_total">மொத்தம்</string>
+    <string name="stat_pending">நிலுவையில்</string>
+    <string name="stat_resolved">தீர்க்கப்பட்டது</string>
+    <string name="stat_referred">பரிந்துரைக்கப்பட்டது</string>
+    <string name="medical_history_title">நோயாளியின் மருத்துவ வரலாறு</string>
+    <string name="no_medical_history">மருத்துவ வரலாறு எதுவும் பதிவு செய்யப்படவில்லை.</string>
+    <string name="medical_history_tab">மருத்துவ வரலாறு</string>
 </resources>
