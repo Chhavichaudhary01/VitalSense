@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.VitalSense" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.VitalSense" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:statusBarColor">@color/background_cream</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">@color/background_cream</item>
