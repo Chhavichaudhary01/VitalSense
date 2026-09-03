@@ -62,3 +62,11 @@ enum class CaseStatus(val displayName: String, val colorHex: Long) {
     CLOSED("Closed", 0xFFE0E0E0)                  // Grey
 }
 
+/**
+ * Types of entries in the patient's longitudinal medical history.
+ */
+enum class MedicalHistoryType(val displayName: String) {
+    CONDITION("Past Condition"),
+    MEDICATION("Medication Record")
+}
+

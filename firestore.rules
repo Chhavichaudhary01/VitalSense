@@ -41,6 +41,12 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
+    // patientMedicalHistory rules
+    match /patientMedicalHistory/{historyId} {
+      allow read, create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
     // Default catch-all for clinical database collections
     match /{document=**} {
       allow read, write: if isAuthenticated();

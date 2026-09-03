@@ -260,6 +260,17 @@ interface VitalSenseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertDoctorSlot(slot: DoctorDaySlotEntity)
+
+    // --- Patient Medical History ---
+    @Query("SELECT * FROM medical_history WHERE patientId = :patientId ORDER BY timestamp DESC")
+    fun getMedicalHistoryForPatient(patientId: String): Flow<List<MedicalHistoryEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedicalHistoryEntry(entry: MedicalHistoryEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedicalHistoryEntries(entries: List<MedicalHistoryEntity>)
 }
+
 
 

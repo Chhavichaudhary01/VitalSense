@@ -29,6 +29,7 @@ fun PatientHistoryDialog(
     conditions: List<ConditionRecord>,
     prescriptions: List<Prescription>,
     appointments: List<Appointment> = emptyList(),
+    medicalHistory: List<MedicalHistoryEntry> = emptyList(),
     onDismiss: () -> Unit
 ) {
     val patientConditions = conditions.filter { it.patientId == patient.id }
@@ -36,6 +37,7 @@ fun PatientHistoryDialog(
     val patientAppointments = appointments.filter { it.patientId == patient.id }
 
     val dateFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+    var selectedTab by remember { mutableStateOf(0) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -111,8 +113,26 @@ fun PatientHistoryDialog(
                     }
                 }
 
-                // 3. Past Conditions Log
-                Text(
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color.Transparent,
+                    contentColor = GlumePrimaryPurple
+                ) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        text = { Text("Records") }
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        text = { Text("Medical History") }
+                    )
+                }
+
+                if (selectedTab == 0) {
+                    // 3. Past Conditions Log
+                    Text(
                     text = "Condition Submissions (${patientConditions.size})",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = GlumeTextPrimary
@@ -263,6 +283,49 @@ fun PatientHistoryDialog(
                                             color = if (appt.status.contains("Pending", true)) GlumeWarningAmber else GlumeSuccessText
                                         ),
                                         modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                    // Medical History Chronological Tab
+                    if (medicalHistory.isEmpty()) {
+                        Text(
+                            text = "No chronological history recorded yet.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = GlumeTextSecondary
+                        )
+                    } else {
+                        medicalHistory.sortedByDescending { it.timestamp }.forEach { entry ->
+                            VitalSenseCard {
+                                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = entry.title,
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = GlumeTextPrimary
+                                        )
+                                        Text(
+                                            text = entry.dateFormatted,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = GlumeTextSecondary
+                                        )
+                                    }
+                                    Text(
+                                        text = entry.details,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextPrimary
+                                    )
+                                    Text(
+                                        text = "By ${entry.doctorName}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = GlumeTextSecondary
                                     )
                                 }
                             }

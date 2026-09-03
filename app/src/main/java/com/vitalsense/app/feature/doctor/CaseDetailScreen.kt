@@ -3,6 +3,7 @@ package com.vitalsense.app.feature.doctor
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.util.touchSpring
 import com.vitalsense.app.feature.doctor.components.*
 import com.vitalsense.app.feature.doctor.components.PatientHistoryDialog
 import com.vitalsense.app.feature.doctor.components.PrescriptionComposerDialog
@@ -34,6 +36,7 @@ fun CaseDetailScreen(
     priorPrescriptions: List<Prescription>,
     dispensaryStock: List<DispensaryItem>,
     currentDoctor: Doctor,
+    medicalHistory: List<MedicalHistoryEntry> = emptyList(),
     allConditions: List<ConditionRecord> = emptyList(),
     allAppointments: List<Appointment> = emptyList(),
     onBack: () -> Unit,
@@ -58,6 +61,7 @@ fun CaseDetailScreen(
     var showTeleConsultModal by remember { mutableStateOf(false) }
     var showMedicalCertDialog by remember { mutableStateOf(false) }
     var showOrderLabDialog by remember { mutableStateOf(false) }
+    var isMedicalHistoryExpanded by remember { mutableStateOf(false) }
 
     val isMentalHealthCase = record.category == ConditionCategory.MENTAL_HEALTH ||
             record.requestedDoctorType == DoctorSpecialty.PSYCHOLOGIST
@@ -514,6 +518,79 @@ fun CaseDetailScreen(
                 }
             }
         }
+
+        // 8. Patient Medical History (Collapsible)
+        item {
+            VitalSenseCard {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .touchSpring()
+                            .clickable { isMedicalHistoryExpanded = !isMedicalHistoryExpanded }
+                            .padding(vertical = Spacing.xxs),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Longitudinal Medical History (${medicalHistory.size})",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = GlumeTextPrimary
+                        )
+                        Text(
+                            text = if (isMedicalHistoryExpanded) "▲" else "▼",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = GlumeTextSecondary
+                        )
+                    }
+
+                    if (isMedicalHistoryExpanded) {
+                        if (medicalHistory.isEmpty()) {
+                            Text(
+                                text = "No medical history recorded.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary,
+                                modifier = Modifier.padding(top = Spacing.xs)
+                            )
+                        } else {
+                            medicalHistory.sortedByDescending { it.timestamp }.forEach { entry ->
+                                HorizontalDivider(color = GlumeBorder, modifier = Modifier.padding(vertical = Spacing.xxs))
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = entry.title,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = GlumeTextPrimary
+                                        )
+                                        Text(
+                                            text = entry.dateFormatted,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = GlumeTextSecondary
+                                        )
+                                    }
+                                    Text(
+                                        text = entry.details,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextPrimary
+                                    )
+                                    Text(
+                                        text = "By ${entry.doctorName}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = GlumeTextSecondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Modal Dialogs
@@ -523,6 +600,7 @@ fun CaseDetailScreen(
             conditions = allConditions,
             prescriptions = priorPrescriptions,
             appointments = allAppointments,
+            medicalHistory = medicalHistory,
             onDismiss = { showHistoryDialog = false }
         )
     }

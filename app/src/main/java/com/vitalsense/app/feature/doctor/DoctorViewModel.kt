@@ -52,6 +52,26 @@ class DoctorViewModel @Inject constructor(
         else flowOf(null)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    // Doctor Case Analytics computed from scopedCases
+    val caseAnalytics: StateFlow<DoctorCaseAnalytics> = scopedCases.map { cases ->
+        DoctorCaseAnalytics(
+            totalCases = cases.size,
+            lowCount = cases.count { it.severity == SeverityLevel.LOW },
+            moderateCount = cases.count { it.severity == SeverityLevel.MODERATE },
+            highCount = cases.count { it.severity == SeverityLevel.HIGH },
+            severeCount = cases.count { it.severity == SeverityLevel.SEVERE },
+            respondedCount = cases.count { it.status == CaseStatus.RESPONDED || it.status == CaseStatus.CLOSED },
+            pendingCount = cases.count { it.status == CaseStatus.PENDING_REVIEW },
+            referredCount = cases.count { it.status == CaseStatus.REFERRED }
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DoctorCaseAnalytics(0, 0, 0, 0, 0, 0, 0, 0))
+
+    // Patient Medical History for selected case
+    val patientMedicalHistory: StateFlow<List<MedicalHistoryEntry>> = _selectedCase.flatMapLatest { case ->
+        if (case != null) repository.getMedicalHistoryForPatient(case.patientId)
+        else flowOf(emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun selectCase(record: ConditionRecord) {
         _selectedCase.value = record
     }
@@ -157,8 +177,24 @@ class DoctorViewModel @Inject constructor(
             isOcrExtracted = false
         )
 
+        val historyEntry = MedicalHistoryEntry(
+            id = "mh_${System.currentTimeMillis()}",
+            patientId = patientId,
+            type = MedicalHistoryType.MEDICATION,
+            title = "Prescription Issued",
+            details = "Prescribed ${medicines.size} medicines. Instructions: $instructions",
+            severity = null,
+            doctorId = doctor.id,
+            doctorName = doctor.name,
+            caseId = caseId,
+            prescriptionId = newPrescription.id,
+            timestamp = System.currentTimeMillis(),
+            dateFormatted = dateFormat.format(Date())
+        )
+
         viewModelScope.launch {
             repository.savePrescription(newPrescription)
+            repository.addMedicalHistoryEntry(historyEntry)
         }
     }
 

@@ -383,3 +383,40 @@ data class DoctorQueueSummary(
     val isQueueOpen: Boolean
 )
 
+// --- Patient Medical History ---
+
+/**
+ * A single entry in a patient's longitudinal medical history.
+ * Append-only: entries are never updated or deleted (clinical audit trail).
+ */
+data class MedicalHistoryEntry(
+    val id: String,
+    val patientId: String,
+    val type: MedicalHistoryType,
+    val title: String,
+    val details: String,
+    val severity: SeverityLevel? = null,
+    val doctorId: String,
+    val doctorName: String,
+    val caseId: String? = null,
+    val prescriptionId: String? = null,
+    val timestamp: Long,
+    val dateFormatted: String
+)
+
+// --- Doctor Case Analytics ---
+
+/**
+ * Aggregated case statistics for a doctor, computed from scoped cases.
+ */
+data class DoctorCaseAnalytics(
+    val totalCases: Int,
+    val lowCount: Int,
+    val moderateCount: Int,
+    val highCount: Int,
+    val severeCount: Int,
+    val respondedCount: Int,
+    val pendingCount: Int,
+    val referredCount: Int
+)
+

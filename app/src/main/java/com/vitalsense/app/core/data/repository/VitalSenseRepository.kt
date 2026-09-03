@@ -130,5 +130,10 @@ interface VitalSenseRepository {
     suspend fun skipEntry(entryId: String)
     suspend fun prioritizeEntry(entryId: String)
     suspend fun cancelQueueEntry(entryId: String)
+
+    // --- Patient Medical History ---
+    fun getMedicalHistoryForPatient(patientId: String): Flow<List<MedicalHistoryEntry>>
+    suspend fun addMedicalHistoryEntry(entry: MedicalHistoryEntry)
 }
+
 
