@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.vitalsense.app.core.data.model.Patient
 import com.vitalsense.app.core.ui.components.SeverityBadge
+import com.vitalsense.app.core.ui.components.VitalSenseButton
+import com.vitalsense.app.core.ui.components.ButtonStyle
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.patient.components.PatientTimelineDialog
 import kotlinx.coroutines.launch

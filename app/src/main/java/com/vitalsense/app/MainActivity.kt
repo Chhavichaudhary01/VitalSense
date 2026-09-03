@@ -28,9 +28,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val currentLanguage by appStateHolder.currentLanguage.collectAsStateWithLifecycle()
             val isLightMode by appStateHolder.isPresentationLightMode.collectAsStateWithLifecycle()
 
             VitalSenseTheme(
+                language = currentLanguage,
                 usePatientLightMode = isLightMode
             ) {
                 Surface(
