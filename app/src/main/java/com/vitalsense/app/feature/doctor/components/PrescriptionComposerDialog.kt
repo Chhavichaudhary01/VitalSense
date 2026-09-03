@@ -47,6 +47,7 @@ fun PrescriptionComposerDialog(
     medicineRepoOverride: MedicineAvailabilityRepository? = null
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
     val medicineRepo = remember {
         medicineRepoOverride ?: run {
             val db = VitalSenseDatabase.getDatabase(context)
@@ -155,7 +156,7 @@ fun PrescriptionComposerDialog(
                 ) {
                     Column {
                         Text(
-                            text = "💊 Issue Structured Prescription",
+                            text = "💊 ${strings.issueRx}",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -572,7 +573,7 @@ fun PrescriptionComposerDialog(
                     enabled = medicinesList.isNotEmpty()
                 ) {
                     Text(
-                        text = "Issue Prescription to Patient & Dispensary ✓",
+                        text = "${strings.savePrescriptionRecord} ✓",
                         style = MaterialTheme.typography.labelLarge
                     )
                 }

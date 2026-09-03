@@ -47,6 +47,7 @@ fun AppointmentsScreen(
     language: AppLanguage = AppLanguage.ENGLISH
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
     val today = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) }
 
     var showBookCallDialog by remember { mutableStateOf(false) }
@@ -59,7 +60,7 @@ fun AppointmentsScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "My Consultations & Visits",
+                            text = strings.scheduledAppointments,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -119,7 +120,7 @@ fun AppointmentsScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Book a Call", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(strings.bookACall, fontWeight = FontWeight.Bold, color = Color.White)
                         }
 
                         OutlinedButton(
@@ -131,7 +132,7 @@ fun AppointmentsScreen(
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.5.dp, NagarSevaPrimary)
                         ) {
-                            Text("Live Queue HUD", fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
+                            Text(strings.liveQueueHud, fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
                         }
                     }
                 }
@@ -156,12 +157,12 @@ fun AppointmentsScreen(
                                 ) {
                                     Text("📅", fontSize = 36.sp)
                                     Text(
-                                        text = "No appointments scheduled",
+                                        text = strings.noUpcomingAppointments,
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                         color = GlumeTextPrimary
                                     )
                                     Text(
-                                        text = "Book a scheduled video or voice consultation with a verified specialist.",
+                                        text = strings.bookConsultationSubtitle,
                                         style = MaterialTheme.typography.labelSmall,
                                         color = GlumeTextSecondary
                                     )
@@ -437,7 +438,7 @@ fun AppointmentsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text("📅", fontSize = 24.sp)
-                    Text("Book Tele-Consultation", fontWeight = FontWeight.Bold)
+                    Text(strings.bookTeleConsultation, fontWeight = FontWeight.Bold)
                 }
             },
             text = {

@@ -21,6 +21,7 @@ import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.components.VitalSenseTextField
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.theme.LocalAppStrings
 
 @Composable
 fun OtSchedulerScreen(
@@ -29,6 +30,7 @@ fun OtSchedulerScreen(
     onBookSurgery: (OtSurgeryBooking) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var showBookSurgeryDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
@@ -59,7 +61,7 @@ fun OtSchedulerScreen(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
                         Text("←", color = GlumeTextPrimary, fontWeight = FontWeight.Bold)
-                        Text("Doctor Desk", style = MaterialTheme.typography.labelMedium, color = GlumeTextPrimary)
+                        Text(strings.roleDoctor, style = MaterialTheme.typography.labelMedium, color = GlumeTextPrimary)
                     }
                 }
 
@@ -92,12 +94,12 @@ fun OtSchedulerScreen(
                     ) {
                         Column {
                             Text(
-                                text = "🔪 Operation Theatre & Surgical Desk",
+                                text = "🔪 ${strings.otScheduler}",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )
                             Text(
-                                text = "Major OT-1, Trauma OT-2 & Emergency Minor OT Suites",
+                                text = strings.otSubtitle,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -113,7 +115,7 @@ fun OtSchedulerScreen(
                             contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                             modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                         ) {
-                            Text("+ Book OT Slot", style = MaterialTheme.typography.labelSmall)
+                            Text("+ ${strings.bookOtSlot}", style = MaterialTheme.typography.labelSmall)
                         }
                     }
 
@@ -286,7 +288,7 @@ fun OtSchedulerScreen(
             onDismissRequest = { showBookSurgeryDialog = false },
             title = {
                 Text(
-                    text = "Book Operation Theatre Slot",
+                    text = strings.bookOtSlot,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = GlumeTextPrimary
                 )

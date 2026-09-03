@@ -37,6 +37,7 @@ fun PrescriptionUploadDialog(
     onDismiss: () -> Unit,
     onSavePrescription: (Prescription) -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val coroutineScope = rememberCoroutineScope()
     var selectedTab by remember { mutableStateOf(0) } // 0: Camera / AI Scan, 1: Write Down (Manual)
 
@@ -111,7 +112,7 @@ fun PrescriptionUploadDialog(
                 ) {
                     Column {
                         Text(
-                            text = if (isAshaProxy) "Upload Prescription (for ${patient.name})" else "Add Prescription",
+                            text = if (isAshaProxy) "Upload Prescription (for ${patient.name})" else strings.uploadPrescriptionTitle,
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -131,7 +132,7 @@ fun PrescriptionUploadDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    val tabs = listOf("📷 Camera / AI Scan", "✍️ Write Down")
+                    val tabs = listOf("📷 ${strings.cameraAiScan}", "✍️ ${strings.writeDown}")
                     tabs.forEachIndexed { index, title ->
                         val isSelected = selectedTab == index
                         Surface(

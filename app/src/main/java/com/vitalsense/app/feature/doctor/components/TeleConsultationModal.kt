@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.theme.LocalAppStrings
 import kotlinx.coroutines.delay
 
 @Composable
@@ -38,6 +39,7 @@ fun TeleConsultationModal(
     onDismiss: () -> Unit,
     onEndCall: (consultationNotes: String) -> Unit
 ) {
+    val strings = LocalAppStrings.current
     var isMuted by remember { mutableStateOf(false) }
     var isCameraOff by remember { mutableStateOf(false) }
     var isLowBandwidthMode by remember { mutableStateOf(false) }
@@ -282,7 +284,7 @@ fun TeleConsultationModal(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "LIVE VITALS",
+                                text = strings.liveTeleVitals,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold,
@@ -533,7 +535,7 @@ fun TeleConsultationModal(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Default.CallEnd,
-                                        contentDescription = "End Call",
+                                        contentDescription = strings.endCall,
                                         tint = Color.White,
                                         modifier = Modifier.size(32.dp)
                                     )

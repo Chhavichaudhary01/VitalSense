@@ -27,6 +27,7 @@ import com.vitalsense.app.core.ui.components.ButtonStyle
 import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.theme.LocalAppStrings
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,6 +40,7 @@ fun OpdQueueScreen(
     onBookToken: (OpdToken) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var showBookTokenDialog by remember { mutableStateOf(false) }
 
     val activeToken = opdTokens.firstOrNull { it.patientId == patient.id && it.status != "Completed" }
@@ -49,12 +51,12 @@ fun OpdQueueScreen(
                 title = {
                     Column {
                         Text(
-                            text = "OPD Live Queue & Tokens",
+                            text = strings.opdLiveQueueAndTokens,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
                         Text(
-                            text = "Outpatient Department & Live Token Desk",
+                            text = strings.opdSubtitle,
                             style = MaterialTheme.typography.labelSmall,
                             color = GlumeTextSecondary
                         )
@@ -64,7 +66,7 @@ fun OpdQueueScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = strings.exit,
                             tint = GlumeTextPrimary
                         )
                     }
@@ -73,7 +75,7 @@ fun OpdQueueScreen(
                     IconButton(onClick = { showBookTokenDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.ConfirmationNumber,
-                            contentDescription = "Book Token",
+                            contentDescription = strings.bookOpdToken,
                             tint = GlumePrimaryPurple
                         )
                     }
@@ -145,7 +147,7 @@ fun OpdQueueScreen(
             // 3. Queue History
             item {
                 Text(
-                    text = "Your Recent OPD Tokens",
+                    text = strings.yourActiveTokens,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     color = GlumePrimaryPurpleLight
                 )
@@ -154,7 +156,7 @@ fun OpdQueueScreen(
             if (opdTokens.isEmpty()) {
                 item {
                     Text(
-                        text = "No previous OPD tokens found.",
+                        text = strings.noActiveTokens,
                         style = MaterialTheme.typography.bodySmall,
                         color = GlumeTextSecondary
                     )
@@ -410,6 +412,7 @@ fun BookOpdTokenDialog(
     onDismiss: () -> Unit,
     onConfirmBook: (OpdToken) -> Unit
 ) {
+    val strings = LocalAppStrings.current
     var selectedDept by remember { mutableStateOf("General Medicine") }
     var selectedDoctor by remember { mutableStateOf("Dr. Rajesh Varma") }
 
@@ -424,7 +427,7 @@ fun BookOpdTokenDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Book Hospital OPD Token",
+                text = strings.bookHospitalOpdToken,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = GlumeTextPrimary
             )
@@ -432,7 +435,7 @@ fun BookOpdTokenDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 Text(
-                    text = "Select Department & Consultation Desk:",
+                    text = strings.selectDepartment,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = GlumeTextSecondary
                 )
@@ -481,7 +484,7 @@ fun BookOpdTokenDialog(
         },
         confirmButton = {
             VitalSenseButton(
-                text = "Generate Token Slip",
+                text = strings.confirmBooking,
                 onClick = {
                     val tokenPrefix = when (selectedDept) {
                         "General Medicine" -> "OPD-A"
@@ -510,7 +513,7 @@ fun BookOpdTokenDialog(
         },
         dismissButton = {
             VitalSenseButton(
-                text = "Cancel",
+                text = strings.cancel,
                 onClick = onDismiss,
                 style = ButtonStyle.SECONDARY
             )

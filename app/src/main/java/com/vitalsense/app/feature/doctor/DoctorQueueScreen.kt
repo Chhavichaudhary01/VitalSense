@@ -44,6 +44,7 @@ fun DoctorQueueScreen(
     onAddWalkIn: (patientId: String, patientName: String) -> Unit,
     onUpdateSlotConfig: (capacity: Int, isWalkInOpen: Boolean, startTime: String, endTime: String) -> Unit
 ) {
+    val strings = LocalAppStrings.current
     var showSlotConfigDialog by remember { mutableStateOf(false) }
     var showWalkInDialog by remember { mutableStateOf(false) }
     var outcomeNotesText by remember { mutableStateOf("") }
@@ -72,7 +73,7 @@ fun DoctorQueueScreen(
                     title = {
                         Column {
                             Text(
-                                text = "Live Clinic Queue",
+                                text = strings.liveQueueTitle,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )

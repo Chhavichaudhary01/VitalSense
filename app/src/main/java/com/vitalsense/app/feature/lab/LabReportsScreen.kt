@@ -30,6 +30,7 @@ import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.components.VitalSenseTextField
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.theme.LocalAppStrings
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,6 +43,7 @@ fun LabReportsScreen(
     onOrderNewTest: (LabReport) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var selectedCategory by remember { mutableStateOf("All") }
     var showOrderDialog by remember { mutableStateOf(false) }
     var selectedReportForDetails by remember { mutableStateOf<LabReport?>(null) }
@@ -66,7 +68,7 @@ fun LabReportsScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Diagnostic Lab Reports",
+                            text = strings.diagnosticLabReports,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -81,7 +83,7 @@ fun LabReportsScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = strings.exit,
                             tint = GlumeTextPrimary
                         )
                     }
@@ -90,7 +92,7 @@ fun LabReportsScreen(
                     IconButton(onClick = { showOrderDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.AddCircle,
-                            contentDescription = "Order Lab Test",
+                            contentDescription = strings.viewLabDiagnostics,
                             tint = GlumePrimaryPurple
                         )
                     }
@@ -121,7 +123,7 @@ fun LabReportsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Total Reports",
+                                text = strings.statTotal,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = GlumeTextSecondary
                             )
@@ -244,6 +246,7 @@ fun LabReportCard(
     onViewDetails: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     val abnormalCount = report.items.count { it.flag != "NORMAL" }
 
     VitalSenseCard(
@@ -294,7 +297,7 @@ fun LabReportCard(
                     color = if (abnormalCount > 0) GlumeErrorContainer else GlumeSuccessContainer
                 ) {
                     Text(
-                        text = if (abnormalCount > 0) "$abnormalCount Out of Range" else "Normal",
+                        text = if (abnormalCount > 0) "$abnormalCount ${strings.outOfStock}" else strings.normalRange,
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = if (abnormalCount > 0) GlumeError else GlumeSuccessText,
                             fontWeight = FontWeight.Bold

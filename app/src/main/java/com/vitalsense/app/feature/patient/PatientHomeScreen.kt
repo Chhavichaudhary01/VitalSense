@@ -406,12 +406,12 @@ fun PatientHomeScreen(
                         }
                         Column {
                             Text(
-                                text = "Live Queue & Appointments",
+                                text = strings.liveQueueAndAppointments,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )
                             Text(
-                                text = "Check in today, view token # and wait time",
+                                text = strings.liveQueueDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -425,7 +425,7 @@ fun PatientHomeScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text("HUD", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(strings.hud, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                         OutlinedButton(
                             onClick = onNavigateToAppointments,
@@ -433,7 +433,7 @@ fun PatientHomeScreen(
                             border = BorderStroke(1.dp, NagarSevaPrimary),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text("Book", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
+                            Text(strings.book, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
                         }
                     }
                 }
@@ -444,12 +444,12 @@ fun PatientHomeScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(
-                    text = "Hospital & Clinical Services",
+                    text = strings.hospitalClinicalServices,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = textPrimaryColor
                 )
                 Text(
-                    text = "Access pathology investigations, digital OPD token slips, and district blood registry.",
+                    text = strings.hospitalServicesDesc,
                     style = MaterialTheme.typography.bodySmall,
                     color = textSecondaryColor
                 )
@@ -468,12 +468,12 @@ fun PatientHomeScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                             Text("🧪", fontSize = 24.sp)
                             Text(
-                                text = "Lab Reports",
+                                text = strings.labReports,
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryColor
                             )
                             Text(
-                                text = "CBC, Sugar, Serology",
+                                text = strings.labReportsSub,
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = textSecondaryColor
                             )
@@ -490,12 +490,12 @@ fun PatientHomeScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                             Text("🎟️", fontSize = 24.sp)
                             Text(
-                                text = "OPD Queue",
+                                text = strings.opdQueue,
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryColor
                             )
                             Text(
-                                text = "Live Tokens & Cabins",
+                                text = strings.opdQueueSub,
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = textSecondaryColor
                             )
@@ -512,12 +512,12 @@ fun PatientHomeScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                             Text("🩸", fontSize = 24.sp)
                             Text(
-                                text = "Blood Bank",
+                                text = strings.bloodBank,
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryColor
                             )
                             Text(
-                                text = "Emergency Units",
+                                text = strings.bloodBankSub,
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = textSecondaryColor
                             )
@@ -552,13 +552,13 @@ fun PatientHomeScreen(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
-                                    text = "Video & Voice Consult Doctor",
+                                    text = strings.consultationCardTitle,
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                     color = textPrimaryColor
                                 )
                                 Surface(shape = PillShape, color = GlumePrimaryPurpleContainer) {
                                     Text(
-                                        text = "ROUTINE",
+                                        text = strings.routineBadge,
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
@@ -569,7 +569,7 @@ fun PatientHomeScreen(
                                 }
                             }
                             Text(
-                                text = "Book or join routine check-ins with your assigned physician (no emergency alarm)",
+                                text = strings.consultationCardDesc,
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                 color = textSecondaryColor
                             )

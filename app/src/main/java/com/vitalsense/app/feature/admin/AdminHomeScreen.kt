@@ -250,7 +250,7 @@ fun AdminHomeScreen(
                     badgeColor = GlumeAlertCoral
                 )
                 GlumeStatCard(
-                    label = "Monitored",
+                    label = strings.assignedVillages,
                     value = "${villages.size}",
                     icon = "🏡",
                     modifier = Modifier.weight(1f),
@@ -258,7 +258,7 @@ fun AdminHomeScreen(
                     badgeColor = GlumePrimaryPurple
                 )
                 GlumeStatCard(
-                    label = "Outbreaks",
+                    label = strings.outbreakSurveillance,
                     value = "$outbreakCount",
                     icon = "⚠️",
                     modifier = Modifier.weight(1f),
@@ -271,7 +271,7 @@ fun AdminHomeScreen(
         // 3. Section: Village Disease Trend Heat Map Cards
         item {
             Text(
-                text = "🗺️ Google Outbreak Surveillance Map",
+                text = "🗺️ ${strings.outbreakSurveillance}",
                 style = MaterialTheme.typography.headlineMedium,
                 color = GlumeTextPrimary
             )

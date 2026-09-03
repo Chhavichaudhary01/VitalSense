@@ -33,6 +33,7 @@ fun SpecialistReferralsScreen(
     onStartConsultCall: (referral: Referral) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var selectedFilter by remember { mutableStateOf("ALL") } // "ALL", "PENDING", "ACTIVE", "COMPLETED"
     var activeDeclineReferral by remember { mutableStateOf<Referral?>(null) }
     var activeInfoRequestReferral by remember { mutableStateOf<Referral?>(null) }
@@ -88,7 +89,7 @@ fun SpecialistReferralsScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "Specialist Referrals Queue",
+                            text = strings.doctorReferralsTitle,
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )

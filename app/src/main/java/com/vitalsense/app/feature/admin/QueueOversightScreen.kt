@@ -36,6 +36,7 @@ fun QueueOversightScreen(
     onClearSelectedDoctor: () -> Unit,
     onBackClick: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val selectedDoctorSummary = remember(summaries, selectedDoctorId) {
         summaries.firstOrNull { it.doctorId == selectedDoctorId }
     }
@@ -47,7 +48,7 @@ fun QueueOversightScreen(
                     title = {
                         Column {
                             Text(
-                                text = if (selectedDoctorSummary != null) "Dr. ${selectedDoctorSummary.doctorName} Queue" else "District Live Queue Oversight",
+                                text = if (selectedDoctorSummary != null) "Dr. ${selectedDoctorSummary.doctorName} Queue" else strings.liveQueueTitle,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )

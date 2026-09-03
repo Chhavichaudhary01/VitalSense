@@ -120,7 +120,7 @@ fun AshaHomeScreen(
                         verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
                         Text(
-                            text = "COMMUNITY CASELOAD PROGRESS",
+                            text = strings.villageCaseload.uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp
@@ -157,7 +157,7 @@ fun AshaHomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 GlumeStatCard(
-                    label = "Caseload",
+                    label = strings.villageCaseload,
                     value = "$totalPatients",
                     icon = "👥",
                     modifier = Modifier.weight(1f),
@@ -165,7 +165,7 @@ fun AshaHomeScreen(
                     badgeColor = GlumePrimaryPurple
                 )
                 GlumeStatCard(
-                    label = "High Risk",
+                    label = strings.criticalCases,
                     value = "$highRiskPatients",
                     icon = "⚠️",
                     modifier = Modifier.weight(1f),
@@ -173,7 +173,7 @@ fun AshaHomeScreen(
                     badgeColor = if (highRiskPatients > 0) GlumeAlertCoral else GlumeSuccessMint
                 )
                 GlumeStatCard(
-                    label = "Villages",
+                    label = strings.assignedVillages,
                     value = "${asha.assignedVillages.size}",
                     icon = "🏡",
                     modifier = Modifier.weight(1f),

@@ -475,7 +475,7 @@ fun DoctorHomeScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = "Live OPD & Walk-In Queue",
+                                    text = strings.liveQueueTitle,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = GlumeTextPrimary
                                 )
@@ -496,7 +496,7 @@ fun DoctorHomeScreen(
                                 }
                             }
                             Text(
-                                text = "Call next, prioritize cases & manage consultations",
+                                text = strings.liveQueueDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -509,7 +509,7 @@ fun DoctorHomeScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                     ) {
-                        Text("Open HUD", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(strings.openHud, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }

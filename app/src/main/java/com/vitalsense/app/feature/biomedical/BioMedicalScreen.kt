@@ -23,6 +23,7 @@ import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.components.VitalSenseTextField
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.theme.LocalAppStrings
 
 @Composable
 fun BioMedicalScreen(
@@ -32,6 +33,7 @@ fun BioMedicalScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
     var selectedFilter by remember { mutableStateOf("ALL") }
     var selectedEquipmentForMaint by remember { mutableStateOf<BioMedicalEquipment?>(null) }
 
@@ -72,7 +74,7 @@ fun BioMedicalScreen(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
                         Text("←", color = GlumeTextPrimary, fontWeight = FontWeight.Bold)
-                        Text("Hospital Desk", style = MaterialTheme.typography.labelMedium, color = GlumeTextPrimary)
+                        Text(strings.hospitalClinicalServices, style = MaterialTheme.typography.labelMedium, color = GlumeTextPrimary)
                     }
                 }
 
@@ -105,12 +107,12 @@ fun BioMedicalScreen(
                     ) {
                         Column {
                             Text(
-                                text = "⚡ Bio-Medical Equipment Registry",
+                                text = "⚡ ${strings.bioMedicalTracker}",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )
                             Text(
-                                text = "Critical Medical Infrastructure & Maintenance Health",
+                                text = strings.bioMedicalSubtitle,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -136,7 +138,7 @@ fun BioMedicalScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Fully Operational", style = MaterialTheme.typography.labelSmall, color = GlumeTextTertiary)
+                            Text(strings.operational, style = MaterialTheme.typography.labelSmall, color = GlumeTextTertiary)
                             Text("$operationalCount Units", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = GlumeSuccessMint)
                         }
                         Column {

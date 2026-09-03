@@ -24,6 +24,7 @@ import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.components.VitalSenseTextField
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.core.ui.theme.LocalAppStrings
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -35,6 +36,7 @@ fun IpdBedTrackerScreen(
     onSaveBed: (IpdBed) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var selectedWard by remember { mutableStateOf("All") }
     var showAdmitDialogForBed by remember { mutableStateOf<IpdBed?>(null) }
 
@@ -77,7 +79,7 @@ fun IpdBedTrackerScreen(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
                         Text("←", color = GlumeTextPrimary, fontWeight = FontWeight.Bold)
-                        Text("Hospital Desk", style = MaterialTheme.typography.labelMedium, color = GlumeTextPrimary)
+                        Text(strings.hospitalClinicalServices, style = MaterialTheme.typography.labelMedium, color = GlumeTextPrimary)
                     }
                 }
 
@@ -110,12 +112,12 @@ fun IpdBedTrackerScreen(
                     ) {
                         Column {
                             Text(
-                                text = "🛏️ In-Patient Ward & Bed Matrix",
+                                text = "🛏️ ${strings.ipdBedTracker}",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )
                             Text(
-                                text = "District Hospital & Sub-Divisional Health Unit",
+                                text = strings.ipdSubtitle,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -126,7 +128,7 @@ fun IpdBedTrackerScreen(
                             color = if (occupancyRate > 80) GlumeAlertContainer else GlumeSuccessContainer
                         ) {
                             Text(
-                                text = "${occupancyRate.toInt()}% Occupied",
+                                text = "${occupancyRate.toInt()}% ${strings.occupied}",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = if (occupancyRate > 80) GlumeAlertCoral else GlumeSuccessMint,
                                 modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 4.dp)

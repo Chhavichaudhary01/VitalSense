@@ -151,7 +151,7 @@ fun LoginScreen(
                             }
                         }
                         Text(
-                            text = if (currentLanguage == AppLanguage.HINDI) "डिजिटल स्वास्थ्य नेटवर्क" else "Digital Health Network",
+                            text = strings.tagline,
                             style = MaterialTheme.typography.labelSmall,
                             color = GlumeTextSecondary
                         )
@@ -240,7 +240,7 @@ fun LoginScreen(
                             verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
                         ) {
                             Text(
-                                text = if (currentLanguage == AppLanguage.HINDI) "अपनी भूमिका चुनें" else "Choose Your Role",
+                                text = strings.whoIsUsing,
                                 style = MaterialTheme.typography.headlineMedium.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 24.sp
@@ -249,10 +249,7 @@ fun LoginScreen(
                                 textAlign = TextAlign.Center
                             )
                             Text(
-                                text = if (currentLanguage == AppLanguage.HINDI)
-                                    "सेवाओं और अपने स्वास्थ्य डैशबोर्ड तक पहुँचने के लिए एक कार्ड चुनें"
-                                else
-                                    "Select a role card to expand your credentials and sign in",
+                                text = strings.selectRoleDesc,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = GlumeTextSecondary,
                                 textAlign = TextAlign.Center
@@ -265,8 +262,8 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             RoleTitleCard(
-                                title = if (currentLanguage == AppLanguage.HINDI) "मरीज़" else "Patient",
-                                roleTag = "PATIENT PORTAL",
+                                title = strings.rolePatient,
+                                roleTag = strings.patientPortal,
                                 subtitle = if (currentLanguage == AppLanguage.HINDI) "पर्चे, ओपीडी टोकन और अपॉइंटमेंट" else "Prescriptions, OPD tokens & consults",
                                 avatarEmoji = "🧑",
                                 accentColor = NagarSevaPrimaryVariant,
@@ -278,8 +275,8 @@ fun LoginScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             RoleTitleCard(
-                                title = if (currentLanguage == AppLanguage.HINDI) "डॉक्टर" else "Doctor",
-                                roleTag = "CLINICAL DESK",
+                                title = strings.roleDoctor,
+                                roleTag = strings.doctorPortal,
                                 subtitle = if (currentLanguage == AppLanguage.HINDI) "मरीज़ कतार, ई-पर्चे और नैदानिक समीक्षा" else "Patient queues, e-prescriptions & review",
                                 avatarEmoji = "👨‍⚕️",
                                 accentColor = NagarSevaPrimary,
@@ -297,8 +294,8 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             RoleTitleCard(
-                                title = if (currentLanguage == AppLanguage.HINDI) "आशा कार्यकर्ता" else "ASHA Worker",
-                                roleTag = "FIELD OPS",
+                                title = strings.roleAsha,
+                                roleTag = strings.ashaPortal,
                                 subtitle = if (currentLanguage == AppLanguage.HINDI) "घर-घर स्वास्थ्य सर्वे, ऑफलाइन सिंक व SOS" else "Door-to-door vitals, offline sync & SOS",
                                 avatarEmoji = "🩺",
                                 accentColor = NagarSevaStatusProgress,
@@ -310,8 +307,8 @@ fun LoginScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             RoleTitleCard(
-                                title = if (currentLanguage == AppLanguage.HINDI) "व्यवस्थापक" else "Administrator",
-                                roleTag = "DISTRICT COMMAND",
+                                title = strings.roleAdmin,
+                                roleTag = strings.adminPortal,
                                 subtitle = if (currentLanguage == AppLanguage.HINDI) "रोग निगरानी, बिस्तर/OT डेस्क व दवा पुनःपूर्ति" else "Surveillance, bed/OT roster & restock",
                                 avatarEmoji = "🛡️",
                                 accentColor = GlumeAlertCoral,
@@ -344,7 +341,7 @@ fun LoginScreen(
                                 ) {
                                     Text("⚡", fontSize = 11.sp)
                                     Text(
-                                        text = if (currentLanguage == AppLanguage.HINDI) "ऑफ़लाइन सक्षम" else "Zero-Internet Ready",
+                                        text = strings.offline,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                         color = NagarSevaStatusNormalText
                                     )

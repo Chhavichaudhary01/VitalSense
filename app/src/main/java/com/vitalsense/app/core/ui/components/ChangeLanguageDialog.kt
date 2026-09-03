@@ -95,7 +95,7 @@ fun ChangeLanguageDialog(
                     }
                 }
 
-                Divider(color = GlumeBorder.copy(alpha = 0.5f))
+                HorizontalDivider(color = GlumeBorder.copy(alpha = 0.5f))
 
                 // 4 Language Cards (Native Scripts)
                 val languages = listOf(
