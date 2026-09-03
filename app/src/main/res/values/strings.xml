@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">VitalSense</string>
     <string name="tagline">SehatSetu — Rural Healthcare Bridge</string>
@@ -5,6 +6,42 @@
     <string name="role_asha">ASHA Worker</string>
     <string name="role_doctor">Doctor</string>
     <string name="role_admin">Admin</string>
+
+    <!-- General Actions -->
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="exit">Exit</string>
+    <string name="cancel">Cancel</string>
+    <string name="done">Done</string>
+    <string name="save">Save</string>
+    <string name="submit">Submit</string>
+    <string name="urgent">URGENT</string>
+    <string name="active">ACTIVE</string>
+    <string name="high_priority">HIGH PRIORITY</string>
+
+    <!-- Severity & Vitals -->
+    <string name="severity_low">Low Risk / Healthy</string>
+    <string name="severity_moderate">Moderate Risk / Pay Attention</string>
+    <string name="severity_high">High Risk / Get Help Now</string>
+    <string name="severity_severe">Severe Alert / Immediate Care</string>
+    <string name="vital_heart_rate">Heart Rate</string>
+    <string name="vital_oxygen">Oxygen (SpO2)</string>
+    <string name="vital_blood_pressure">Blood Pressure</string>
+    <string name="vital_temperature">Temperature</string>
+    <string name="vital_status_normal">Normal</string>
+    <string name="vital_status_attention">Attention</string>
+    <string name="take_reading">Take Reading</string>
+    <string name="listen_audio">Listen</string>
+
+    <!-- Language Selection -->
+    <string name="select_language_title">Choose Language / भाषा चुनें</string>
+    <string name="select_language_subtitle">Select your preferred language across the entire application:</string>
+    <string name="current_language">Active Language</string>
+    <string name="apply_language">Confirm &amp; Apply</string>
+    <string name="lang_english">English</string>
+    <string name="lang_hindi">हिन्दी</string>
+    <string name="lang_tamil">தமிழ்</string>
+    <string name="lang_marathi">मराठी</string>
 
     <!-- Queue & Appointments -->
     <string name="queue_token">Token #%1$d</string>
@@ -26,4 +63,44 @@
     <string name="queue_walkin_intake">Add Walk-in Patient</string>
     <string name="queue_oversight_title">Live Clinic Queue Oversight</string>
     <string name="queue_status_title">Live Visit Queue</string>
+
+    <!-- Plurals for Dynamic Counts -->
+    <plurals name="pharmacy_count">
+        <item quantity="one">%1$d pharmacy nearby</item>
+        <item quantity="other">%1$d pharmacies nearby</item>
+    </plurals>
+    <plurals name="people_ahead_count">
+        <item quantity="one">%1$d person ahead</item>
+        <item quantity="other">%1$d people ahead</item>
+    </plurals>
+
+    <!-- Medicine Availability -->
+    <string name="medicine_availability_title">Medicine Availability &amp; Alternatives</string>
+    <string name="in_stock">In Stock</string>
+    <string name="out_of_stock">Out of Stock</string>
+    <string name="limited_stock">Limited Stock</string>
+    <string name="alternatives_available">Alternative Available Nearby</string>
+    <string name="find_nearby_stores">Find Nearby Stores</string>
+    <string name="open_in_maps">Open in Maps</string>
+
+    <!-- Teleconsultation & Calling -->
+    <string name="video_call">Video Call</string>
+    <string name="voice_call">Voice Call</string>
+    <string name="end_call">End Call</string>
+    <string name="mute">Mute</string>
+    <string name="unmute">Unmute</string>
+    <string name="speaker">Speaker</string>
+    <string name="emergency_call_routing">Emergency Doctor On-Call</string>
+    <string name="auto_escalating_timer">Auto-escalating in %1$d seconds</string>
+
+    <!-- Doctor Referrals -->
+    <string name="specialist_referrals_title">Doctor-to-Doctor Referrals</string>
+    <string name="refer_to_specialist">Refer to Specialist</string>
+    <string name="clinical_question">Clinical Question / Ask</string>
+    <string name="reason_for_referral">Reason for Referral</string>
+    <string name="accept_referral">Accept Referral</string>
+    <string name="decline_referral">Decline Referral</string>
+    <string name="request_more_info">Request More Info</string>
+    <string name="specialist_findings">Specialist Findings</string>
+    <string name="specialist_recommendations">Specialist Recommendations</string>
 </resources>

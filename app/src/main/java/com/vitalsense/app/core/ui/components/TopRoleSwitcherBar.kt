@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,10 +32,23 @@ fun TopRoleSwitcherBar(
     onToggleOffline: () -> Unit = {},
     currentLanguage: AppLanguage = AppLanguage.ENGLISH,
     onToggleLanguage: () -> Unit = {},
+    onSelectLanguage: (AppLanguage) -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    if (showLanguageDialog) {
+        ChangeLanguageDialog(
+            currentLanguage = currentLanguage,
+            onLanguageSelected = { lang ->
+                onSelectLanguage(lang)
+                showLanguageDialog = false
+            },
+            onDismiss = { showLanguageDialog = false }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -104,7 +121,7 @@ fun TopRoleSwitcherBar(
             ) {
                 // Global Language Switcher Pill
                 Surface(
-                    onClick = onToggleLanguage,
+                    onClick = { showLanguageDialog = true },
                     shape = PillShape,
                     color = GlumeSurfaceCard,
                     border = BorderStroke(1.dp, GlumeBorder),
@@ -117,7 +134,7 @@ fun TopRoleSwitcherBar(
                     ) {
                         Text(text = "🌐", style = MaterialTheme.typography.labelSmall)
                         Text(
-                            text = if (currentLanguage == AppLanguage.ENGLISH) "हिंदी" else "EN",
+                            text = currentLanguage.nativeName,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )

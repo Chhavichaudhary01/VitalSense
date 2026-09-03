@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VitalSense</string>
+    <string name="tagline">SehatSetu — கிராமப்புற சுகாதார பாலம்</string>
+    <string name="role_patient">நோயாளி</string>
+    <string name="role_asha">ஆஷா பணியாளர்</string>
+    <string name="role_doctor">மருத்துவர்</string>
+    <string name="role_admin">நிர்வாகி</string>
+
+    <!-- General Actions -->
+    <string name="online">ஆன்லைன்</string>
+    <string name="offline">ஆஃப்லைன்</string>
+    <string name="exit">வெளியேறு</string>
+    <string name="cancel">ரத்துசெய்</string>
+    <string name="done">முடிந்தது</string>
+    <string name="save">சேமி</string>
+    <string name="submit">சமர்ப்பி</string>
+    <string name="urgent">அவசரம்</string>
+    <string name="active">செயலில்</string>
+    <string name="high_priority">முக்கிய முன்னுரிமை</string>
+
+    <!-- Severity & Vitals -->
+    <string name="severity_low">குறைந்த ஆபத்து / இயல்பு</string>
+    <string name="severity_moderate">நடுத்தர ஆபத்து / கவனம் தேவை</string>
+    <string name="severity_high">அதிக ஆபத்து / உதவி பெறுக</string>
+    <string name="severity_severe">தீவிர அவசரம் / உடனடி சிகிச்சை</string>
+    <string name="vital_heart_rate">இதயத் துடிப்பு</string>
+    <string name="vital_oxygen">ஆக்சிஜன் (SpO2)</string>
+    <string name="vital_blood_pressure">இரத்த அழுத்தம்</string>
+    <string name="vital_temperature">உடல் வெப்பநிலை</string>
+    <string name="vital_status_normal">இயல்பு</string>
+    <string name="vital_status_attention">கவனம்</string>
+    <string name="take_reading">அளவீடு எடு</string>
+    <string name="listen_audio">கேளுங்கள்</string>
+
+    <!-- Language Selection -->
+    <string name="select_language_title">மொழியைத் தேர்ந்தெடுக்கவும் / Select Language</string>
+    <string name="select_language_subtitle">பயன்பாட்டிற்கான உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்:</string>
+    <string name="current_language">தற்போதைய மொழி</string>
+    <string name="apply_language">பயன்படுத்து ✓</string>
+    <string name="lang_english">English</string>
+    <string name="lang_hindi">हिन्दी</string>
+    <string name="lang_tamil">தமிழ்</string>
+    <string name="lang_marathi">मराठी</string>
+
+    <!-- Queue & Appointments -->
+    <string name="queue_token">டோக்கன் #%1$d</string>
+    <string name="queue_confirming_position">உங்கள் வரிசை நிலை சரிபார்க்கப்படுகிறது…</string>
+    <string name="queue_position_ahead">உங்களுக்கு முன் %1$d நபர் உள்ளனர்</string>
+    <string name="queue_you_are_next">அடுத்தது உங்கள் முறை</string>
+    <string name="queue_estimated_wait">~%1$d நிமிடம்</string>
+    <string name="queue_check_in">செக்-இன் செய்க</string>
+    <string name="queue_join_walkin">வரிசையில் சேரவும்</string>
+    <string name="queue_cancel">டோக்கனை ரத்துசெய்</string>
+    <string name="queue_call_next">அடுத்தவரை அழைக்கவும்</string>
+    <string name="queue_start_consultation">ஆலோசனையைத் தொடங்கு</string>
+    <string name="queue_complete_consultation">ஆலோசனையை முடி</string>
+    <string name="queue_mark_noshow">வரவில்லை</string>
+    <string name="queue_skip">தவிர்</string>
+    <string name="queue_prioritize">முன்னுரிமை அளி</string>
+    <string name="queue_open_clinic">இன்றைய வரிசையைத் தொடங்கு</string>
+    <string name="queue_close_clinic">வரிசையை மூடு</string>
+    <string name="queue_walkin_intake">நோயாளியைச் சேர்</string>
+    <string name="queue_oversight_title">நேரலை வரிசை மேலாண்மை</string>
+    <string name="queue_status_title">நேரலை மருத்துவமனை வரிசை</string>
+
+    <!-- Plurals for Dynamic Counts -->
+    <plurals name="pharmacy_count">
+        <item quantity="one">%1$d மருந்தகம் அருகில் உள்ளது</item>
+        <item quantity="other">%1$d மருந்தகங்கள் அருகில் உள்ளன</item>
+    </plurals>
+    <plurals name="people_ahead_count">
+        <item quantity="one">%1$d நபர் முன்னால் உள்ளார்</item>
+        <item quantity="other">%1$d நபர்கள் முன்னால் உள்ளனர்</item>
+    </plurals>
+
+    <!-- Medicine Availability -->
+    <string name="medicine_availability_title">மருந்து இருப்பு மற்றும் மாற்றுகள்</string>
+    <string name="in_stock">இருப்பில் உள்ளது</string>
+    <string name="out_of_stock">இருப்பில் இல்லை</string>
+    <string name="limited_stock">குறைந்த அளவு இருப்பு</string>
+    <string name="alternatives_available">மாற்று மருந்து அருகில் கிடைக்கிறது</string>
+    <string name="find_nearby_stores">அருகிலுள்ள கடைகளைத் தேடு</string>
+    <string name="open_in_maps">வரைபடத்தில் காண்க</string>
+
+    <!-- Teleconsultation & Calling -->
+    <string name="video_call">வீடியோ அழைப்பு</string>
+    <string name="voice_call">குரல் அழைப்பு</string>
+    <string name="end_call">அழைப்பை முடி</string>
+    <string name="mute">ஒலியை நிறுத்து</string>
+    <string name="unmute">ஒலியை இயக்கு</string>
+    <string name="speaker">ஸ்பீக்கர்</string>
+    <string name="emergency_call_routing">பணியில் உள்ள அவசர மருத்துவர்</string>
+    <string name="auto_escalating_timer">%1$d வினாடிகளில் அடுத்த மருத்துவருக்கு மாற்றப்படும்</string>
+
+    <!-- Doctor Referrals -->
+    <string name="specialist_referrals_title">சிறப்பு மருத்துவர் பரிந்துரை</string>
+    <string name="refer_to_specialist">நிபுணரிடம் பரிந்துரை செய்</string>
+    <string name="clinical_question">குறிப்பிட்ட மருத்துவக் கேள்வி</string>
+    <string name="reason_for_referral">பரிந்துரைக்கான காரணம்</string>
+    <string name="accept_referral">ஏற்றுக்கொள்</string>
+    <string name="decline_referral">நிராகரி</string>
+    <string name="request_more_info">கூடுதல் தகவல் கோரு</string>
+    <string name="specialist_findings">பரிசோதனை முடிவுகள்</string>
+    <string name="specialist_recommendations">மருத்துவ ஆலோசனைகள்</string>
+</resources>

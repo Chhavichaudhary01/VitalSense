@@ -39,6 +39,7 @@ import com.vitalsense.app.core.ui.util.touchSpring
 fun LoginScreen(
     currentLanguage: AppLanguage,
     onToggleLanguage: () -> Unit,
+    onSelectLanguage: (AppLanguage) -> Unit = {},
     onPatientLogin: (Patient) -> Unit,
     onAshaLogin: (AshaWorker) -> Unit,
     onDoctorLogin: (Doctor) -> Unit,
@@ -47,6 +48,19 @@ fun LoginScreen(
 ) {
     val strings = LocalAppStrings.current
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    if (showLanguageDialog) {
+        ChangeLanguageDialog(
+            currentLanguage = currentLanguage,
+            onLanguageSelected = { lang ->
+                onSelectLanguage(lang)
+                showLanguageDialog = false
+            },
+            onDismiss = { showLanguageDialog = false }
+        )
+    }
 
     // expandedRole controls whether 4 title cards are shown (null) or a selected ID card is expanded
     var expandedRole by remember { mutableStateOf<UserRole?>(null) }
@@ -177,9 +191,9 @@ fun LoginScreen(
                         }
                     }
 
-                    // Language toggle
+                    // Language selector pill
                     Surface(
-                        onClick = onToggleLanguage,
+                        onClick = { showLanguageDialog = true },
                         shape = PillShape,
                         color = GlumeSurfaceCard,
                         border = BorderStroke(1.dp, GlumeBorder),
@@ -192,7 +206,7 @@ fun LoginScreen(
                         ) {
                             Text(text = "🌐", fontSize = 13.sp)
                             Text(
-                                text = currentLanguage.displayName,
+                                text = currentLanguage.nativeName,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VitalSense</string>
+    <string name="tagline">सेहतसेतु — ग्रामीण स्वास्थ्य नेटवर्क</string>
+    <string name="role_patient">मरीज़</string>
+    <string name="role_asha">आशा कार्यकर्ता</string>
+    <string name="role_doctor">डॉक्टर</string>
+    <string name="role_admin">प्रशासक</string>
+
+    <!-- General Actions -->
+    <string name="online">ऑनलाइन</string>
+    <string name="offline">ऑफलाइन</string>
+    <string name="exit">बाहर निकलें</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="done">पूर्ण</string>
+    <string name="save">सहेजें</string>
+    <string name="submit">जमा करें</string>
+    <string name="urgent">अति आवश्यक</string>
+    <string name="active">सक्रिय</string>
+    <string name="high_priority">उच्च प्राथमिकता</string>
+
+    <!-- Severity & Vitals -->
+    <string name="severity_low">सामान्य / कम जोखिम</string>
+    <string name="severity_moderate">मध्यम जोखिम / ध्यान दें</string>
+    <string name="severity_high">उच्च जोखिम / तुरंत मदद लें</string>
+    <string name="severity_severe">गंभीर आपातकाल / तत्काल परामर्श</string>
+    <string name="vital_heart_rate">दिल की धड़कन</string>
+    <string name="vital_oxygen">ऑक्सीजन (SpO2)</string>
+    <string name="vital_blood_pressure">रक्तचाप (BP)</string>
+    <string name="vital_temperature">तापमान (Temp)</string>
+    <string name="vital_status_normal">सामान्य</string>
+    <string name="vital_status_attention">ध्यान दें</string>
+    <string name="take_reading">रीडिंग लें</string>
+    <string name="listen_audio">सुनें</string>
+
+    <!-- Language Selection -->
+    <string name="select_language_title">भाषा चुनें / Select Language</string>
+    <string name="select_language_subtitle">पूरी ऐप के लिए अपनी पसंदीदा भाषा चुनें:</string>
+    <string name="current_language">सक्रिय भाषा</string>
+    <string name="apply_language">लागू करें ✓</string>
+    <string name="lang_english">English</string>
+    <string name="lang_hindi">हिन्दी</string>
+    <string name="lang_tamil">தமிழ்</string>
+    <string name="lang_marathi">मराठी</string>
+
+    <!-- Queue & Appointments -->
+    <string name="queue_token">टोकन #%1$d</string>
+    <string name="queue_confirming_position">आपकी कतार स्थिति जांची जा रही है…</string>
+    <string name="queue_position_ahead">आपसे आगे %1$d व्यक्ति हैं</string>
+    <string name="queue_you_are_next">अगला नंबर आपका है</string>
+    <string name="queue_estimated_wait">~%1$d मिनट</string>
+    <string name="queue_check_in">चेक-इन करें</string>
+    <string name="queue_join_walkin">कतार में शामिल हों</string>
+    <string name="queue_cancel">टोकन रद्द करें</string>
+    <string name="queue_call_next">अगला बुलाएं</string>
+    <string name="queue_start_consultation">परामर्श शुरू करें</string>
+    <string name="queue_complete_consultation">परामर्श पूर्ण करें</string>
+    <string name="queue_mark_noshow">अनुपस्थित</string>
+    <string name="queue_skip">छोड़ें</string>
+    <string name="queue_prioritize">प्राथमिकता दें</string>
+    <string name="queue_open_clinic">आज की कतार शुरू करें</string>
+    <string name="queue_close_clinic">कतार बंद करें</string>
+    <string name="queue_walkin_intake">नया मरीज़ जोड़ें</string>
+    <string name="queue_oversight_title">लाइव कतार निगरानी</string>
+    <string name="queue_status_title">लाइव ओपीडी कतार</string>
+
+    <!-- Plurals for Dynamic Counts -->
+    <plurals name="pharmacy_count">
+        <item quantity="one">%1$d दवा दुकान उपलब्ध</item>
+        <item quantity="other">%1$d दवा दुकानें उपलब्ध</item>
+    </plurals>
+    <plurals name="people_ahead_count">
+        <item quantity="one">%1$d व्यक्ति आगे हैं</item>
+        <item quantity="other">%1$d व्यक्ति आगे हैं</item>
+    </plurals>
+
+    <!-- Medicine Availability -->
+    <string name="medicine_availability_title">दवा उपलब्धता व विकल्प</string>
+    <string name="in_stock">उपलब्ध है</string>
+    <string name="out_of_stock">स्टॉक में नहीं</string>
+    <string name="limited_stock">सीमित स्टॉक</string>
+    <string name="alternatives_available">समान असर वाली दवा उपलब्ध</string>
+    <string name="find_nearby_stores">नज़दीकी मेडिकल स्टोर खोजें</string>
+    <string name="open_in_maps">मैप में देखें</string>
+
+    <!-- Teleconsultation & Calling -->
+    <string name="video_call">वीडियो कॉल</string>
+    <string name="voice_call">ऑडियो कॉल</string>
+    <string name="end_call">कॉल समाप्त करें</string>
+    <string name="mute">माइक बंद</string>
+    <string name="unmute">माइक चालू</string>
+    <string name="speaker">स्पीकर</string>
+    <string name="emergency_call_routing">ड्यूटी पर आपातकालीन डॉक्टर</string>
+    <string name="auto_escalating_timer">%1$d सेकंड में अगले डॉक्टर को कॉल जाएगी</string>
+
+    <!-- Doctor Referrals -->
+    <string name="specialist_referrals_title">विशेषज्ञ रेफरल</string>
+    <string name="refer_to_specialist">विशेषज्ञ को रेफर करें</string>
+    <string name="clinical_question">विशिष्ट नैदानिक प्रश्न</string>
+    <string name="reason_for_referral">रेफर करने का कारण</string>
+    <string name="accept_referral">स्वीकार करें</string>
+    <string name="decline_referral">अस्वीकार करें</string>
+    <string name="request_more_info">अधिक जानकारी मांगें</string>
+    <string name="specialist_findings">विशेषज्ञ रिपोर्ट</string>
+    <string name="specialist_recommendations">विशेषज्ञ सुझाव</string>
+</resources>

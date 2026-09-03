@@ -148,6 +148,7 @@ fun VitalSenseNavGraph(
                     LoginScreen(
                         currentLanguage = currentLanguage,
                         onToggleLanguage = { appStateHolder.toggleLanguage() },
+                        onSelectLanguage = { appStateHolder.setLanguage(it) },
                         onPatientLogin = { selectedPatient ->
                             appStateHolder.loginAsPatient(selectedPatient)
                         },
@@ -180,6 +181,9 @@ fun VitalSenseNavGraph(
                                 currentLanguage = currentLanguage,
                                 onToggleLanguage = {
                                     appStateHolder.toggleLanguage()
+                                },
+                                onSelectLanguage = { lang ->
+                                    appStateHolder.setLanguage(lang)
                                 },
                                 onLogout = {
                                     doctorViewModel.clearSelectedCase()
@@ -292,7 +296,8 @@ fun VitalSenseNavGraph(
                                                                 coroutineScope.launch {
                                                                     repository.scheduleAppointment(appt)
                                                                 }
-                                                            }
+                                                            },
+                                                            language = currentLanguage
                                                         )
                                                     }
                                                     "queue_status" -> {
@@ -333,6 +338,7 @@ fun VitalSenseNavGraph(
                                                             schemes = schemes,
                                                             familyMembers = familyMembers,
                                                             referrals = patientReferrals,
+                                                            language = currentLanguage,
                                                             onCategoryClick = { category ->
                                                                 if (category == ConditionCategory.MENTAL_HEALTH) {
                                                                     currentPatientScreen = "mental_wellness"

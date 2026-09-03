@@ -39,6 +39,7 @@ fun FindMedicineNearbySheet(
     patient: Patient,
     medicine: PrescribedMedicine,
     onDismiss: () -> Unit,
+    language: AppLanguage = AppLanguage.ENGLISH,
     medicineRepoOverride: MedicineAvailabilityRepository? = null
 ) {
     val context = LocalContext.current
@@ -128,13 +129,23 @@ fun FindMedicineNearbySheet(
                     // Audio Guidance Button (Low-literacy)
                     IconButton(
                         onClick = {
+                            val topStore = stores.firstOrNull { it.inStock }?.storeName ?: "nearby store"
                             val audioMessage = if (inStockCount > 0) {
-                                val topStore = stores.firstOrNull { it.inStock }?.storeName ?: "nazdeeki store"
-                                "$currentMedicineName aas-paas ke $inStockCount medical stores mein uplabdh hone ki sambhavna hai. Sabse pass $topStore hai."
+                                when (language) {
+                                    AppLanguage.HINDI -> "$currentMedicineName आस-पास के $inStockCount मेडिकल स्टोर में उपलब्ध होने की संभावना है। सबसे पास $topStore है।"
+                                    AppLanguage.TAMIL -> "$currentMedicineName அருகில் உள்ள $inStockCount மருந்தகங்களில் கிடைக்கிறது. மிக அருகில் $topStore உள்ளது."
+                                    AppLanguage.MARATHI -> "$currentMedicineName जवळील $inStockCount औषध दुकानांमध्ये उपलब्ध आहे. सर्वात जवळ $topStore आहे."
+                                    AppLanguage.ENGLISH -> "$currentMedicineName is likely available at $inStockCount nearby stores. Closest is $topStore."
+                                }
                             } else {
-                                "$currentMedicineName abhi nazdeeki medical stores mein uplabdh nahi hai. Doctor ne iska vikalp sujhayi hai."
+                                when (language) {
+                                    AppLanguage.HINDI -> "$currentMedicineName अभी नज़दीकी मेडिकल स्टोर में उपलब्ध नहीं है। वैकल्पिक दवा देखें।"
+                                    AppLanguage.TAMIL -> "$currentMedicineName தற்போது அருகில் கிடைக்கவில்லை. மாற்று மருந்துகளைப் பார்க்கவும்."
+                                    AppLanguage.MARATHI -> "$currentMedicineName सध्या जवळ उपलब्ध नाही. पर्यायी औषधे तपासा."
+                                    AppLanguage.ENGLISH -> "$currentMedicineName is currently out of stock nearby. Doctor's suggested alternative is available."
+                                }
                             }
-                            AudioGuidanceHelper.speak(context, audioMessage, AppLanguage.HINDI)
+                            AudioGuidanceHelper.speak(context, audioMessage, language)
                         }
                     ) {
                         Text(text = "🔊", fontSize = 22.sp)

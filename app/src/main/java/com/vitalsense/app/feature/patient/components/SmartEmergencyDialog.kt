@@ -1,11 +1,14 @@
 package com.vitalsense.app.feature.patient.components
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,67 +17,81 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.vitalsense.app.core.call.*
-import com.vitalsense.app.core.data.model.*
-import com.vitalsense.app.core.ui.components.VitalSenseCard
+import com.vitalsense.app.core.data.model.Patient
 import com.vitalsense.app.core.ui.components.VitalSenseDialog
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.util.AudioGuidanceHelper
-import com.vitalsense.app.core.util.EmergencySosHelper
-import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
 import kotlinx.coroutines.delay
 
-/**
- * Smart Emergency Screen with 3-Second Countdown & Auto-GPS/SMS Dispatch
- * and Immediate On-Call Video / Voice Routing.
- */
 @Composable
 fun SmartEmergencyDialog(
     patient: Patient,
-    language: AppLanguage = AppLanguage.HINDI,
-    assignedDoctor: Doctor? = null,
-    onCallDoctors: List<Doctor> = emptyList(),
     onDismiss: () -> Unit,
-    onSosDispatched: () -> Unit = {}
+    onSosDispatched: () -> Unit,
+    language: AppLanguage = AppLanguage.ENGLISH,
+    onInitiateVoiceCall: (() -> Unit)? = null,
+    onInitiateVideoCall: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val activeSession by TeleCallingManager.currentSession.collectAsStateWithLifecycle()
-
-    // Countdown state: 3 -> 2 -> 1 -> 0 (Triggered)
     var countdownSeconds by remember { mutableStateOf(3) }
     var isCountdownActive by remember { mutableStateOf(true) }
+    var alertDispatched by remember { mutableStateOf(false) }
 
-    val sosMessage = remember {
-        EmergencySosHelper.createSosMessage(patient)
+    val countdownText = when (language) {
+        AppLanguage.HINDI -> "आपातकालीन अलर्ट $countdownSeconds सेकंड में भेजा जाएगा"
+        AppLanguage.TAMIL -> "$countdownSeconds வினாடிகளில் அவசர எச்சரிக்கை அனுப்பப்படும்"
+        AppLanguage.MARATHI -> "$countdownSeconds सेकंदात आपत्कालीन अलर्ट पाठवला जाईल"
+        AppLanguage.ENGLISH -> "Emergency alert will be dispatched in $countdownSeconds seconds"
     }
 
-    // 3-second active countdown loop
-    LaunchedEffect(isCountdownActive) {
-        if (isCountdownActive) {
-            while (countdownSeconds > 0) {
-                AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = false)
-                AudioGuidanceHelper.speak(
-                    context = context,
-                    text = "",
-                    language = language
-                )
-                delay(1000)
-                countdownSeconds -= 1
-            }
-            // Auto dispatch on countdown zero
+    val alertDispatchedSpoken = when (language) {
+        AppLanguage.HINDI -> "आपातकालीन सहायता भेजी गई। आशा कार्यकर्ता और 108 एम्बुलेंस को सूचित कर दिया गया है।"
+        AppLanguage.TAMIL -> "அவசர உதவி கோரப்பட்டது. ஆஷா மற்றும் 108 ஆம்புலன்ஸுக்கு தகவல் தெரிவிக்கப்பட்டது."
+        AppLanguage.MARATHI -> "आपत्कालीन मदत पाठवली गेली. आशा सेविका व १०८ रुग्णवाहिकेला माहिती दिली आहे."
+        AppLanguage.ENGLISH -> "Emergency alert sent. ASHA worker and 108 ambulance notified."
+    }
+
+    LaunchedEffect(Unit) {
+        AudioGuidanceHelper.speak(context = context, text = countdownText, language = language)
+        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = false)
+
+        while (countdownSeconds > 0 && isCountdownActive) {
+            delay(1000)
+            countdownSeconds--
+        }
+
+        if (isCountdownActive && countdownSeconds == 0) {
+            alertDispatched = true
             isCountdownActive = false
             onSosDispatched()
-            
-            // Auto background SMS with GPS coordinates
-            EmergencySosHelper.sendCellularSmsFallback(
-                context = context,
-                recipientPhone = patient.emergencyContact,
-                message = sosMessage
-            )
+            AudioGuidanceHelper.speak(context = context, text = alertDispatchedSpoken, language = language)
+            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
         }
+    }
+
+    val dialogTitle = when (language) {
+        AppLanguage.HINDI -> "🚨 आपातकालीन सहायता (SOS)"
+        AppLanguage.TAMIL -> "🚨 அவசர உதவி (SOS)"
+        AppLanguage.MARATHI -> "🚨 आपत्कालीन मदत (SOS)"
+        AppLanguage.ENGLISH -> "🚨 Emergency SOS"
+    }
+
+    val cancelAlertText = when (language) {
+        AppLanguage.HINDI -> "✕ अभी रोकें (Cancel Alert)"
+        AppLanguage.TAMIL -> "✕ நிறுத்து (Cancel Alert)"
+        AppLanguage.MARATHI -> "✕ आत्ताच थांबवा (Cancel Alert)"
+        AppLanguage.ENGLISH -> "✕ Cancel Alert"
+    }
+
+    val closeText = when (language) {
+        AppLanguage.HINDI -> "समझ गया (Close)"
+        AppLanguage.TAMIL -> "புரிந்தது (Close)"
+        AppLanguage.MARATHI -> "समजले (Close)"
+        AppLanguage.ENGLISH -> "Close"
     }
 
     VitalSenseDialog(
@@ -82,11 +99,10 @@ fun SmartEmergencyDialog(
             isCountdownActive = false
             onDismiss()
         },
-        title = if (language == AppLanguage.HINDI) "🚨 आपातकालीन सहायता (SOS)" else "🚨 Emergency SOS",
+        title = dialogTitle,
         icon = { Text("🚨", fontSize = 24.sp) },
         confirmButton = {
             if (isCountdownActive) {
-                // Large CANCEL button during countdown
                 Button(
                     onClick = {
                         isCountdownActive = false
@@ -98,7 +114,7 @@ fun SmartEmergencyDialog(
                     modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 46.dp)
                 ) {
                     Text(
-                        text = if (language == AppLanguage.HINDI) "✕ अभी रोकें (Cancel Alert)" else "✕ Cancel Alert",
+                        text = cancelAlertText,
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                         color = GlumeTextPrimary
                     )
@@ -110,11 +126,7 @@ fun SmartEmergencyDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
                     modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                 ) {
-                    Text(
-                        text = if (language == AppLanguage.HINDI) "समझ गया (Close)" else "Close",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color.White
-                    )
+                    Text(text = closeText, style = MaterialTheme.typography.labelLarge, color = Color.White)
                 }
             }
         },
@@ -126,17 +138,23 @@ fun SmartEmergencyDialog(
             verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             if (isCountdownActive) {
-                // 1. COUNTDOWN VIEW
+                val sendingInText = when (language) {
+                    AppLanguage.HINDI -> "आपातकालीन अलर्ट भेजा जा रहा है:"
+                    AppLanguage.TAMIL -> "அவசர எச்சரிக்கை அனுப்பப்படுகிறது:"
+                    AppLanguage.MARATHI -> "आपत्कालीन अलर्ट पाठवला जात आहे:"
+                    AppLanguage.ENGLISH -> "Emergency Alert Sending in:"
+                }
+                val accidentalText = when (language) {
+                    AppLanguage.HINDI -> "गलती से दबा? 'अभी रोकें' बटन दबाएं।"
+                    AppLanguage.TAMIL -> "தவறாக அழுத்தப்பட்டதா? 'நிறுத்து' என்பதைத் தொடவும்."
+                    AppLanguage.MARATHI -> "चुकीने दाबले गेले? 'थांबवा' बटण दाबा."
+                    AppLanguage.ENGLISH -> "Accidental press? Tap Cancel below."
+                }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Text(
-                        text = if (language == AppLanguage.HINDI) "आपातकालीन अलर्ट भेजा जा रहा है:" else "Emergency Alert Sending in:",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = GlumeAlertCoral
-                    )
-
+                    Text(text = sendingInText, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = GlumeAlertCoral)
                     Box(
                         modifier = Modifier
                             .size(90.dp)
@@ -144,254 +162,53 @@ fun SmartEmergencyDialog(
                             .background(GlumeAlertCoral.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "",
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 44.sp
-                            ),
-                            color = GlumeAlertCoral
-                        )
+                        Text(text = "$countdownSeconds", fontSize = 44.sp, fontWeight = FontWeight.Black, color = GlumeAlertCoral)
                     }
-
-                    Text(
-                        text = if (language == AppLanguage.HINDI) "गलती से दबा? 'अभी रोकें' बटन दबाएं।" else "Accidental press? Tap Cancel below.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GlumeTextSecondary
-                    )
+                    Text(text = accidentalText, style = MaterialTheme.typography.bodySmall, color = GlumeTextSecondary, textAlign = TextAlign.Center)
                 }
             } else {
-                // 2. DISPATCHED CONFIRMATION & DUAL GIANT BUTTONS
+                val helpOnWayText = when (language) {
+                    AppLanguage.HINDI -> "सहायता रास्ते में है!"
+                    AppLanguage.TAMIL -> "உதவி வழியில் உள்ளது!"
+                    AppLanguage.MARATHI -> "मदत येत आहे!"
+                    AppLanguage.ENGLISH -> "Help is on the way!"
+                }
+                val dispatchedDesc = when (language) {
+                    AppLanguage.HINDI -> "आशा कार्यकर्ता (${patient.ashaWorkerName}) और 108 एम्बुलेंस को तत्काल अलर्ट भेजा गया।"
+                    AppLanguage.TAMIL -> "ஆஷா பணியாளர் (${patient.ashaWorkerName}) மற்றும் 108 ஆம்புலன்ஸுக்கு அவசர எச்சரிக்கை அனுப்பப்பட்டது."
+                    AppLanguage.MARATHI -> "आशा सेविका (${patient.ashaWorkerName}) आणि १०८ रुग्णवाहिकेला तात्काळ अलर्ट पाठवला गेला."
+                    AppLanguage.ENGLISH -> "Alert dispatched to ASHA (${patient.ashaWorkerName}) and 108 Ambulance."
+                }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Surface(
+                    Text(text = "🚨", fontSize = 42.sp)
+                    Text(text = helpOnWayText, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = GlumeAlertCoral)
+                    Text(text = dispatchedDesc, style = MaterialTheme.typography.bodySmall, color = GlumeTextSecondary, textAlign = TextAlign.Center)
+
+                    Spacer(modifier = Modifier.height(Spacing.xs))
+
+                    // 108 Direct Call button
+                    val call108Text = when (language) {
+                        AppLanguage.HINDI -> "तुरंत 108 एम्बुलेंस कॉल करें"
+                        AppLanguage.TAMIL -> "108 ஆம்புலன்ஸை உடனடியாக அழைக்கவும்"
+                        AppLanguage.MARATHI -> "तात्काळ १०८ रुग्णवाहिकेला कॉल करा"
+                        AppLanguage.ENGLISH -> "Call 108 Ambulance Now"
+                    }
+                    Button(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:108"))
+                            context.startActivity(intent)
+                        },
                         shape = PillShape,
-                        color = GlumeSuccessContainer,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text("✓ ", color = GlumeSuccessMint, fontWeight = FontWeight.Bold)
-                            Text(
-                                text = if (language == AppLanguage.HINDI) "सहायता रास्ते में है! (Help is on the way)" else "Help is on the way!",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = GlumeSuccessMint
-                            )
-                        }
-                    }
-
-                    // Static GPS Location Pin Card
-                    VitalSenseCard(
-                        backgroundColor = GlumeSurfaceElevated,
-                        border = BorderStroke(1.dp, GlumeBorder)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                        ) {
-                            Text("📍", fontSize = 24.sp)
-                            Column {
-                                Text(
-                                    text = "GPS Coordinates Shared with 108 & ASHA",
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                    color = GlumeTextPrimary
-                                )
-                                Text(
-                                    text = " · Lat 28.6139, Long 77.2090",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = GlumeTextSecondary
-                                )
-                            }
-                        }
-                    }
-
-                    HorizontalDivider(color = GlumeBorder)
-
-                    // Live Emergency Call Routing State
-                    if (activeSession != null && activeSession?.mode == CallMode.EMERGENCY) {
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = GlumeAlertContainer,
-                            border = BorderStroke(1.5.dp, GlumeAlertCoral),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text("🚨", fontSize = 20.sp)
-                                    Text(
-                                        text = "EMERGENCY CALL IN PROGRESS",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = GlumeAlertText
-                                    )
-                                }
-                                Text(
-                                    text = activeSession?.statusMessage ?: "Connecting…",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = GlumeTextPrimary
-                                )
-                                Text(
-                                    text = "Target: Dr. ${activeSession?.doctorName} (${activeSession?.doctorSpecialty})",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = GlumeTextSecondary
-                                )
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    if (activeSession?.type == CallType.VIDEO) {
-                                        OutlinedButton(
-                                            onClick = { TeleCallingManager.switchToVoice() },
-                                            shape = PillShape,
-                                            modifier = Modifier.weight(1f).height(40.dp)
-                                        ) {
-                                            Text("Switch to Voice", style = MaterialTheme.typography.labelSmall, color = GlumeWarningAmber)
-                                        }
-                                    }
-                                    Button(
-                                        onClick = { TeleCallingManager.endCall("Emergency call cancelled by user") },
-                                        shape = PillShape,
-                                        colors = ButtonDefaults.buttonColors(containerColor = GlumeSurfaceElevated),
-                                        border = BorderStroke(1.dp, GlumeBorder),
-                                        modifier = Modifier.weight(1f).height(40.dp)
-                                    ) {
-                                        Text("End Call", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // EMERGENCY CALL BUTTON 1: Giant Voice Call Now (Default / Low-Bandwidth primary)
-                    Button(
-                        onClick = {
-                            TeleCallingManager.startEmergencyCall(
-                                context = context,
-                                patient = patient,
-                                callType = CallType.VOICE,
-                                assignedDoctor = assignedDoctor,
-                                onCallDoctors = onCallDoctors
-                            )
-                        },
-                        shape = CardShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint),
-                        modifier = Modifier.fillMaxWidth().height(56.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                        ) {
-                            Text("🎙️", fontSize = 20.sp)
-                            Text(
-                                text = if (language == AppLanguage.HINDI) "🚨 आपातकालीन वॉयस कॉल (On-Call SOS)" else "🚨 Emergency Voice Call (On-Call SOS)",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = GlumeBackground
-                            )
-                        }
-                    }
-
-                    // EMERGENCY CALL BUTTON 2: Giant Video Call Now
-                    Button(
-                        onClick = {
-                            TeleCallingManager.startEmergencyCall(
-                                context = context,
-                                patient = patient,
-                                callType = CallType.VIDEO,
-                                assignedDoctor = assignedDoctor,
-                                onCallDoctors = onCallDoctors
-                            )
-                        },
-                        shape = CardShape,
                         colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
-                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                        modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 44.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                        ) {
-                            Text("🎥", fontSize = 20.sp)
-                            Text(
-                                text = if (language == AppLanguage.HINDI) "🚨 आपातकालीन वीडियो कॉल (Video SOS)" else "🚨 Emergency Video Call (Immediate SOS)",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color.White
-                            )
-                        }
-                    }
-
-                    // BUTTON 3: Giant Red "Call for Help Now (108)" (72dp height touch target)
-                    Button(
-                        onClick = {
-                            EmergencySosHelper.dialEmergencyCall(context, "108")
-                        },
-                        shape = CardShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral.copy(alpha = 0.85f)),
-                        modifier = Modifier.fillMaxWidth().height(52.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                        ) {
-                            Text("📞 108", fontSize = 18.sp, color = Color.White)
-                            Text(
-                                text = if (language == AppLanguage.HINDI) "तुरंत 108 एम्बुलेंस कॉल करें" else "Call 108 Ambulance Now",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color.White
-                            )
-                        }
-                    }
-
-                    // BUTTON 4: Giant Orange "Call ASHA" (52dp height touch target)
-                    Button(
-                        onClick = {
-                            EmergencySosHelper.dialEmergencyCall(context, patient.emergencyContact)
-                        },
-                        shape = CardShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
-                        modifier = Modifier.fillMaxWidth().height(52.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                        ) {
-                            Text("👩‍⚕️", fontSize = 18.sp)
-                            Text(
-                                text = if (language == AppLanguage.HINDI) "आशा कार्यकर्ता को कॉल करें" else "Call ASHA Worker",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color.White
-                            )
-                        }
+                        Text(text = call108Text, color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                     }
                 }
             }
         }
-    }
-
-    // Active in-call modal for emergency
-    if (activeSession?.state == CallSessionState.CONNECTED) {
-        TeleConsultationModal(
-            patientName = patient.name,
-            doctorName = activeSession?.doctorName ?: "Doctor",
-            specialty = activeSession?.doctorSpecialty ?: "Emergency On-Call",
-            villageName = patient.villageName,
-            patientAge = patient.age,
-            onDismiss = {
-                TeleCallingManager.endCall("Patient ended call")
-            },
-            onEndCall = {
-                TeleCallingManager.endCall("Emergency consultation finished")
-            }
-        )
     }
 }

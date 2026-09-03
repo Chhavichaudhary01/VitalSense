@@ -78,6 +78,10 @@ val GlumeWarningText = NagarSevaStatusProgressText
 val GlumeError = GlumeAlertCoral
 val GlumeErrorContainer = GlumeAlertContainer
 val GlumeWarning = GlumeWarningAmber
+val GlumePrimaryBlue = GlumePrimaryPurple
+val StatusSafeGreen = GlumeSuccessMint
+val StatusAttentionAmber = GlumeWarningAmber
+val StatusDangerRed = GlumeAlertCoral
 
 // Presentation Tokens
 val VitalSenseTealPrimary = NagarSevaPrimary

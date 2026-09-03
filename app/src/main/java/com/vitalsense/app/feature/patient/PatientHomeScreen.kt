@@ -50,6 +50,7 @@ fun PatientHomeScreen(
     onNavigateToLiveQueue: () -> Unit = {},
     referrals: List<com.vitalsense.app.core.data.model.Referral> = emptyList(),
     scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
+    language: AppLanguage = AppLanguage.ENGLISH,
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -145,6 +146,7 @@ fun PatientHomeScreen(
                 spO2 = spO2,
                 bloodPressure = bloodPressure,
                 temperature = temperature,
+                language = language,
                 onTakeReadingClick = { showSensorPairingDialog = true }
             )
         }
@@ -580,11 +582,10 @@ fun PatientHomeScreen(
 
         // 3.9 Doctor-to-Doctor Specialist Consultations (Plain Language Patient View)
         if (referrals.isNotEmpty()) {
-            val currentLanguage = if (strings.namaste == "नमस्ते") AppLanguage.HINDI else AppLanguage.ENGLISH
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     Text(
-                        text = if (currentLanguage == AppLanguage.HINDI) "विशेषज्ञ डॉक्टर परामर्श (${referrals.size})" else "Specialist Referrals (${referrals.size})",
+                        text = "${strings.doctorReferralsTitle} (${referrals.size})",
                         style = MaterialTheme.typography.headlineMedium,
                         color = textPrimaryColor
                     )
@@ -592,7 +593,7 @@ fun PatientHomeScreen(
                     referrals.forEach { ref ->
                         com.vitalsense.app.feature.patient.components.ReferralStatusCard(
                             referral = ref,
-                            language = currentLanguage,
+                            language = language,
                             onScheduleCall = onNavigateToAppointments
                         )
                     }
@@ -940,6 +941,7 @@ fun PatientHomeScreen(
     if (showSmartEmergencyDialog) {
         SmartEmergencyDialog(
             patient = patient,
+            language = language,
             onDismiss = { showSmartEmergencyDialog = false },
             onSosDispatched = {
                 onTriggerSos()
@@ -951,6 +953,7 @@ fun PatientHomeScreen(
     if (showSensorPairingDialog) {
         SensorPairingDialog(
             patient = patient,
+            language = language,
             onDismiss = { showSensorPairingDialog = false },
             onReadingCaptured = { newHr, newSpo2, newBp, newTemp ->
                 heartRate = newHr
@@ -1003,6 +1006,7 @@ fun PatientHomeScreen(
         FindMedicineNearbySheet(
             patient = patient,
             medicine = med,
+            language = language,
             onDismiss = { selectedMedicineForNearby = null }
         )
     }

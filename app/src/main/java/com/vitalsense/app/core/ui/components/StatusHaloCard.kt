@@ -1,5 +1,6 @@
 package com.vitalsense.app.core.ui.components
 
+import android.content.Context
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -22,10 +23,6 @@ import com.vitalsense.app.core.data.model.SeverityLevel
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.util.AudioGuidanceHelper
 
-/**
- * The Status Halo (Hero Element ~40% of screen) as specified in VitalSense_UX_Architecture.md §3.2
- * Provides instant glanceable health verdict + 2x2 vital tiles + Voice Narration.
- */
 @Composable
 fun StatusHaloCard(
     patient: Patient,
@@ -33,34 +30,125 @@ fun StatusHaloCard(
     spO2: Int = 98,
     bloodPressure: String = "120/80",
     temperature: String = "98.4°F",
-    language: AppLanguage = AppLanguage.HINDI,
     onTakeReadingClick: () -> Unit = {},
+    language: AppLanguage = AppLanguage.ENGLISH,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val firstName = patient.name.split(" ").firstOrNull() ?: patient.name
 
-    // Dynamic Halo Ring Color based on risk level
     val haloColor by animateColorAsState(
         targetValue = when (patient.currentRiskLevel) {
-            SeverityLevel.LOW -> Color(0xFF2E9E5B) // Green Safe
-            SeverityLevel.MODERATE -> Color(0xFFE8A93B) // Amber Attention
-            SeverityLevel.HIGH, SeverityLevel.SEVERE -> Color(0xFFD63B3B) // Red Emergency
+            SeverityLevel.LOW -> StatusSafeGreen
+            SeverityLevel.MODERATE -> StatusAttentionAmber
+            SeverityLevel.HIGH, SeverityLevel.SEVERE -> StatusDangerRed
         },
         animationSpec = tween(durationMillis = 600),
         label = "HaloColorAnim"
     )
 
     val verdictWord = when (patient.currentRiskLevel) {
-        SeverityLevel.LOW -> if (language == AppLanguage.HINDI) "ठीक हैं" else "You're Fine"
-        SeverityLevel.MODERATE -> if (language == AppLanguage.HINDI) "ध्यान दें" else "Pay Attention"
-        SeverityLevel.HIGH, SeverityLevel.SEVERE -> if (language == AppLanguage.HINDI) "तुरंत मदद लें" else "Get Help Now"
+        SeverityLevel.LOW -> when (language) {
+            AppLanguage.HINDI -> "ठीक हैं"
+            AppLanguage.TAMIL -> "நலமாக உள்ளீர்கள்"
+            AppLanguage.MARATHI -> "ठीक आहात"
+            AppLanguage.ENGLISH -> "You're Fine"
+        }
+        SeverityLevel.MODERATE -> when (language) {
+            AppLanguage.HINDI -> "ध्यान दें"
+            AppLanguage.TAMIL -> "கவனம் தேவை"
+            AppLanguage.MARATHI -> "लक्ष द्या"
+            AppLanguage.ENGLISH -> "Pay Attention"
+        }
+        SeverityLevel.HIGH, SeverityLevel.SEVERE -> when (language) {
+            AppLanguage.HINDI -> "तुरंत मदद लें"
+            AppLanguage.TAMIL -> "உதவி பெறவும்"
+            AppLanguage.MARATHI -> "तातडीने मदत घ्या"
+            AppLanguage.ENGLISH -> "Get Help Now"
+        }
     }
 
     val verdictSubtitle = when (patient.currentRiskLevel) {
-        SeverityLevel.LOW -> if (language == AppLanguage.HINDI) "सभी स्वास्थ्य पैरामीटर सामान्य हैं" else "All vital signs are healthy"
-        SeverityLevel.MODERATE -> if (language == AppLanguage.HINDI) "परामर्श की आवश्यकता हो सकती है" else "May require consultation"
-        SeverityLevel.HIGH, SeverityLevel.SEVERE -> if (language == AppLanguage.HINDI) "तत्काल डॉक्टर संपर्क करें" else "Immediate consultation advised"
+        SeverityLevel.LOW -> when (language) {
+            AppLanguage.HINDI -> "सभी स्वास्थ्य पैरामीटर सामान्य हैं"
+            AppLanguage.TAMIL -> "அனைத்து முக்கிய அளவீடுகளும் இயல்பாக உள்ளன"
+            AppLanguage.MARATHI -> "सर्व आरोग्य मापदंड सामान्य आहेत"
+            AppLanguage.ENGLISH -> "All vital signs are healthy"
+        }
+        SeverityLevel.MODERATE -> when (language) {
+            AppLanguage.HINDI -> "परामर्श की आवश्यकता हो सकती है"
+            AppLanguage.TAMIL -> "மருத்துவ ஆலோசனை தேவைப்படலாம்"
+            AppLanguage.MARATHI -> "सल्लामसलतीची आवश्यकता असू शकते"
+            AppLanguage.ENGLISH -> "May require consultation"
+        }
+        SeverityLevel.HIGH, SeverityLevel.SEVERE -> when (language) {
+            AppLanguage.HINDI -> "तत्काल डॉक्टर संपर्क करें"
+            AppLanguage.TAMIL -> "உடனடியாக மருத்துவரைத் தொடர்பு கொள்ளவும்"
+            AppLanguage.MARATHI -> "त्वरित डॉक्टरांशी संपर्क साधा"
+            AppLanguage.ENGLISH -> "Immediate consultation advised"
+        }
+    }
+
+    val greetingText = when (language) {
+        AppLanguage.HINDI -> "नमस्ते, ${patient.name} जी 🙏"
+        AppLanguage.TAMIL -> "வணக்கம், ${patient.name} 🙏"
+        AppLanguage.MARATHI -> "नमस्ते, ${patient.name} जी 🙏"
+        AppLanguage.ENGLISH -> "Hello, ${patient.name} 👋"
+    }
+
+    val syncedText = when (language) {
+        AppLanguage.HINDI -> "सुरक्षित"
+        AppLanguage.TAMIL -> "பாதுகாக்கப்பட்டது"
+        AppLanguage.MARATHI -> "सुरक्षित"
+        AppLanguage.ENGLISH -> "Synced"
+    }
+
+    val normalStatusText = when (language) {
+        AppLanguage.HINDI -> "सामान्य"
+        AppLanguage.TAMIL -> "இயல்பு"
+        AppLanguage.MARATHI -> "सामान्य"
+        AppLanguage.ENGLISH -> "Normal"
+    }
+
+    val heartRateLabel = when (language) {
+        AppLanguage.HINDI -> "दिल की धड़कन"
+        AppLanguage.TAMIL -> "இதயத் துடிப்பு"
+        AppLanguage.MARATHI -> "हृदयाचे ठोके"
+        AppLanguage.ENGLISH -> "Heart Rate"
+    }
+
+    val spo2Label = when (language) {
+        AppLanguage.HINDI -> "ऑक्सीजन (SpO2)"
+        AppLanguage.TAMIL -> "ஆக்சிஜன் (SpO2)"
+        AppLanguage.MARATHI -> "ऑक्सिजन (SpO2)"
+        AppLanguage.ENGLISH -> "Oxygen (SpO2)"
+    }
+
+    val bpLabel = when (language) {
+        AppLanguage.HINDI -> "रक्तचाप (BP)"
+        AppLanguage.TAMIL -> "இரத்த அழுத்தம் (BP)"
+        AppLanguage.MARATHI -> "रक्तदाब (BP)"
+        AppLanguage.ENGLISH -> "Blood Pressure"
+    }
+
+    val tempLabel = when (language) {
+        AppLanguage.HINDI -> "तापमान (Temp)"
+        AppLanguage.TAMIL -> "உடல் வெப்பநிலை"
+        AppLanguage.MARATHI -> "तापमान (Temp)"
+        AppLanguage.ENGLISH -> "Temperature"
+    }
+
+    val listenBtnText = when (language) {
+        AppLanguage.HINDI -> "सुनें (Listen)"
+        AppLanguage.TAMIL -> "கேளுங்கள்"
+        AppLanguage.MARATHI -> "ऐका"
+        AppLanguage.ENGLISH -> "Listen"
+    }
+
+    val takeReadingBtnText = when (language) {
+        AppLanguage.HINDI -> "🩺 नई रीडिंग लें"
+        AppLanguage.TAMIL -> "🩺 புதிய அளவீடு எடு"
+        AppLanguage.MARATHI -> "🩺 नवीन रीडिंग घ्या"
+        AppLanguage.ENGLISH -> "🩺 Take Reading"
     }
 
     VitalSenseCard(
@@ -81,12 +169,12 @@ fun StatusHaloCard(
             ) {
                 Column {
                     Text(
-                        text = if (language == AppLanguage.HINDI) "नमस्ते,  जी 🙏" else "Hello,  👋",
+                        text = greetingText,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = " · ASHA: ",
+                        text = "${patient.villageName} · ASHA: ${patient.ashaWorkerName}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -105,7 +193,7 @@ fun StatusHaloCard(
                     ) {
                         Text("☁️✓", fontSize = 11.sp, color = VitalSenseTealPrimary)
                         Text(
-                            text = if (language == AppLanguage.HINDI) "सुरक्षित" else "Synced",
+                            text = syncedText,
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -152,7 +240,11 @@ fun StatusHaloCard(
                             color = haloColor
                         )
                         Text(
-                            text = if (language == AppLanguage.HINDI) "(You're Fine)" else "(Normal)",
+                            text = when (patient.currentRiskLevel) {
+                                SeverityLevel.LOW -> "(Safe)"
+                                SeverityLevel.MODERATE -> "(Attention)"
+                                SeverityLevel.HIGH, SeverityLevel.SEVERE -> "(Urgent)"
+                            },
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -168,7 +260,7 @@ fun StatusHaloCard(
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
 
-            // 2. 2x2 VITAL TILES (56dp+ minimum touch targets)
+            // 2. 2x2 VITAL TILES
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -177,22 +269,20 @@ fun StatusHaloCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    // Tile 1: Heart Rate
                     VitalTile(
                         icon = "❤️",
-                        label = if (language == AppLanguage.HINDI) "दिल की धड़कन" else "Heart Rate",
-                        value = " bpm",
-                        status = if (language == AppLanguage.HINDI) "सामान्य" else "Normal",
+                        label = heartRateLabel,
+                        value = "$heartRate bpm",
+                        status = normalStatusText,
                         statusColor = VitalSenseTealPrimary,
                         modifier = Modifier.weight(1f)
                     )
 
-                    // Tile 2: SpO2 Oxygen
                     VitalTile(
                         icon = "🫁",
-                        label = if (language == AppLanguage.HINDI) "ऑक्सीजन (SpO2)" else "Oxygen (SpO2)",
-                        value = "%",
-                        status = if (language == AppLanguage.HINDI) "सामान्य" else "Normal",
+                        label = spo2Label,
+                        value = "$spO2%",
+                        status = normalStatusText,
                         statusColor = VitalSenseTealPrimary,
                         modifier = Modifier.weight(1f)
                     )
@@ -202,22 +292,20 @@ fun StatusHaloCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    // Tile 3: Blood Pressure
                     VitalTile(
                         icon = "💧",
-                        label = if (language == AppLanguage.HINDI) "रक्तचाप (BP)" else "Blood Pressure",
+                        label = bpLabel,
                         value = bloodPressure,
-                        status = if (language == AppLanguage.HINDI) "सामान्य" else "Normal",
+                        status = normalStatusText,
                         statusColor = VitalSenseTealPrimary,
                         modifier = Modifier.weight(1f)
                     )
 
-                    // Tile 4: Temperature
                     VitalTile(
                         icon = "🌡️",
-                        label = if (language == AppLanguage.HINDI) "तापमान (Temp)" else "Temperature",
+                        label = tempLabel,
                         value = temperature,
-                        status = if (language == AppLanguage.HINDI) "सामान्य" else "Normal",
+                        status = normalStatusText,
                         statusColor = VitalSenseTealPrimary,
                         modifier = Modifier.weight(1f)
                     )
@@ -230,7 +318,6 @@ fun StatusHaloCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 🔊 "Listen to this" Audio Narration Button
                 Surface(
                     shape = PillShape,
                     color = VitalSenseTealContainer,
@@ -253,7 +340,7 @@ fun StatusHaloCard(
                     ) {
                         Text("🔊", fontSize = 14.sp)
                         Text(
-                            text = if (language == AppLanguage.HINDI) "सुनें (Listen)" else "Listen",
+                            text = listenBtnText,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = VitalSenseTealPrimary
@@ -262,7 +349,6 @@ fun StatusHaloCard(
                     }
                 }
 
-                // 🩺 Take a Reading Button
                 Button(
                     onClick = onTakeReadingClick,
                     shape = PillShape,
@@ -271,7 +357,7 @@ fun StatusHaloCard(
                     modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
                     Text(
-                        text = if (language == AppLanguage.HINDI) "🩺 नई रीडिंग लें" else "🩺 Take Reading",
+                        text = takeReadingBtnText,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
@@ -292,12 +378,12 @@ private fun VitalTile(
 ) {
     Surface(
         shape = CardShape,
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        modifier = modifier.defaultMinSize(minHeight = 56.dp)
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
+        modifier = modifier.defaultMinSize(minHeight = 64.dp)
     ) {
         Column(
-            modifier = Modifier.padding(Spacing.xs),
+            modifier = Modifier.padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Row(
@@ -305,25 +391,22 @@ private fun VitalTile(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = icon, fontSize = 16.sp)
-                Surface(
-                    shape = PillShape,
-                    color = statusColor.copy(alpha = 0.15f)
-                ) {
-                    Text(
-                        text = status,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 9.sp,
-                            color = statusColor
-                        ),
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                    )
-                }
+                Text(icon, fontSize = 16.sp)
+                Text(
+                    text = status,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = statusColor
+                )
             }
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(

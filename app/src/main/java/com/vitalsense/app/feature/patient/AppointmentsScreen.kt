@@ -43,7 +43,8 @@ fun AppointmentsScreen(
     onBackClick: () -> Unit,
     onCheckIn: (appointmentId: String) -> Unit,
     onViewLiveQueue: () -> Unit,
-    onBookAppointment: (Appointment) -> Unit = {}
+    onBookAppointment: (Appointment) -> Unit = {},
+    language: AppLanguage = AppLanguage.ENGLISH
 ) {
     val context = LocalContext.current
     val today = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) }
@@ -74,10 +75,16 @@ fun AppointmentsScreen(
                     },
                     actions = {
                         IconButton(onClick = {
+                            val audioSpoken = when (language) {
+                                AppLanguage.HINDI -> "यहाँ आपके सभी डॉक्टर अपॉइंटमेंट और वीडियो कॉल उपलब्ध हैं। समय होने पर आप कॉल से जुड़ सकते हैं।"
+                                AppLanguage.TAMIL -> "உங்கள் அனைத்து மருத்துவ ஆலோசனைகளும் இங்கே உள்ளன. நேரம் வரும்போது அழைப்பில் இணையலாம்."
+                                AppLanguage.MARATHI -> "येथे आपल्या सर्व डॉक्टरांच्या भेटी आणि व्हिडिओ कॉल उपलब्ध आहेत. वेळ झाल्यावर आपण कॉलला जोडू शकता."
+                                AppLanguage.ENGLISH -> "Here are all your doctor appointments and video consultations. You can join the call when scheduled."
+                            }
                             AudioGuidanceHelper.speak(
                                 context = context,
-                                text = "यहाँ आपके सभी डॉक्टर अपॉइंटमेंट और वीडियो कॉल उपलब्ध हैं। समय होने पर आप कॉल से जुड़ सकते हैं।",
-                                language = AppLanguage.HINDI
+                                text = audioSpoken,
+                                language = language
                             )
                         }) {
                             Text("🔊", fontSize = 20.sp)

@@ -1,8 +1,12 @@
 package com.vitalsense.app.core.state
 
+import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.vitalsense.app.core.data.local.seed.SeedDataProvider
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.theme.AppLanguage
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,7 +14,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AppStateHolder @Inject constructor() {
+class AppStateHolder @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    private val prefs by lazy {
+        context.getSharedPreferences("vitalsense_prefs", Context.MODE_PRIVATE)
+    }
 
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
@@ -18,8 +27,19 @@ class AppStateHolder @Inject constructor() {
     private val _currentRole = MutableStateFlow(UserRole.PATIENT)
     val currentRole: StateFlow<UserRole> = _currentRole.asStateFlow()
 
-    private val _currentLanguage = MutableStateFlow(AppLanguage.ENGLISH)
-    val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
+    private val _currentLanguage: MutableStateFlow<AppLanguage>
+    val currentLanguage: StateFlow<AppLanguage>
+
+    init {
+        val savedLangCode = prefs?.getString("selected_language", AppLanguage.ENGLISH.code)
+        val initialLang = AppLanguage.values().firstOrNull { it.code == savedLangCode } ?: AppLanguage.ENGLISH
+        _currentLanguage = MutableStateFlow(initialLang)
+        currentLanguage = _currentLanguage.asStateFlow()
+
+        try {
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(initialLang.code))
+        } catch (_: Exception) {}
+    }
 
     private val _isPresentationLightMode = MutableStateFlow(true)
     val isPresentationLightMode: StateFlow<Boolean> = _isPresentationLightMode.asStateFlow()
@@ -77,11 +97,17 @@ class AppStateHolder @Inject constructor() {
     }
 
     fun setLanguage(language: AppLanguage) {
+        prefs?.edit()?.putString("selected_language", language.code)?.apply()
         _currentLanguage.value = language
+        try {
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.code))
+        } catch (_: Exception) {}
     }
 
     fun toggleLanguage() {
-        _currentLanguage.value = if (_currentLanguage.value == AppLanguage.ENGLISH) AppLanguage.HINDI else AppLanguage.ENGLISH
+        val languages = AppLanguage.values()
+        val nextIndex = (languages.indexOf(_currentLanguage.value) + 1) % languages.size
+        setLanguage(languages[nextIndex])
     }
 
     fun togglePresentationTheme() {

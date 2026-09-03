@@ -25,13 +25,18 @@ object AudioGuidanceHelper {
         }
     }
 
-    fun speak(context: Context, text: String, language: AppLanguage = AppLanguage.HINDI) {
+    fun speak(context: Context, text: String, language: AppLanguage = AppLanguage.ENGLISH) {
         if (tts == null) {
             init(context)
         }
 
         try {
-            val locale = if (language == AppLanguage.HINDI) Locale("hi", "IN") else Locale.US
+            val locale = when (language) {
+                AppLanguage.ENGLISH -> Locale.US
+                AppLanguage.HINDI -> Locale("hi", "IN")
+                AppLanguage.TAMIL -> Locale("ta", "IN")
+                AppLanguage.MARATHI -> Locale("mr", "IN")
+            }
             tts?.language = locale
             tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "VitalSenseAudioGuidance")
         } catch (e: Exception) {
@@ -71,26 +76,49 @@ object AudioGuidanceHelper {
         severity: SeverityLevel,
         heartRate: Int = 76,
         spO2: Int = 98,
-        language: AppLanguage = AppLanguage.HINDI
+        language: AppLanguage = AppLanguage.ENGLISH
     ): String {
         val firstName = patientName.split(" ").firstOrNull() ?: patientName
-        return if (language == AppLanguage.HINDI) {
-            when (severity) {
-                SeverityLevel.LOW -> 
-                    "नमस्ते " + firstName + " जी। आज आपका स्वास्थ्य बिल्कुल ठीक है। दिल की धड़कन " + heartRate + " और ऑक्सीजन " + spO2 + " प्रतिशत सामान्य है।"
-                SeverityLevel.MODERATE -> 
-                    "नमस्ते " + firstName + " जी। कृपया अपने स्वास्थ्य पर ध्यान दें। अपने आशा कार्यकर्ता या डॉक्टर से परामर्श लें।"
-                SeverityLevel.HIGH, SeverityLevel.SEVERE -> 
-                    "सावधान " + firstName + " जी। तुरंत आपातकालीन सहायता लें या डॉक्टर से संपर्क करें।"
+        return when (language) {
+            AppLanguage.HINDI -> {
+                when (severity) {
+                    SeverityLevel.LOW ->
+                        "नमस्ते $firstName जी। आज आपका स्वास्थ्य बिल्कुल ठीक है। दिल की धड़कन $heartRate और ऑक्सीजन $spO2 प्रतिशत सामान्य है।"
+                    SeverityLevel.MODERATE ->
+                        "नमस्ते $firstName जी। कृपया अपने स्वास्थ्य पर ध्यान दें। अपने आशा कार्यकर्ता या डॉक्टर से परामर्श लें।"
+                    SeverityLevel.HIGH, SeverityLevel.SEVERE ->
+                        "सावधान $firstName जी। तुरंत आपातकालीन सहायता लें या डॉक्टर से संपर्क करें।"
+                }
             }
-        } else {
-            when (severity) {
-                SeverityLevel.LOW -> 
-                    "Hello " + firstName + ". You are completely fine today. Your heart rate is " + heartRate + " and oxygen is " + spO2 + " percent, which is normal."
-                SeverityLevel.MODERATE -> 
-                    "Hello " + firstName + ". Please pay attention to your health. Consult your ASHA worker or doctor."
-                SeverityLevel.HIGH, SeverityLevel.SEVERE -> 
-                    "Warning " + firstName + ". Please seek immediate medical help or contact emergency services."
+            AppLanguage.TAMIL -> {
+                when (severity) {
+                    SeverityLevel.LOW ->
+                        "வணக்கம் $firstName. இன்று உங்கள் உடல்நலம் நன்றாக உள்ளது. இதயத் துடிப்பு $heartRate மற்றும் ஆக்சிஜன் அளவு $spO2 சதவீதம் இயல்பாக உள்ளது."
+                    SeverityLevel.MODERATE ->
+                        "வணக்கம் $firstName. உங்கள் உடல்நிலையில் கவனம் தேவை. உங்கள் ஆஷா பணியாளர் அல்லது மருத்துவரை அணுகவும்."
+                    SeverityLevel.HIGH, SeverityLevel.SEVERE ->
+                        "எச்சரிக்கை $firstName. உடனடி மருத்துவ உதவி பெறுங்கள் அல்லது அவசர சேவையைத் தொடர்பு கொள்ளுங்கள்."
+                }
+            }
+            AppLanguage.MARATHI -> {
+                when (severity) {
+                    SeverityLevel.LOW ->
+                        "नमस्ते $firstName जी. आज आपले आरोग्य पूर्णपणे ठीक आहे. हृदयाचे ठोके $heartRate आणि ऑक्सिजन $spO2 टक्के सामान्य आहे."
+                    SeverityLevel.MODERATE ->
+                        "नमस्ते $firstName जी. कृपया आपल्या आरोग्याकडे लक्ष द्या. आपल्या आशा सेविका किंवा डॉक्टरांचा सल्ला घ्या."
+                    SeverityLevel.HIGH, SeverityLevel.SEVERE ->
+                        "सावधान $firstName जी. त्वरित आपत्कालीन वैद्यकीय मदत घ्या किंवा डॉक्टरांशी संपर्क साधा."
+                }
+            }
+            AppLanguage.ENGLISH -> {
+                when (severity) {
+                    SeverityLevel.LOW ->
+                        "Hello $firstName. You are completely fine today. Your heart rate is $heartRate and oxygen is $spO2 percent, which is normal."
+                    SeverityLevel.MODERATE ->
+                        "Hello $firstName. Please pay attention to your health. Consult your ASHA worker or doctor."
+                    SeverityLevel.HIGH, SeverityLevel.SEVERE ->
+                        "Warning $firstName. Please seek immediate medical help or contact emergency services."
+                }
             }
         }
     }
