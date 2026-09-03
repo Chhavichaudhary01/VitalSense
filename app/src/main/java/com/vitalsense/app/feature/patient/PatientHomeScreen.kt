@@ -30,6 +30,8 @@ import com.vitalsense.app.feature.patient.components.GovernmentSchemesDialog
 import com.vitalsense.app.feature.patient.components.SensorPairingDialog
 import com.vitalsense.app.feature.patient.components.SmartEmergencyDialog
 import com.vitalsense.app.core.util.DismissedNoticeHelper
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun PatientHomeScreen(
@@ -53,7 +55,6 @@ fun PatientHomeScreen(
     language: AppLanguage = AppLanguage.ENGLISH,
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     var showSmartEmergencyDialog by remember { mutableStateOf(false) }
     var showSensorPairingDialog by remember { mutableStateOf(false) }
     var showPrescriptionUploadDialog by remember { mutableStateOf(false) }
@@ -120,7 +121,7 @@ fun PatientHomeScreen(
                 ) {
                     Column {
                         Text(
-                            text = "${strings.namaste}, ${patient.name.split(" ").first()}!",
+                            text = "${stringResource(R.string.namaste)}, ${patient.name.split(" ").first()}!",
                             style = MaterialTheme.typography.displayLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 28.sp
@@ -128,7 +129,7 @@ fun PatientHomeScreen(
                             color = textPrimaryColor
                         )
                         Text(
-                            text = "${strings.village}: ${patient.villageName} · ${strings.ashaAssigned}: ${patient.ashaWorkerName}",
+                            text = "${stringResource(R.string.village)}: ${patient.villageName} · ${stringResource(R.string.ashaAssigned)}: ${patient.ashaWorkerName}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = textSecondaryColor
                         )
@@ -212,7 +213,7 @@ fun PatientHomeScreen(
                             }
                             Column {
                                 Text(
-                                    text = strings.offlineHealthCard,
+                                    text = stringResource(R.string.offlineHealthCard),
                                     style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.5.sp),
                                     color = GlumePrimaryPurple
                                 )
@@ -230,7 +231,7 @@ fun PatientHomeScreen(
                             modifier = Modifier.clickable { showHealthCardDialog = true }
                         ) {
                             Text(
-                                text = strings.viewCard,
+                                text = stringResource(R.string.viewCard),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = GlumeTextPrimary,
                                     fontWeight = FontWeight.Bold
@@ -249,7 +250,7 @@ fun PatientHomeScreen(
                     ) {
                         Column {
                             Text(
-                                text = strings.activeCondition,
+                                text = stringResource(R.string.activeCondition),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = textSecondaryColor
                             )
@@ -265,7 +266,7 @@ fun PatientHomeScreen(
                             color = GlumeSuccessContainer
                         ) {
                             Text(
-                                text = strings.cachedOffline,
+                                text = stringResource(R.string.cachedOffline),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = GlumeSuccessText
@@ -276,7 +277,7 @@ fun PatientHomeScreen(
                     }
 
                     Text(
-                        text = "${strings.nextCheckup} ${patient.nextAppointmentDate ?: strings.noneScheduled}",
+                        text = "${stringResource(R.string.nextCheckup)} ${patient.nextAppointmentDate ?: stringResource(R.string.noneScheduled)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = textSecondaryColor
                     )
@@ -321,12 +322,12 @@ fun PatientHomeScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Text(
-                    text = strings.howCanWeHelp,
+                    text = stringResource(R.string.howCanWeHelp),
                     style = MaterialTheme.typography.headlineMedium,
                     color = textPrimaryColor
                 )
                 Text(
-                    text = strings.tapServiceDesc,
+                    text = stringResource(R.string.tapServiceDesc),
                     style = MaterialTheme.typography.bodySmall,
                     color = textSecondaryColor
                 )
@@ -406,12 +407,12 @@ fun PatientHomeScreen(
                         }
                         Column {
                             Text(
-                                text = strings.liveQueueAndAppointments,
+                                text = stringResource(R.string.liveQueueAndAppointments),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )
                             Text(
-                                text = strings.liveQueueDesc,
+                                text = stringResource(R.string.liveQueueDesc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -425,7 +426,7 @@ fun PatientHomeScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text(strings.hud, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(stringResource(R.string.hud), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                         OutlinedButton(
                             onClick = onNavigateToAppointments,
@@ -433,7 +434,7 @@ fun PatientHomeScreen(
                             border = BorderStroke(1.dp, NagarSevaPrimary),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text(strings.book, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
+                            Text(stringResource(R.string.book), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
                         }
                     }
                 }
@@ -444,12 +445,12 @@ fun PatientHomeScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(
-                    text = strings.hospitalClinicalServices,
+                    text = stringResource(R.string.hospitalClinicalServices),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = textPrimaryColor
                 )
                 Text(
-                    text = strings.hospitalServicesDesc,
+                    text = stringResource(R.string.hospitalServicesDesc),
                     style = MaterialTheme.typography.bodySmall,
                     color = textSecondaryColor
                 )
@@ -468,12 +469,12 @@ fun PatientHomeScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                             Text("🧪", fontSize = 24.sp)
                             Text(
-                                text = strings.labReports,
+                                text = stringResource(R.string.labReports),
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryColor
                             )
                             Text(
-                                text = strings.labReportsSub,
+                                text = stringResource(R.string.labReportsSub),
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = textSecondaryColor
                             )
@@ -490,12 +491,12 @@ fun PatientHomeScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                             Text("🎟️", fontSize = 24.sp)
                             Text(
-                                text = strings.opdQueue,
+                                text = stringResource(R.string.opdQueue),
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryColor
                             )
                             Text(
-                                text = strings.opdQueueSub,
+                                text = stringResource(R.string.opdQueueSub),
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = textSecondaryColor
                             )
@@ -512,12 +513,12 @@ fun PatientHomeScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                             Text("🩸", fontSize = 24.sp)
                             Text(
-                                text = strings.bloodBank,
+                                text = stringResource(R.string.bloodBank),
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryColor
                             )
                             Text(
-                                text = strings.bloodBankSub,
+                                text = stringResource(R.string.bloodBankSub),
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = textSecondaryColor
                             )
@@ -552,13 +553,13 @@ fun PatientHomeScreen(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
-                                    text = strings.consultationCardTitle,
+                                    text = stringResource(R.string.consultationCardTitle),
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                     color = textPrimaryColor
                                 )
                                 Surface(shape = PillShape, color = GlumePrimaryPurpleContainer) {
                                     Text(
-                                        text = strings.routineBadge,
+                                        text = stringResource(R.string.routineBadge),
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
@@ -569,7 +570,7 @@ fun PatientHomeScreen(
                                 }
                             }
                             Text(
-                                text = strings.consultationCardDesc,
+                                text = stringResource(R.string.consultationCardDesc),
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                 color = textSecondaryColor
                             )
@@ -585,7 +586,7 @@ fun PatientHomeScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     Text(
-                        text = "${strings.doctorReferralsTitle} (${referrals.size})",
+                        text = "${stringResource(R.string.doctorReferralsTitle)} (${referrals.size})",
                         style = MaterialTheme.typography.headlineMedium,
                         color = textPrimaryColor
                     )
@@ -609,7 +610,7 @@ fun PatientHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${strings.myPrescriptions} (${prescriptions.size})",
+                    text = "${stringResource(R.string.myPrescriptions)} (${prescriptions.size})",
                     style = MaterialTheme.typography.headlineMedium,
                     color = textPrimaryColor
                 )
@@ -624,7 +625,7 @@ fun PatientHomeScreen(
                     contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                     modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
-                    Text(strings.uploadRx, style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.uploadRx), style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -642,12 +643,12 @@ fun PatientHomeScreen(
                     ) {
                         Column {
                             Text(
-                                text = strings.noPrescriptions,
+                                text = stringResource(R.string.noPrescriptions),
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryColor
                             )
                             Text(
-                                text = strings.scanOrWrite,
+                                text = stringResource(R.string.scanOrWrite),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textSecondaryColor
                             )
@@ -657,7 +658,7 @@ fun PatientHomeScreen(
                             shape = PillShape,
                             border = BorderStroke(1.dp, GlumePrimaryPurple)
                         ) {
-                            Text(strings.uploadRx, style = MaterialTheme.typography.labelSmall, color = GlumePrimaryPurple)
+                            Text(stringResource(R.string.uploadRx), style = MaterialTheme.typography.labelSmall, color = GlumePrimaryPurple)
                         }
                     }
                 }
@@ -766,7 +767,7 @@ fun PatientHomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = strings.districtAdvisories,
+                        text = stringResource(R.string.districtAdvisories),
                         style = MaterialTheme.typography.headlineMedium,
                         color = textPrimaryColor
                     )
@@ -807,7 +808,7 @@ fun PatientHomeScreen(
                             if (advisory.isUrgent) {
                                 Surface(shape = PillShape, color = GlumeAlertCoral) {
                                     Text(
-                                        text = strings.urgent,
+                                        text = stringResource(R.string.urgent),
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontWeight = FontWeight.Bold,
                                             color = GlumeTextPrimary
@@ -828,7 +829,7 @@ fun PatientHomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${strings.issuedBy} ${advisory.senderName} (${advisory.senderRole.name})",
+                                text = "${stringResource(R.string.issuedBy)} ${advisory.senderName} (${advisory.senderRole.name})",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textSecondaryColor,
                                 modifier = Modifier.weight(1f)
@@ -918,7 +919,7 @@ fun PatientHomeScreen(
             icon = { Text(text = "🚨", fontSize = 20.sp) },
             text = {
                 Text(
-                    text = strings.emergencySos,
+                    text = stringResource(R.string.emergencySos),
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.5.sp

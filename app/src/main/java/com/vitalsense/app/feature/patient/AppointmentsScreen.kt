@@ -34,6 +34,8 @@ import com.vitalsense.app.core.util.AudioGuidanceHelper
 import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
 import java.text.SimpleDateFormat
 import java.util.*
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +49,6 @@ fun AppointmentsScreen(
     language: AppLanguage = AppLanguage.ENGLISH
 ) {
     val context = LocalContext.current
-    val strings = LocalAppStrings.current
     val today = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) }
 
     var showBookCallDialog by remember { mutableStateOf(false) }
@@ -60,7 +61,7 @@ fun AppointmentsScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = strings.scheduledAppointments,
+                            text = stringResource(R.string.scheduledAppointments),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -120,7 +121,7 @@ fun AppointmentsScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(strings.bookACall, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(stringResource(R.string.bookACall), fontWeight = FontWeight.Bold, color = Color.White)
                         }
 
                         OutlinedButton(
@@ -132,7 +133,7 @@ fun AppointmentsScreen(
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.5.dp, NagarSevaPrimary)
                         ) {
-                            Text(strings.liveQueueHud, fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
+                            Text(stringResource(R.string.liveQueueHud), fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
                         }
                     }
                 }
@@ -157,12 +158,12 @@ fun AppointmentsScreen(
                                 ) {
                                     Text("📅", fontSize = 36.sp)
                                     Text(
-                                        text = strings.noUpcomingAppointments,
+                                        text = stringResource(R.string.noUpcomingAppointments),
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                         color = GlumeTextPrimary
                                     )
                                     Text(
-                                        text = strings.bookConsultationSubtitle,
+                                        text = stringResource(R.string.bookConsultationSubtitle),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = GlumeTextSecondary
                                     )
@@ -438,7 +439,7 @@ fun AppointmentsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text("📅", fontSize = 24.sp)
-                    Text(strings.bookTeleConsultation, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.bookTeleConsultation), fontWeight = FontWeight.Bold)
                 }
             },
             text = {

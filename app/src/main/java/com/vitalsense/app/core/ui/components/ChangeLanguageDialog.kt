@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ChangeLanguageDialog(
@@ -27,7 +29,6 @@ fun ChangeLanguageDialog(
     onLanguageSelected: (AppLanguage) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val strings = LocalAppStrings.current
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -71,12 +72,12 @@ fun ChangeLanguageDialog(
                         }
                         Column {
                             Text(
-                                text = strings.selectLanguageTitle,
+                                text = stringResource(R.string.selectLanguageTitle),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = strings.selectLanguageSubtitle,
+                                text = stringResource(R.string.selectLanguageSubtitle),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -157,7 +158,7 @@ fun ChangeLanguageDialog(
                                         color = GlumePrimaryBlue.copy(alpha = 0.15f)
                                     ) {
                                         Text(
-                                            text = strings.currentLanguageBadge,
+                                            text = stringResource(R.string.currentLanguageBadge),
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                             color = GlumePrimaryBlue,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)

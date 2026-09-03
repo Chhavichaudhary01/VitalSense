@@ -32,6 +32,8 @@ import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
 import com.vitalsense.app.feature.doctor.components.CaseAnalyticsCard
 import com.vitalsense.app.core.util.DismissedNoticeHelper
 import com.vitalsense.app.core.util.AudioGuidanceHelper
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun DoctorHomeScreen(
@@ -59,7 +61,6 @@ fun DoctorHomeScreen(
     scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     var showScheduleDialog by remember { mutableStateOf(false) }
     var selectedPatientForHistory by remember { mutableStateOf<Patient?>(null) }
     var activeTeleConsultationPatient by remember { mutableStateOf<String?>(null) }
@@ -283,7 +284,7 @@ fun DoctorHomeScreen(
             ) {
                 // Pending Cases Stat Card
                 GlumeStatCard(
-                    label = strings.pendingCases,
+                    label = stringResource(R.string.pendingCases),
                     value = "${pendingCases.size}",
                     icon = "⏳",
                     modifier = Modifier.weight(1f),
@@ -293,7 +294,7 @@ fun DoctorHomeScreen(
 
                 // Critical Cases Stat Card
                 GlumeStatCard(
-                    label = strings.criticalCases,
+                    label = stringResource(R.string.criticalCases),
                     value = "$severeCount",
                     icon = "🚨",
                     modifier = Modifier.weight(1f),
@@ -303,7 +304,7 @@ fun DoctorHomeScreen(
 
                 // Scheduled Appointments Stat Card
                 GlumeStatCard(
-                    label = strings.scheduledAppts,
+                    label = stringResource(R.string.scheduledAppts),
                     value = "${appointments.size}",
                     icon = "📅",
                     modifier = Modifier.weight(1f),
@@ -475,7 +476,7 @@ fun DoctorHomeScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = strings.liveQueueTitle,
+                                    text = stringResource(R.string.liveQueueTitle),
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = GlumeTextPrimary
                                 )
@@ -496,7 +497,7 @@ fun DoctorHomeScreen(
                                 }
                             }
                             Text(
-                                text = strings.liveQueueDesc,
+                                text = stringResource(R.string.liveQueueDesc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -509,7 +510,7 @@ fun DoctorHomeScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                     ) {
-                        Text(strings.openHud, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(stringResource(R.string.openHud), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
@@ -554,7 +555,7 @@ fun DoctorHomeScreen(
                                         color = GlumeAlertCoral
                                     ) {
                                         Text(
-                                            text = strings.highPriority,
+                                            text = stringResource(R.string.highPriority),
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 color = GlumeTextPrimary
@@ -574,7 +575,7 @@ fun DoctorHomeScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "${strings.village}: ${sos.targetVillage ?: "General"}",
+                                        text = "${stringResource(R.string.village)}: ${sos.targetVillage ?: "General"}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = GlumeTextSecondary,
                                         modifier = Modifier.weight(1f)
@@ -631,7 +632,7 @@ fun DoctorHomeScreen(
                         ) {
                             Text(text = "🎉", fontSize = 32.sp)
                             Text(
-                                text = strings.noPendingCases,
+                                text = stringResource(R.string.noPendingCases),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = GlumeTextSecondary
                             )
@@ -659,7 +660,7 @@ fun DoctorHomeScreen(
                                             color = GlumeTextPrimary
                                         )
                                         Text(
-                                            text = "${strings.village}: ${record.villageName} · ${record.category.displayName}",
+                                            text = "${stringResource(R.string.village)}: ${record.villageName} · ${record.category.displayName}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = GlumeTextSecondary
                                         )
@@ -685,7 +686,7 @@ fun DoctorHomeScreen(
                                 }
 
                                 Text(
-                                    text = "${strings.symptoms} ${record.notes}",
+                                    text = "${stringResource(R.string.symptoms)} ${record.notes}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = GlumeTextPrimary
                                 )
@@ -733,7 +734,7 @@ fun DoctorHomeScreen(
                                             contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                                             modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                                         ) {
-                                            Text(text = strings.history, style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                                            Text(text = stringResource(R.string.history), style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
                                         }
 
                                         Button(
@@ -746,7 +747,7 @@ fun DoctorHomeScreen(
                                             contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.xxs),
                                             modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                                         ) {
-                                            Text(text = strings.review, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                            Text(text = stringResource(R.string.review), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                         }
                                     }
                                 }
@@ -781,7 +782,7 @@ fun DoctorHomeScreen(
                         contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                         modifier = Modifier.defaultMinSize(minHeight = 34.dp)
                     ) {
-                        Text(text = strings.proposeAppt, style = MaterialTheme.typography.labelSmall)
+                        Text(text = stringResource(R.string.proposeAppt), style = MaterialTheme.typography.labelSmall)
                     }
                 }
 
@@ -971,7 +972,7 @@ fun DoctorHomeScreen(
                 if (lowStockCount > 0) {
                     Surface(shape = PillShape, color = GlumeAlertContainer) {
                         Text(
-                            text = "$lowStockCount ${strings.lowStock}",
+                            text = "$lowStockCount ${stringResource(R.string.lowStock)}",
                             style = MaterialTheme.typography.labelSmall.copy(color = GlumeAlertCoral, fontWeight = FontWeight.Bold),
                             modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp)
                         )
@@ -1088,8 +1089,8 @@ fun DoctorHomeScreen(
                     VitalSenseTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        label = strings.searchPatient,
-                        placeholder = strings.searchPlaceholder
+                        label = stringResource(R.string.searchPatient),
+                        placeholder = stringResource(R.string.searchPlaceholder)
                     )
 
                     val filteredPatients = patients.filter {
@@ -1111,7 +1112,7 @@ fun DoctorHomeScreen(
                                         color = GlumeTextPrimary
                                     )
                                     Text(
-                                        text = "${pat.villageName} · Age: ${pat.age} (${pat.gender}) · ${strings.ashaAssigned}: ${pat.ashaWorkerName}",
+                                        text = "${pat.villageName} · Age: ${pat.age} (${pat.gender}) · ${stringResource(R.string.ashaAssigned)}: ${pat.ashaWorkerName}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = GlumeTextSecondary
                                     )
@@ -1157,7 +1158,7 @@ fun DoctorHomeScreen(
                                         contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                                         modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                                     ) {
-                                        Text(strings.history, style = MaterialTheme.typography.labelSmall)
+                                        Text(stringResource(R.string.history), style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
@@ -1176,7 +1177,7 @@ fun DoctorHomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "📢 ${strings.districtAdvisories}",
+                        text = "📢 ${stringResource(R.string.districtAdvisories)}",
                         style = MaterialTheme.typography.headlineMedium,
                         color = GlumeTextPrimary
                     )
@@ -1234,7 +1235,7 @@ fun DoctorHomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${strings.issuedBy} ${directive.senderName} (${directive.senderRole.name})",
+                                text = "${stringResource(R.string.issuedBy)} ${directive.senderName} (${directive.senderRole.name})",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary,
                                 modifier = Modifier.weight(1f)

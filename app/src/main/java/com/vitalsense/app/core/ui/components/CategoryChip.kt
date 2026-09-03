@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vitalsense.app.core.data.model.ConditionCategory
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun CategoryChip(
@@ -23,14 +25,13 @@ fun CategoryChip(
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     val categoryName = when (category) {
-        ConditionCategory.GENERAL_MEDICINE -> strings.catGeneralMedicine
-        ConditionCategory.MATERNAL_HEALTH -> strings.catMaternalHealth
-        ConditionCategory.FITNESS -> strings.catFitness
-        ConditionCategory.NUTRITION -> strings.catNutrition
-        ConditionCategory.MENTAL_HEALTH -> strings.catMentalHealth
-        ConditionCategory.EMERGENCY -> strings.catEmergency
+        ConditionCategory.GENERAL_MEDICINE -> stringResource(R.string.catGeneralMedicine)
+        ConditionCategory.MATERNAL_HEALTH -> stringResource(R.string.catMaternalHealth)
+        ConditionCategory.FITNESS -> stringResource(R.string.catFitness)
+        ConditionCategory.NUTRITION -> stringResource(R.string.catNutrition)
+        ConditionCategory.MENTAL_HEALTH -> stringResource(R.string.catMentalHealth)
+        ConditionCategory.EMERGENCY -> stringResource(R.string.catEmergency)
     }
 
     Surface(

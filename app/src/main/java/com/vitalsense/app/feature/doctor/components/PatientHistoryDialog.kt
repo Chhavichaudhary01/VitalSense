@@ -22,6 +22,8 @@ import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun PatientHistoryDialog(
@@ -38,7 +40,6 @@ fun PatientHistoryDialog(
 
     val dateFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
     var selectedTab by remember { mutableStateOf(0) }
-    val strings = LocalAppStrings.current
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -127,7 +128,7 @@ fun PatientHistoryDialog(
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text(strings.medicalHistoryTab) }
+                        text = { Text(stringResource(R.string.medicalHistoryTab)) }
                     )
                 }
 
@@ -294,7 +295,7 @@ fun PatientHistoryDialog(
                     // Medical History Chronological Tab
                     if (medicalHistory.isEmpty()) {
                         Text(
-                            text = strings.noMedicalHistory,
+                            text = stringResource(R.string.noMedicalHistory),
                             style = MaterialTheme.typography.bodySmall,
                             color = GlumeTextSecondary
                         )

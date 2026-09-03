@@ -18,15 +18,15 @@ import com.vitalsense.app.core.data.model.SeverityLevel
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.GlumeTextPrimary
 import com.vitalsense.app.core.ui.theme.GlumeTextSecondary
-import com.vitalsense.app.core.ui.theme.LocalAppStrings
 import com.vitalsense.app.core.ui.theme.Spacing
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun CaseAnalyticsCard(
     analytics: DoctorCaseAnalytics,
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     val lowRatio = if (analytics.totalCases > 0) analytics.lowCount.toFloat() / analytics.totalCases else 0f
     val modRatio = if (analytics.totalCases > 0) analytics.moderateCount.toFloat() / analytics.totalCases else 0f
     val highRatio = if (analytics.totalCases > 0) analytics.highCount.toFloat() / analytics.totalCases else 0f
@@ -40,7 +40,7 @@ fun CaseAnalyticsCard(
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             Text(
-                text = strings.triageBreakdownTitle,
+                text = stringResource(R.string.triageBreakdownTitle),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = GlumeTextPrimary
             )
@@ -68,10 +68,10 @@ fun CaseAnalyticsCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                LegendItem("${strings.lowRisk} (${analytics.lowCount})", Color(SeverityLevel.LOW.badgeColorHex))
-                LegendItem("${strings.moderateRisk} (${analytics.moderateCount})", Color(SeverityLevel.MODERATE.badgeColorHex))
-                LegendItem("${strings.highRisk} (${analytics.highCount})", Color(SeverityLevel.HIGH.badgeColorHex))
-                LegendItem("${strings.urgent} (${analytics.severeCount})", Color(SeverityLevel.SEVERE.badgeColorHex))
+                LegendItem("${stringResource(R.string.lowRisk)} (${analytics.lowCount})", Color(SeverityLevel.LOW.badgeColorHex))
+                LegendItem("${stringResource(R.string.moderateRisk)} (${analytics.moderateCount})", Color(SeverityLevel.MODERATE.badgeColorHex))
+                LegendItem("${stringResource(R.string.highRisk)} (${analytics.highCount})", Color(SeverityLevel.HIGH.badgeColorHex))
+                LegendItem("${stringResource(R.string.urgent)} (${analytics.severeCount})", Color(SeverityLevel.SEVERE.badgeColorHex))
             }
 
             Spacer(modifier = Modifier.height(Spacing.xs))
@@ -82,22 +82,22 @@ fun CaseAnalyticsCard(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 MiniStatTile(
-                    label = strings.statTotal,
+                    label = stringResource(R.string.statTotal),
                     value = analytics.totalCases.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 MiniStatTile(
-                    label = strings.statPending,
+                    label = stringResource(R.string.statPending),
                     value = analytics.pendingCount.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 MiniStatTile(
-                    label = strings.statResolved,
+                    label = stringResource(R.string.statResolved),
                     value = analytics.respondedCount.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 MiniStatTile(
-                    label = strings.statReferred,
+                    label = stringResource(R.string.statReferred),
                     value = analytics.referredCount.toString(),
                     modifier = Modifier.weight(1f)
                 )

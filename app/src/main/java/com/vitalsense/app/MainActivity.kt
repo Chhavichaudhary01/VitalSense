@@ -1,7 +1,7 @@
 package com.vitalsense.app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var appStateHolder: AppStateHolder
@@ -28,11 +28,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val currentLanguage by appStateHolder.currentLanguage.collectAsStateWithLifecycle()
             val isLightMode by appStateHolder.isPresentationLightMode.collectAsStateWithLifecycle()
 
             VitalSenseTheme(
-                language = currentLanguage,
                 usePatientLightMode = isLightMode
             ) {
                 Surface(

@@ -26,6 +26,8 @@ import com.vitalsense.app.core.ui.util.AdaptiveScreenContainer
 import com.vitalsense.app.core.ui.util.touchSpring
 import com.vitalsense.app.feature.doctor.components.DoctorSlotConfigDialog
 import com.vitalsense.app.feature.doctor.components.QueueEntryListItem
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +46,6 @@ fun DoctorQueueScreen(
     onAddWalkIn: (patientId: String, patientName: String) -> Unit,
     onUpdateSlotConfig: (capacity: Int, isWalkInOpen: Boolean, startTime: String, endTime: String) -> Unit
 ) {
-    val strings = LocalAppStrings.current
     var showSlotConfigDialog by remember { mutableStateOf(false) }
     var showWalkInDialog by remember { mutableStateOf(false) }
     var outcomeNotesText by remember { mutableStateOf("") }
@@ -73,7 +74,7 @@ fun DoctorQueueScreen(
                     title = {
                         Column {
                             Text(
-                                text = strings.liveQueueTitle,
+                                text = stringResource(R.string.liveQueueTitle),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )

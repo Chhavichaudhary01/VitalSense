@@ -77,15 +77,13 @@ private val NagarSevaLightColorScheme = lightColorScheme(
 
 @Composable
 fun VitalSenseTheme(
-    language: AppLanguage = AppLanguage.ENGLISH,
     usePatientLightMode: Boolean = true, // Default to Presentation Light Mode for clarity
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (usePatientLightMode) NagarSevaLightColorScheme else NagarSevaDarkColorScheme
 
     CompositionLocalProvider(
-        LocalSpacing provides VitalSenseSpacing(),
-        LocalAppStrings provides AppLanguageManager.getStrings(language)
+        LocalSpacing provides VitalSenseSpacing()
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

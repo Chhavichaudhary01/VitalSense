@@ -26,10 +26,12 @@ import com.vitalsense.app.core.data.model.Patient
 import com.vitalsense.app.core.ui.components.ButtonStyle
 import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
+import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
 import com.vitalsense.app.core.ui.theme.*
-import com.vitalsense.app.core.ui.theme.LocalAppStrings
 import java.text.SimpleDateFormat
 import java.util.*
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +42,6 @@ fun OpdQueueScreen(
     onBookToken: (OpdToken) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     var showBookTokenDialog by remember { mutableStateOf(false) }
 
     val activeToken = opdTokens.firstOrNull { it.patientId == patient.id && it.status != "Completed" }
@@ -51,12 +52,12 @@ fun OpdQueueScreen(
                 title = {
                     Column {
                         Text(
-                            text = strings.opdLiveQueueAndTokens,
+                            text = stringResource(R.string.opdLiveQueueAndTokens),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
                         Text(
-                            text = strings.opdSubtitle,
+                            text = stringResource(R.string.opdSubtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = GlumeTextSecondary
                         )
@@ -66,7 +67,7 @@ fun OpdQueueScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = strings.exit,
+                            contentDescription = stringResource(R.string.exit),
                             tint = GlumeTextPrimary
                         )
                     }
@@ -75,7 +76,7 @@ fun OpdQueueScreen(
                     IconButton(onClick = { showBookTokenDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.ConfirmationNumber,
-                            contentDescription = strings.bookOpdToken,
+                            contentDescription = stringResource(R.string.bookOpdToken),
                             tint = GlumePrimaryPurple
                         )
                     }
@@ -96,7 +97,7 @@ fun OpdQueueScreen(
             // 1. Active Token Hero Card
             item {
                 if (activeToken != null) {
-                    ActiveTokenCard(token = activeToken)
+                    ActiveTokenCard(token = activeToken, patient = patient)
                 } else {
                     NoActiveTokenCard(onBookClick = { showBookTokenDialog = true })
                 }
@@ -147,7 +148,7 @@ fun OpdQueueScreen(
             // 3. Queue History
             item {
                 Text(
-                    text = strings.yourActiveTokens,
+                    text = stringResource(R.string.yourActiveTokens),
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     color = GlumePrimaryPurpleLight
                 )
@@ -156,7 +157,7 @@ fun OpdQueueScreen(
             if (opdTokens.isEmpty()) {
                 item {
                     Text(
-                        text = strings.noActiveTokens,
+                        text = stringResource(R.string.noActiveTokens),
                         style = MaterialTheme.typography.bodySmall,
                         color = GlumeTextSecondary
                     )
@@ -186,8 +187,11 @@ fun OpdQueueScreen(
 @Composable
 fun ActiveTokenCard(
     token: OpdToken,
+    patient: Patient,
     modifier: Modifier = Modifier
 ) {
+    var showTeleconsultation by remember { mutableStateOf(false) }
+
     VitalSenseCard(
         modifier = modifier.fillMaxWidth(),
         backgroundColor = GlumeSurfaceElevated,
@@ -291,7 +295,28 @@ fun ActiveTokenCard(
                     Text("~${token.estimatedWaitMinutes} mins", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = GlumeWarningText)
                 }
             }
+
+            Spacer(modifier = Modifier.height(Spacing.xs))
+            
+            VitalSenseButton(
+                text = "📹 Join Teleconsultation",
+                onClick = { showTeleconsultation = true },
+                style = ButtonStyle.PRIMARY,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
+    }
+
+    if (showTeleconsultation) {
+        TeleConsultationModal(
+            patientName = patient.name,
+            doctorName = token.doctorName,
+            specialty = token.department,
+            villageName = patient.villageName,
+            patientAge = patient.age,
+            onDismiss = { showTeleconsultation = false },
+            onEndCall = { showTeleconsultation = false }
+        )
     }
 }
 
@@ -412,7 +437,6 @@ fun BookOpdTokenDialog(
     onDismiss: () -> Unit,
     onConfirmBook: (OpdToken) -> Unit
 ) {
-    val strings = LocalAppStrings.current
     var selectedDept by remember { mutableStateOf("General Medicine") }
     var selectedDoctor by remember { mutableStateOf("Dr. Rajesh Varma") }
 
@@ -427,7 +451,7 @@ fun BookOpdTokenDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = strings.bookHospitalOpdToken,
+                text = stringResource(R.string.bookHospitalOpdToken),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = GlumeTextPrimary
             )
@@ -435,7 +459,7 @@ fun BookOpdTokenDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 Text(
-                    text = strings.selectDepartment,
+                    text = stringResource(R.string.selectDepartment),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = GlumeTextSecondary
                 )
@@ -484,7 +508,7 @@ fun BookOpdTokenDialog(
         },
         confirmButton = {
             VitalSenseButton(
-                text = strings.confirmBooking,
+                text = stringResource(R.string.confirmBooking),
                 onClick = {
                     val tokenPrefix = when (selectedDept) {
                         "General Medicine" -> "OPD-A"
@@ -513,7 +537,7 @@ fun BookOpdTokenDialog(
         },
         dismissButton = {
             VitalSenseButton(
-                text = strings.cancel,
+                text = stringResource(R.string.cancel),
                 onClick = onDismiss,
                 style = ButtonStyle.SECONDARY
             )

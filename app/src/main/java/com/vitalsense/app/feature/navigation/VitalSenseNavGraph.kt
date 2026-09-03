@@ -20,6 +20,8 @@ import com.vitalsense.app.core.util.AppUpdateInfo
 import com.vitalsense.app.core.ui.components.TopRoleSwitcherBar
 import com.vitalsense.app.core.ui.util.AdaptiveScreenContainer
 import com.vitalsense.app.feature.admin.AdminHomeScreen
+import com.vitalsense.app.feature.admin.AdminDiagnosticsScreen
+import com.vitalsense.app.feature.admin.AdminFacilityQualityScreen
 import com.vitalsense.app.feature.admin.AdminViewModel
 import com.vitalsense.app.feature.admin.AdminDispensaryRestockScreen
 import com.vitalsense.app.feature.admin.AdminDiseaseTrendsScreen
@@ -789,6 +791,18 @@ fun VitalSenseNavGraph(
                                                             onBackClick = { currentAdminScreen = "home" }
                                                         )
                                                     }
+                                                    "facility_quality" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        AdminFacilityQualityScreen(
+                                                            onNavigateBack = { currentAdminScreen = "home" }
+                                                        )
+                                                    }
+                                                    "diagnostics" -> {
+                                                        BackHandler { currentAdminScreen = "home" }
+                                                        AdminDiagnosticsScreen(
+                                                            onBackClick = { currentAdminScreen = "home" }
+                                                        )
+                                                    }
                                                     else -> {
                                                         BackHandler {
                                                             appStateHolder.logout()
@@ -807,7 +821,9 @@ fun VitalSenseNavGraph(
                                                             onNavigateToOtScheduler = { currentAdminScreen = "ot_scheduler" },
                                                             onNavigateToExternalReferrals = { currentAdminScreen = "referrals" },
                                                             onNavigateToBioMedical = { currentAdminScreen = "biomedical" },
-                                                            onNavigateToQueueOversight = { currentAdminScreen = "queue_oversight" }
+                                                            onNavigateToQueueOversight = { currentAdminScreen = "queue_oversight" },
+                                                            onNavigateToFacilityQuality = { currentAdminScreen = "facility_quality" },
+                                                            onNavigateToDiagnostics = { currentAdminScreen = "diagnostics" }
                                                         )
                                                     }
                                                 }

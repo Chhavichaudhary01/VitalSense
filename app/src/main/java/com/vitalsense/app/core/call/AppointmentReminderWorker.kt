@@ -44,8 +44,8 @@ class AppointmentReminderWorker(
             notificationManager.createNotificationChannel(channel)
         }
 
-        val title = "📅 " + applicationContext.getString(R.string.appointment_reminder_title)
-        val message = applicationContext.getString(R.string.appointment_reminder_body, "Dr. $doctorName")
+        val title = "📅 " + applicationContext.getString(R.string.appointmentReminderTitle)
+        val message = applicationContext.getString(R.string.appointmentReminderBody, "Dr. $doctorName")
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(android.R.drawable.ic_menu_agenda)

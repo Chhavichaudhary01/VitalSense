@@ -21,7 +21,8 @@ import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.components.VitalSenseTextField
 import com.vitalsense.app.core.ui.theme.*
-import com.vitalsense.app.core.ui.theme.LocalAppStrings
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun OtSchedulerScreen(
@@ -30,7 +31,6 @@ fun OtSchedulerScreen(
     onBookSurgery: (OtSurgeryBooking) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     var showBookSurgeryDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
@@ -61,7 +61,7 @@ fun OtSchedulerScreen(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
                     ) {
                         Text("←", color = GlumeTextPrimary, fontWeight = FontWeight.Bold)
-                        Text(strings.roleDoctor, style = MaterialTheme.typography.labelMedium, color = GlumeTextPrimary)
+                        Text(stringResource(R.string.roleDoctor), style = MaterialTheme.typography.labelMedium, color = GlumeTextPrimary)
                     }
                 }
 
@@ -94,12 +94,12 @@ fun OtSchedulerScreen(
                     ) {
                         Column {
                             Text(
-                                text = "🔪 ${strings.otScheduler}",
+                                text = "🔪 ${stringResource(R.string.otScheduler)}",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )
                             Text(
-                                text = strings.otSubtitle,
+                                text = stringResource(R.string.otSubtitle),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -115,7 +115,7 @@ fun OtSchedulerScreen(
                             contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
                             modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                         ) {
-                            Text("+ ${strings.bookOtSlot}", style = MaterialTheme.typography.labelSmall)
+                            Text("+ ${stringResource(R.string.bookOtSlot)}", style = MaterialTheme.typography.labelSmall)
                         }
                     }
 
@@ -288,7 +288,7 @@ fun OtSchedulerScreen(
             onDismissRequest = { showBookSurgeryDialog = false },
             title = {
                 Text(
-                    text = strings.bookOtSlot,
+                    text = stringResource(R.string.bookOtSlot),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = GlumeTextPrimary
                 )

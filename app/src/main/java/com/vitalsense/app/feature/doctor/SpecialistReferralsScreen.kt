@@ -19,6 +19,8 @@ import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.doctor.components.SpecialistFindingsDialog
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +35,6 @@ fun SpecialistReferralsScreen(
     onStartConsultCall: (referral: Referral) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     var selectedFilter by remember { mutableStateOf("ALL") } // "ALL", "PENDING", "ACTIVE", "COMPLETED"
     var activeDeclineReferral by remember { mutableStateOf<Referral?>(null) }
     var activeInfoRequestReferral by remember { mutableStateOf<Referral?>(null) }
@@ -89,7 +90,7 @@ fun SpecialistReferralsScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = strings.doctorReferralsTitle,
+                            text = stringResource(R.string.doctorReferralsTitle),
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )

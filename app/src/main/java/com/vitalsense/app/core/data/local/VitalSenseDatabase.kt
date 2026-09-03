@@ -41,9 +41,10 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         MedicalHistoryEntity::class,
         NearbyPharmacyCacheEntity::class,
         CallLogEntity::class,
-        ReferralEntity::class
+        ReferralEntity::class,
+        AuditLogEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -189,6 +190,24 @@ abstract class VitalSenseDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `audit_logs` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `timestamp` INTEGER NOT NULL,
+                        `actorId` TEXT NOT NULL,
+                        `actorRole` TEXT NOT NULL,
+                        `action` TEXT NOT NULL,
+                        `resourceId` TEXT,
+                        `resourceType` TEXT,
+                        `details` TEXT,
+                        `isSynced` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): VitalSenseDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -196,7 +215,7 @@ abstract class VitalSenseDatabase : RoomDatabase() {
                     VitalSenseDatabase::class.java,
                     "vitalsense_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

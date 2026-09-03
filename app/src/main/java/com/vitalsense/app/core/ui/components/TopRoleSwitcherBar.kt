@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.Patient
 import com.vitalsense.app.core.data.model.UserRole
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun TopRoleSwitcherBar(
@@ -36,7 +38,6 @@ fun TopRoleSwitcherBar(
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     var showLanguageDialog by remember { mutableStateOf(false) }
 
     if (showLanguageDialog) {
@@ -96,17 +97,17 @@ fun TopRoleSwitcherBar(
                     }
                     Column {
                         Text(
-                            text = if (activeUserName.isNotBlank()) activeUserName else strings.appName,
+                            text = if (activeUserName.isNotBlank()) activeUserName else stringResource(R.string.app_name),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary,
                             maxLines = 1
                         )
                         Text(
                             text = when (currentRole) {
-                                UserRole.PATIENT -> strings.patientPortal
-                                UserRole.ASHA -> strings.ashaPortal
-                                UserRole.DOCTOR -> strings.doctorPortal
-                                UserRole.ADMIN -> strings.adminPortal
+                                UserRole.PATIENT -> stringResource(R.string.patientPortal)
+                                UserRole.ASHA -> stringResource(R.string.ashaPortal)
+                                UserRole.DOCTOR -> stringResource(R.string.doctorPortal)
+                                UserRole.ADMIN -> stringResource(R.string.adminPortal)
                             },
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                             color = GlumePrimaryPurpleLight
@@ -161,7 +162,7 @@ fun TopRoleSwitcherBar(
                                 .background(if (isOffline) GlumeTextTertiary else GlumeSuccessMint)
                         )
                         Text(
-                            text = if (isOffline) strings.offline else strings.online,
+                            text = if (isOffline) stringResource(R.string.offline) else stringResource(R.string.online),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = if (isOffline) GlumeTextSecondary else GlumeSuccessText
                         )
@@ -183,7 +184,7 @@ fun TopRoleSwitcherBar(
                     ) {
                         Text(text = "🚪", style = MaterialTheme.typography.labelSmall)
                         Text(
-                            text = strings.exit,
+                            text = stringResource(R.string.exit),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -223,7 +224,7 @@ fun TopRoleSwitcherBar(
                             Text(text = "🤝", style = MaterialTheme.typography.titleMedium)
                             Column {
                                 Text(
-                                    text = strings.actingAsProxy,
+                                    text = stringResource(R.string.actingAsProxy),
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = GlumePrimaryPurpleLight
                                 )
@@ -244,7 +245,7 @@ fun TopRoleSwitcherBar(
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             modifier = Modifier.height(34.dp)
                         ) {
-                            Text(text = strings.exitProxy, style = MaterialTheme.typography.labelSmall)
+                            Text(text = stringResource(R.string.exitProxy), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

@@ -33,6 +33,8 @@ import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.util.AudioGuidanceHelper
 import com.vitalsense.app.core.util.DismissedNoticeHelper
 import com.vitalsense.app.core.ui.util.touchSpring
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 
 @Composable
@@ -46,7 +48,6 @@ fun LoginScreen(
     onAdminLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     val context = androidx.compose.ui.platform.LocalContext.current
 
     var showLanguageDialog by remember { mutableStateOf(false) }
@@ -151,7 +152,7 @@ fun LoginScreen(
                             }
                         }
                         Text(
-                            text = strings.tagline,
+                            text = stringResource(R.string.tagline),
                             style = MaterialTheme.typography.labelSmall,
                             color = GlumeTextSecondary
                         )
@@ -240,7 +241,7 @@ fun LoginScreen(
                             verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
                         ) {
                             Text(
-                                text = strings.whoIsUsing,
+                                text = stringResource(R.string.whoIsUsing),
                                 style = MaterialTheme.typography.headlineMedium.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 24.sp
@@ -249,7 +250,7 @@ fun LoginScreen(
                                 textAlign = TextAlign.Center
                             )
                             Text(
-                                text = strings.selectRoleDesc,
+                                text = stringResource(R.string.selectRoleDesc),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = GlumeTextSecondary,
                                 textAlign = TextAlign.Center
@@ -262,8 +263,8 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             RoleTitleCard(
-                                title = strings.rolePatient,
-                                roleTag = strings.patientPortal,
+                                title = stringResource(R.string.rolePatient),
+                                roleTag = stringResource(R.string.patientPortal),
                                 subtitle = if (currentLanguage == AppLanguage.HINDI) "पर्चे, ओपीडी टोकन और अपॉइंटमेंट" else "Prescriptions, OPD tokens & consults",
                                 avatarEmoji = "🧑",
                                 accentColor = NagarSevaPrimaryVariant,
@@ -275,8 +276,8 @@ fun LoginScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             RoleTitleCard(
-                                title = strings.roleDoctor,
-                                roleTag = strings.doctorPortal,
+                                title = stringResource(R.string.roleDoctor),
+                                roleTag = stringResource(R.string.doctorPortal),
                                 subtitle = if (currentLanguage == AppLanguage.HINDI) "मरीज़ कतार, ई-पर्चे और नैदानिक समीक्षा" else "Patient queues, e-prescriptions & review",
                                 avatarEmoji = "👨‍⚕️",
                                 accentColor = NagarSevaPrimary,
@@ -294,8 +295,8 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             RoleTitleCard(
-                                title = strings.roleAsha,
-                                roleTag = strings.ashaPortal,
+                                title = stringResource(R.string.roleAsha),
+                                roleTag = stringResource(R.string.ashaPortal),
                                 subtitle = if (currentLanguage == AppLanguage.HINDI) "घर-घर स्वास्थ्य सर्वे, ऑफलाइन सिंक व SOS" else "Door-to-door vitals, offline sync & SOS",
                                 avatarEmoji = "🩺",
                                 accentColor = NagarSevaStatusProgress,
@@ -307,8 +308,8 @@ fun LoginScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             RoleTitleCard(
-                                title = strings.roleAdmin,
-                                roleTag = strings.adminPortal,
+                                title = stringResource(R.string.roleAdmin),
+                                roleTag = stringResource(R.string.adminPortal),
                                 subtitle = if (currentLanguage == AppLanguage.HINDI) "रोग निगरानी, बिस्तर/OT डेस्क व दवा पुनःपूर्ति" else "Surveillance, bed/OT roster & restock",
                                 avatarEmoji = "🛡️",
                                 accentColor = GlumeAlertCoral,
@@ -341,7 +342,7 @@ fun LoginScreen(
                                 ) {
                                     Text("⚡", fontSize = 11.sp)
                                     Text(
-                                        text = strings.offline,
+                                        text = stringResource(R.string.offline),
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                         color = NagarSevaStatusNormalText
                                     )

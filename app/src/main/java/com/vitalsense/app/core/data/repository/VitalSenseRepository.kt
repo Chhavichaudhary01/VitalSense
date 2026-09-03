@@ -146,6 +146,11 @@ interface VitalSenseRepository {
     fun getReferralsForDoctorOrSpecialty(doctorId: String, specialty: String): Flow<List<Referral>>
     suspend fun createReferral(referral: Referral)
     suspend fun updateReferral(referral: Referral)
+
+    // --- Audit Logs ---
+    fun getAllAuditLogs(): Flow<List<AuditLog>>
+    fun getAuditLogsForPatient(patientId: String): Flow<List<AuditLog>>
+    suspend fun logAuditAction(auditLog: AuditLog)
 }
 
 

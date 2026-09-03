@@ -481,3 +481,40 @@ fun Referral.toEntity(): ReferralEntity = ReferralEntity(
     respondedAt = respondedAt,
     completedAt = completedAt
 )
+
+@Entity(tableName = "audit_logs")
+data class AuditLogEntity(
+    @PrimaryKey val id: String,
+    val timestamp: Long,
+    val actorId: String,
+    val actorRole: String,
+    val action: String,
+    val resourceId: String?,
+    val resourceType: String?,
+    val details: String?,
+    val isSynced: Boolean
+) {
+    fun toModel(): com.vitalsense.app.core.data.model.AuditLog = com.vitalsense.app.core.data.model.AuditLog(
+        id = id,
+        timestamp = timestamp,
+        actorId = actorId,
+        actorRole = actorRole,
+        action = action,
+        resourceId = resourceId,
+        resourceType = resourceType,
+        details = details,
+        isSynced = isSynced
+    )
+}
+
+fun com.vitalsense.app.core.data.model.AuditLog.toEntity(): AuditLogEntity = AuditLogEntity(
+    id = id,
+    timestamp = timestamp,
+    actorId = actorId,
+    actorRole = actorRole,
+    action = action,
+    resourceId = resourceId,
+    resourceType = resourceType,
+    details = details,
+    isSynced = isSynced
+)

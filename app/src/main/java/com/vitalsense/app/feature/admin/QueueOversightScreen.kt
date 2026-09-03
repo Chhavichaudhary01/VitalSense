@@ -25,6 +25,8 @@ import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.ui.util.AdaptiveScreenContainer
 import com.vitalsense.app.core.ui.util.touchSpring
 import com.vitalsense.app.feature.doctor.components.QueueEntryListItem
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +38,6 @@ fun QueueOversightScreen(
     onClearSelectedDoctor: () -> Unit,
     onBackClick: () -> Unit
 ) {
-    val strings = LocalAppStrings.current
     val selectedDoctorSummary = remember(summaries, selectedDoctorId) {
         summaries.firstOrNull { it.doctorId == selectedDoctorId }
     }
@@ -48,7 +49,7 @@ fun QueueOversightScreen(
                     title = {
                         Column {
                             Text(
-                                text = if (selectedDoctorSummary != null) "Dr. ${selectedDoctorSummary.doctorName} Queue" else strings.liveQueueTitle,
+                                text = if (selectedDoctorSummary != null) "Dr. ${selectedDoctorSummary.doctorName} Queue" else stringResource(R.string.liveQueueTitle),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeTextPrimary
                             )

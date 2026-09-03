@@ -71,6 +71,17 @@ data class CallLog(
     val outcomeNotes: String? = null
 )
 
+
+data class FacilityQuality(
+    val id: String,
+    val facilityId: String,
+    val cleanlinessScore: Int, // 0-100
+    val staffAvailabilityScore: Int, // 0-100
+    val equipmentReadinessScore: Int, // 0-100
+    val patientFeedbackScore: Float, // 1.0 - 5.0
+    val lastAssessmentDate: Long
+)
+
 data class Doctor(
     val id: String,
     val name: String,

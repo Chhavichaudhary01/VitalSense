@@ -309,6 +309,16 @@ interface VitalSenseDao {
 
     @Update
     suspend fun updateReferral(referral: ReferralEntity)
+
+    // --- Audit Logs ---
+    @Query("SELECT * FROM audit_logs ORDER BY timestamp DESC")
+    fun getAllAuditLogs(): Flow<List<AuditLogEntity>>
+
+    @Query("SELECT * FROM audit_logs WHERE resourceId = :patientId ORDER BY timestamp DESC")
+    fun getAuditLogsForPatient(patientId: String): Flow<List<AuditLogEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAuditLog(log: AuditLogEntity)
 }
 
 

@@ -1452,4 +1452,27 @@ class VitalSenseRepositoryImpl @Inject constructor(
             )
         )
     }
+
+    // --- Audit Logs ---
+    override fun getAllAuditLogs(): Flow<List<AuditLog>> {
+        return dao.getAllAuditLogs().map { list -> list.map { it.toModel() } }
+    }
+
+    override fun getAuditLogsForPatient(patientId: String): Flow<List<AuditLog>> {
+        return dao.getAuditLogsForPatient(patientId).map { list -> list.map { it.toModel() } }
+    }
+
+    override suspend fun logAuditAction(auditLog: AuditLog) {
+        dao.insertAuditLog(auditLog.toEntity())
+        
+        val outboxId = "outbox_audit_${auditLog.id}"
+        dao.insertOutboxRecord(
+            com.vitalsense.app.core.data.local.entity.OutboxEntity(
+                id = outboxId,
+                actionType = "AUDIT_LOG",
+                entityId = auditLog.id,
+                payloadJson = gson.toJson(auditLog)
+            )
+        )
+    }
 }

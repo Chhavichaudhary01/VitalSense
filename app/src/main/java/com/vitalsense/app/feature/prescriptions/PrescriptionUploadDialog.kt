@@ -29,6 +29,8 @@ import com.vitalsense.app.feature.prescriptions.ocr.PrescriptionOcrHelper
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun PrescriptionUploadDialog(
@@ -37,7 +39,6 @@ fun PrescriptionUploadDialog(
     onDismiss: () -> Unit,
     onSavePrescription: (Prescription) -> Unit
 ) {
-    val strings = LocalAppStrings.current
     val coroutineScope = rememberCoroutineScope()
     var selectedTab by remember { mutableStateOf(0) } // 0: Camera / AI Scan, 1: Write Down (Manual)
 
@@ -112,7 +113,7 @@ fun PrescriptionUploadDialog(
                 ) {
                     Column {
                         Text(
-                            text = if (isAshaProxy) "Upload Prescription (for ${patient.name})" else strings.uploadPrescriptionTitle,
+                            text = if (isAshaProxy) "Upload Prescription (for ${patient.name})" else stringResource(R.string.uploadPrescriptionTitle),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -132,7 +133,7 @@ fun PrescriptionUploadDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    val tabs = listOf("📷 ${strings.cameraAiScan}", "✍️ ${strings.writeDown}")
+                    val tabs = listOf("📷 ${stringResource(R.string.cameraAiScan)}", "✍️ ${stringResource(R.string.writeDown)}")
                     tabs.forEachIndexed { index, title ->
                         val isSelected = selectedTab == index
                         Surface(

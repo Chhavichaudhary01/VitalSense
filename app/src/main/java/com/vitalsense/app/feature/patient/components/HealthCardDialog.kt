@@ -23,6 +23,8 @@ import androidx.compose.ui.window.Dialog
 import com.vitalsense.app.core.data.model.Patient
 import com.vitalsense.app.core.ui.components.SeverityBadge
 import com.vitalsense.app.core.ui.theme.*
+import com.vitalsense.app.feature.patient.components.PatientTimelineDialog
+import kotlinx.coroutines.launch
 
 @Composable
 fun HealthCardDialog(
@@ -32,6 +34,11 @@ fun HealthCardDialog(
 ) {
     var isSunlightMode by remember { mutableStateOf(false) }
     var selectedFamilyMember by remember { mutableStateOf<com.vitalsense.app.core.data.model.FamilyMember?>(null) }
+    var showTimelineDialog by remember { mutableStateOf(false) }
+
+    if (showTimelineDialog) {
+        PatientTimelineDialog(patient = patient, onDismiss = { showTimelineDialog = false })
+    }
 
     val activeName = selectedFamilyMember?.name ?: patient.name
     val activeAge = selectedFamilyMember?.age ?: patient.age
@@ -153,6 +160,15 @@ fun HealthCardDialog(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(Spacing.xs))
+                
+                VitalSenseButton(
+                    text = "View Full Care Journey (Timeline)",
+                    onClick = { showTimelineDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = ButtonStyle.SECONDARY
+                )
 
                 HorizontalDivider(color = if (isSunlightMode) Color(0xFFEEEEEE) else GlumeBorder)
 
@@ -289,6 +305,74 @@ fun HealthCardDialog(
                     }
                 }
 
+                // ABDM Sync & Consent Simulation
+                var isSyncingAbdm by remember { mutableStateOf(false) }
+                var abdmSyncSuccess by remember { mutableStateOf(false) }
+                val scope = rememberCoroutineScope()
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (abdmSyncSuccess) GlumeSuccessMint.copy(alpha = 0.1f) else GlumePrimaryPurpleContainer.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, if (abdmSyncSuccess) GlumeSuccessMint else GlumePrimaryPurple.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Spacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(if (abdmSyncSuccess) "✅" else "🔗", fontSize = 16.sp)
+                                Text(
+                                    text = if (abdmSyncSuccess) "ABDM Network Synchronized" else "ABHA ID Integration (ABDM)",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (abdmSyncSuccess) GlumeSuccessMint else GlumePrimaryPurple
+                                    )
+                                )
+                            }
+                            if (!abdmSyncSuccess && !isSyncingAbdm) {
+                                TextButton(
+                                    onClick = {
+                                        isSyncingAbdm = true
+                                        scope.launch {
+                                            kotlinx.coroutines.delay(1500)
+                                            abdmSyncSuccess = true
+                                            isSyncingAbdm = false
+                                        }
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(28.dp)
+                                ) {
+                                    Text("Link ABHA", style = MaterialTheme.typography.labelSmall)
+                                }
+                            } else if (isSyncingAbdm) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = GlumePrimaryPurple,
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+                        
+                        Text(
+                            text = if (abdmSyncSuccess) 
+                                "Digital records for $activeAbha are now securely linked to the Ayushman Bharat Digital Mission via Health Information Provider (HIP) gateway." 
+                            else 
+                                "Link this health profile to the national ABDM sandbox to allow cross-facility health record sharing and consent management.",
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = cardTextSecondary
+                        )
+                    }
+                }
+
                 // Footer Actions: Offline Status & Sunlight Mode Toggle
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -321,5 +405,12 @@ fun HealthCardDialog(
                 }
             }
         }
+    }
+
+    if (showTimelineDialog) {
+        PatientTimelineDialog(
+            patient = patient,
+            onDismiss = { showTimelineDialog = false }
+        )
     }
 }

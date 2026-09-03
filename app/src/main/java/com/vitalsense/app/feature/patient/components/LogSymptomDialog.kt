@@ -314,6 +314,12 @@ fun LogSymptomDialog(
                             else -> DoctorSpecialty.GENERAL_PHYSICIAN
                         }
 
+                        val calculatedSeverity = com.vitalsense.app.core.util.TriageEngine.evaluateSeverity(
+                            category = selectedCategory,
+                            symptoms = selectedSymptoms
+                        )
+                        val finalSeverity = maxOf(calculatedSeverity, selectedSeverity)
+
                         val record = ConditionRecord(
                             id = "cond_${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(4)}",
                             patientId = patient.id,
@@ -321,7 +327,7 @@ fun LogSymptomDialog(
                             villageId = patient.villageId,
                             villageName = patient.villageName,
                             category = selectedCategory,
-                            severity = selectedSeverity,
+                            severity = finalSeverity,
                             requestedDoctorType = requestedDoctorType,
                             notes = combinedNotes,
                             timestamp = System.currentTimeMillis(),

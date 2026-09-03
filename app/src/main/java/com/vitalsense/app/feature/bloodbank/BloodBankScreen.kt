@@ -29,7 +29,8 @@ import com.vitalsense.app.core.ui.components.ButtonStyle
 import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
-import com.vitalsense.app.core.ui.theme.LocalAppStrings
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +40,6 @@ fun BloodBankScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val strings = LocalAppStrings.current
     var selectedBloodGroup by remember { mutableStateOf("All") }
 
     val bloodGroups = listOf("All", "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-")
@@ -58,12 +58,12 @@ fun BloodBankScreen(
                 title = {
                     Column {
                         Text(
-                            text = strings.bloodBankRegistry,
+                            text = stringResource(R.string.bloodBankRegistry),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
                         Text(
-                            text = strings.bloodBankSubtitle,
+                            text = stringResource(R.string.bloodBankSubtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = GlumeTextSecondary
                         )
@@ -73,7 +73,7 @@ fun BloodBankScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = strings.exit,
+                            contentDescription = stringResource(R.string.exit),
                             tint = GlumeTextPrimary
                         )
                     }
@@ -103,7 +103,7 @@ fun BloodBankScreen(
                         border = BorderStroke(1.dp, GlumeBorder)
                     ) {
                         Column {
-                            Text(strings.bloodUnitsAvailable, style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
+                            Text(stringResource(R.string.bloodUnitsAvailable), style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
                             Text(
                                 text = "$totalUnits Units",
                                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
@@ -206,7 +206,6 @@ fun BloodStockCard(
     onCallHospital: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     VitalSenseCard(
         modifier = modifier.fillMaxWidth(),
         backgroundColor = GlumeSurfaceElevated,
@@ -282,7 +281,7 @@ fun BloodStockCard(
                 IconButton(onClick = onCallHospital) {
                     Icon(
                         imageVector = Icons.Default.Phone,
-                        contentDescription = strings.callBloodBank,
+                        contentDescription = stringResource(R.string.callBloodBank),
                         tint = GlumeSuccessText
                     )
                 }

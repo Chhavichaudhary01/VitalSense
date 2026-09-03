@@ -27,6 +27,8 @@ import com.vitalsense.app.core.util.AudioGuidanceHelper
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.max
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AdminHomeScreen(
@@ -41,9 +43,10 @@ fun AdminHomeScreen(
     onNavigateToExternalReferrals: () -> Unit = {},
     onNavigateToBioMedical: () -> Unit = {},
     onNavigateToQueueOversight: () -> Unit = {},
+    onNavigateToFacilityQuality: () -> Unit = {},
+    onNavigateToDiagnostics: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     var showBroadcastDialog by remember { mutableStateOf(false) }
     var broadcastTitle by remember { mutableStateOf("") }
     var broadcastMessage by remember { mutableStateOf("") }
@@ -85,7 +88,7 @@ fun AdminHomeScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Text(
-                    text = strings.districtCommand,
+                    text = stringResource(R.string.districtCommand),
                     style = MaterialTheme.typography.displayLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 28.sp
@@ -242,7 +245,7 @@ fun AdminHomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 GlumeStatCard(
-                    label = strings.totalActiveCases,
+                    label = stringResource(R.string.totalActiveCases),
                     value = "$totalActiveCases",
                     icon = "🚨",
                     modifier = Modifier.weight(1f),
@@ -250,7 +253,7 @@ fun AdminHomeScreen(
                     badgeColor = GlumeAlertCoral
                 )
                 GlumeStatCard(
-                    label = strings.assignedVillages,
+                    label = stringResource(R.string.assignedVillages),
                     value = "${villages.size}",
                     icon = "🏡",
                     modifier = Modifier.weight(1f),
@@ -258,7 +261,7 @@ fun AdminHomeScreen(
                     badgeColor = GlumePrimaryPurple
                 )
                 GlumeStatCard(
-                    label = strings.outbreakSurveillance,
+                    label = stringResource(R.string.outbreakSurveillance),
                     value = "$outbreakCount",
                     icon = "⚠️",
                     modifier = Modifier.weight(1f),
@@ -271,7 +274,7 @@ fun AdminHomeScreen(
         // 3. Section: Village Disease Trend Heat Map Cards
         item {
             Text(
-                text = "🗺️ ${strings.outbreakSurveillance}",
+                text = "🗺️ ${stringResource(R.string.outbreakSurveillance)}",
                 style = MaterialTheme.typography.headlineMedium,
                 color = GlumeTextPrimary
             )
@@ -385,6 +388,20 @@ fun AdminHomeScreen(
                 VitalSenseButton(
                     text = "Disease Trends",
                     onClick = onNavigateToDiseaseTrends,
+                    style = ButtonStyle.SECONDARY,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(Spacing.xs))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                VitalSenseButton(
+                    text = "Diagnostics & Labs",
+                    onClick = onNavigateToDiagnostics,
                     style = ButtonStyle.SECONDARY,
                     modifier = Modifier.weight(1f)
                 )
@@ -526,6 +543,65 @@ fun AdminHomeScreen(
                 }
             }
         }
+
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable(onClick = onNavigateToFacilityQuality)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = GlumePrimaryPurpleLight.copy(alpha = 0.15f),
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("🏥", fontSize = 22.sp)
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "Facility Quality Metrics",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeTextPrimary
+                            )
+                            Text(
+                                text = "Monitor PHC/CHC infrastructure and feedback",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextSecondary
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = onNavigateToFacilityQuality,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Text("View", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+        }
+
 
         // 5. Broadcast Action Button (Single Full-Width Purple CTA)
         item {
@@ -708,7 +784,7 @@ fun AdminHomeScreen(
                     onClick = { showBroadcastDialog = false },
                     shape = PillShape
                 ) {
-                    Text(strings.cancel, color = GlumeTextSecondary, style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.cancel), color = GlumeTextSecondary, style = MaterialTheme.typography.labelLarge)
                 }
             }
         ) {

@@ -24,6 +24,8 @@ import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
 import kotlinx.coroutines.delay
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 sealed class AvailabilityCheckState {
     object Idle : AvailabilityCheckState()
@@ -47,7 +49,6 @@ fun PrescriptionComposerDialog(
     medicineRepoOverride: MedicineAvailabilityRepository? = null
 ) {
     val context = LocalContext.current
-    val strings = LocalAppStrings.current
     val medicineRepo = remember {
         medicineRepoOverride ?: run {
             val db = VitalSenseDatabase.getDatabase(context)
@@ -156,7 +157,7 @@ fun PrescriptionComposerDialog(
                 ) {
                     Column {
                         Text(
-                            text = "💊 ${strings.issueRx}",
+                            text = "💊 ${stringResource(R.string.issueRx)}",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -573,7 +574,7 @@ fun PrescriptionComposerDialog(
                     enabled = medicinesList.isNotEmpty()
                 ) {
                     Text(
-                        text = "${strings.savePrescriptionRecord} ✓",
+                        text = "${stringResource(R.string.savePrescriptionRecord)} ✓",
                         style = MaterialTheme.typography.labelLarge
                     )
                 }

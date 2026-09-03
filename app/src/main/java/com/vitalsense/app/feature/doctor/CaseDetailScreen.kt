@@ -27,6 +27,8 @@ import com.vitalsense.app.feature.doctor.components.PrescriptionComposerDialog
 import com.vitalsense.app.feature.doctor.components.ProposeAppointmentDialog
 import com.vitalsense.app.feature.doctor.components.ReferCaseDialog
 import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
+import com.vitalsense.app.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -50,7 +52,6 @@ fun CaseDetailScreen(
     onSendStructuredReferral: (Referral) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val strings = LocalAppStrings.current
     var responseText by remember(record) { mutableStateOf(record.doctorResponse ?: "") }
     var privateNotes by remember(record) { mutableStateOf(record.privateDoctorNotes ?: "") }
     var showPrivateNotes by remember { mutableStateOf(record.privateDoctorNotes?.isNotBlank() == true) }
@@ -105,7 +106,7 @@ fun CaseDetailScreen(
                     ) {
                         Text(text = "←", style = MaterialTheme.typography.labelLarge, color = GlumeTextPrimary)
                         Text(
-                            text = strings.caseQueue,
+                            text = stringResource(R.string.caseQueue),
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -145,7 +146,7 @@ fun CaseDetailScreen(
                                 color = GlumeTextPrimary
                             )
                             Text(
-                                text = "${strings.village}: ${record.villageName} · ${record.category.displayName}",
+                                text = "${stringResource(R.string.village)}: ${record.villageName} · ${record.category.displayName}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary
                             )
@@ -156,7 +157,7 @@ fun CaseDetailScreen(
                     HorizontalDivider(color = GlumeBorder)
 
                     Text(
-                        text = strings.reportedSymptoms,
+                        text = stringResource(R.string.reportedSymptoms),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                         color = GlumeTextSecondary
                     )
@@ -359,7 +360,7 @@ fun CaseDetailScreen(
         // 5. Section: Doctor Medical Response Composer
         item {
             Text(
-                text = strings.doctorAdviceTitle,
+                text = stringResource(R.string.doctorAdviceTitle),
                 style = MaterialTheme.typography.headlineMedium,
                 color = GlumeTextPrimary
             )
@@ -369,7 +370,7 @@ fun CaseDetailScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Text(
-                    text = strings.quickTemplates,
+                    text = stringResource(R.string.quickTemplates),
                     style = MaterialTheme.typography.labelSmall,
                     color = GlumeTextSecondary
                 )
@@ -448,7 +449,7 @@ fun CaseDetailScreen(
 
                     // Single Full-Width Purple Submit Button
                     VitalSenseButton(
-                        text = if (record.doctorResponse != null) strings.updateAdvice else strings.submitAdvice,
+                        text = if (record.doctorResponse != null) stringResource(R.string.updateAdvice) else stringResource(R.string.submitAdvice),
                         onClick = {
                             onSubmitResponse(
                                 responseText.trim(),
@@ -485,19 +486,19 @@ fun CaseDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     VitalSenseButton(
-                        text = strings.issueRx,
+                        text = stringResource(R.string.issueRx),
                         onClick = { showPrescriptionDialog = true },
                         modifier = Modifier.weight(1f),
                         style = ButtonStyle.DARK
                     )
                     VitalSenseButton(
-                        text = strings.proposeAppt,
+                        text = stringResource(R.string.proposeAppt),
                         onClick = { showAppointmentDialog = true },
                         modifier = Modifier.weight(1f),
                         style = ButtonStyle.SECONDARY
                     )
                     VitalSenseButton(
-                        text = strings.refer,
+                        text = stringResource(R.string.refer),
                         onClick = { showReferDialog = true },
                         modifier = Modifier.weight(0.9f),
                         style = ButtonStyle.OUTLINED
@@ -616,7 +617,7 @@ fun CaseDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${strings.medicalHistoryTitle} (${medicalHistory.size})",
+                            text = "${stringResource(R.string.medicalHistoryTitle)} (${medicalHistory.size})",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -630,7 +631,7 @@ fun CaseDetailScreen(
                     if (isMedicalHistoryExpanded) {
                         if (medicalHistory.isEmpty()) {
                             Text(
-                                text = strings.noMedicalHistory,
+                                text = stringResource(R.string.noMedicalHistory),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GlumeTextSecondary,
                                 modifier = Modifier.padding(top = Spacing.xs)
