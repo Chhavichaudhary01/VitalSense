@@ -4,8 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -214,6 +216,7 @@ fun VitalSenseNavGraph(
                                     when (role) {
                                         UserRole.PATIENT -> {
                                             var currentPatientScreen by remember { mutableStateOf("home") }
+                                            val patientHomeScrollState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
                                             val familyMembers by repository.getFamilyMembers(effectivePatient.id).collectAsStateWithLifecycle(initialValue = emptyList())
 
                                             AnimatedContent(
@@ -322,6 +325,7 @@ fun VitalSenseNavGraph(
 
                                                         PatientHomeScreen(
                                                             patient = effectivePatient,
+                                                            scrollState = patientHomeScrollState,
                                                             notices = notices,
                                                             prescriptions = allPrescriptions.filter { it.patientId == effectivePatient.id },
                                                             schemes = schemes,
@@ -359,6 +363,7 @@ fun VitalSenseNavGraph(
 
                                         UserRole.ASHA -> {
                                             var currentAshaScreen by remember { mutableStateOf("home") }
+                                            val ashaHomeScrollState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
 
                                             val immunizations by repository.getImmunizationRecords().collectAsStateWithLifecycle(initialValue = emptyList())
                                             val dailyRounds by repository.getDailyRounds().collectAsStateWithLifecycle(initialValue = emptyList())
@@ -411,6 +416,7 @@ fun VitalSenseNavGraph(
                                                         AshaHomeScreen(
                                                             asha = activeAsha,
                                                             patients = patients.filter { it.ashaWorkerId == activeAsha.id },
+                                                            scrollState = ashaHomeScrollState,
                                                             notices = notices,
                                                             onSelectProxyPatient = { selectedPatient ->
                                                                 appStateHolder.setProxyPatient(selectedPatient)
@@ -445,6 +451,7 @@ fun VitalSenseNavGraph(
 
                                         UserRole.DOCTOR -> {
                                             var currentDoctorScreen by remember { mutableStateOf("home") }
+                                            val doctorHomeScrollState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
 
                                             AnimatedContent(
                                                 targetState = selectedDoctorCase,
@@ -583,6 +590,7 @@ fun VitalSenseNavGraph(
 
                                                             DoctorHomeScreen(
                                                                 doctor = activeDoctor,
+                                                                scrollState = doctorHomeScrollState,
                                                                 cases = doctorCases,
                                                                 appointments = doctorAppointments,
                                                                 dispensaryStock = doctorDispensaryStock,

@@ -6,11 +6,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.vitalsense.app.core.ui.util.touchSpring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,7 @@ fun PatientHomeScreen(
     onNavigateToBloodBank: () -> Unit = {},
     onNavigateToAppointments: () -> Unit = {},
     onNavigateToLiveQueue: () -> Unit = {},
+    scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -98,6 +101,7 @@ fun PatientHomeScreen(
             .background(bgColor)
     ) {
         LazyColumn(
+            state = scrollState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = Spacing.md),
@@ -515,6 +519,59 @@ fun PatientHomeScreen(
                                 color = textSecondaryColor
                             )
                         }
+                    }
+                }
+
+                // Dedicated Routine Video & Voice Consultation Card (Step 3A - Independent of SOS)
+                VitalSenseCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = elevatedBgColor,
+                    border = BorderStroke(1.5.dp, GlumePrimaryPurple.copy(alpha = 0.6f)),
+                    onClick = onNavigateToAppointments
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = GlumePrimaryPurpleContainer,
+                            modifier = Modifier.size(46.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("📹", fontSize = 22.sp)
+                            }
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "Video & Voice Consult Doctor",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = textPrimaryColor
+                                )
+                                Surface(shape = PillShape, color = GlumePrimaryPurpleContainer) {
+                                    Text(
+                                        text = "ROUTINE",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = GlumePrimaryPurpleLight
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "Book or join routine check-ins with your assigned physician (no emergency alarm)",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = textSecondaryColor
+                            )
+                        }
+                        Text("→", fontSize = 20.sp, color = GlumePrimaryPurple)
                     }
                 }
             }

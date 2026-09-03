@@ -295,7 +295,7 @@ fun SmartEmergencyDialog(
                         ) {
                             Text("🎙️", fontSize = 20.sp)
                             Text(
-                                text = if (language == AppLanguage.HINDI) "आपातकालीन वॉयस कॉल (On-Call Doctor)" else "🎙️ Voice Call Now (On-Call Doctor)",
+                                text = if (language == AppLanguage.HINDI) "🚨 आपातकालीन वॉयस कॉल (On-Call SOS)" else "🚨 Emergency Voice Call (On-Call SOS)",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = GlumeBackground
                             )
@@ -323,7 +323,7 @@ fun SmartEmergencyDialog(
                         ) {
                             Text("🎥", fontSize = 20.sp)
                             Text(
-                                text = if (language == AppLanguage.HINDI) "आपातकालीन वीडियो कॉल (Video SOS)" else "🎥 Video Call Now (Emergency SOS)",
+                                text = if (language == AppLanguage.HINDI) "🚨 आपातकालीन वीडियो कॉल (Video SOS)" else "🚨 Emergency Video Call (Immediate SOS)",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = Color.White
                             )

@@ -5,11 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vitalsense.app.core.ui.util.touchSpring
 import androidx.compose.ui.Alignment
@@ -50,6 +52,7 @@ fun DoctorHomeScreen(
     onNavigateToLiveQueue: () -> Unit = {},
     onRemindAdminRestock: (DispensaryItem) -> Unit = {},
     todaysQueue: List<QueueEntry> = emptyList(),
+    scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -92,6 +95,7 @@ fun DoctorHomeScreen(
     }
 
     LazyColumn(
+        state = scrollState,
         modifier = modifier
             .fillMaxSize()
             .background(GlumeBackground)
@@ -1023,17 +1027,49 @@ fun DoctorHomeScreen(
                                         color = GlumeTextSecondary
                                     )
                                 }
-                                Button(
-                                    onClick = { selectedPatientForHistory = pat },
-                                    shape = PillShape,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = GlumePrimaryPurpleContainer,
-                                        contentColor = GlumePrimaryPurpleLight
-                                    ),
-                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
-                                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(strings.history, style = MaterialTheme.typography.labelSmall)
+                                    OutlinedButton(
+                                        onClick = {
+                                            val routineAppt = Appointment(
+                                                id = "appt_${pat.id}_${System.currentTimeMillis()}",
+                                                patientId = pat.id,
+                                                patientName = pat.name,
+                                                doctorId = doctor.id,
+                                                doctorName = doctor.name,
+                                                doctorSpecialty = doctor.specialty.displayName,
+                                                dateFormatted = "Today",
+                                                timeSlot = "Now",
+                                                status = "Confirmed",
+                                                proposedBy = UserRole.DOCTOR,
+                                                callType = CallType.VIDEO,
+                                                scheduledTimestamp = System.currentTimeMillis()
+                                            )
+                                            TeleCallingManager.startAppointmentCall(routineAppt, isDoctor = true)
+                                            activeTeleConsultationPatient = pat.name
+                                        },
+                                        shape = PillShape,
+                                        border = BorderStroke(1.dp, GlumeSuccessMint),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                                        modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                                    ) {
+                                        Text("📹 Call", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = GlumeSuccessMint)
+                                    }
+
+                                    Button(
+                                        onClick = { selectedPatientForHistory = pat },
+                                        shape = PillShape,
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = GlumePrimaryPurpleContainer,
+                                            contentColor = GlumePrimaryPurpleLight
+                                        ),
+                                        contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                        modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                                    ) {
+                                        Text(strings.history, style = MaterialTheme.typography.labelSmall)
+                                    }
                                 }
                             }
                         }
