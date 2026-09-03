@@ -6,11 +6,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.vitalsense.app.core.ui.util.touchSpring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,12 +48,15 @@ fun PatientHomeScreen(
     onNavigateToBloodBank: () -> Unit = {},
     onNavigateToAppointments: () -> Unit = {},
     onNavigateToLiveQueue: () -> Unit = {},
+    referrals: List<com.vitalsense.app.core.data.model.Referral> = emptyList(),
+    scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
     var showSmartEmergencyDialog by remember { mutableStateOf(false) }
     var showSensorPairingDialog by remember { mutableStateOf(false) }
     var showPrescriptionUploadDialog by remember { mutableStateOf(false) }
+    var selectedMedicineForNearby by remember { mutableStateOf<com.vitalsense.app.core.data.model.PrescribedMedicine?>(null) }
 
     // Live vitals readings as per UX Architecture §3.2
     var heartRate by remember { mutableStateOf(76) }
@@ -72,7 +77,7 @@ fun PatientHomeScreen(
 
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    var dismissedAdvisoryIds by remember {
+    var dismissedAdvisoryIds by remember(patient.id) {
         mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "patient"))
     }
 
@@ -97,6 +102,7 @@ fun PatientHomeScreen(
             .background(bgColor)
     ) {
         LazyColumn(
+            state = scrollState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = Spacing.md),
@@ -516,6 +522,81 @@ fun PatientHomeScreen(
                         }
                     }
                 }
+
+                // Dedicated Routine Video & Voice Consultation Card (Step 3A - Independent of SOS)
+                VitalSenseCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = elevatedBgColor,
+                    border = BorderStroke(1.5.dp, GlumePrimaryPurple.copy(alpha = 0.6f)),
+                    onClick = onNavigateToAppointments
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = GlumePrimaryPurpleContainer,
+                            modifier = Modifier.size(46.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("📹", fontSize = 22.sp)
+                            }
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "Video & Voice Consult Doctor",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = textPrimaryColor
+                                )
+                                Surface(shape = PillShape, color = GlumePrimaryPurpleContainer) {
+                                    Text(
+                                        text = "ROUTINE",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = GlumePrimaryPurpleLight
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "Book or join routine check-ins with your assigned physician (no emergency alarm)",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = textSecondaryColor
+                            )
+                        }
+                        Text("→", fontSize = 20.sp, color = GlumePrimaryPurple)
+                    }
+                }
+            }
+        }
+
+        // 3.9 Doctor-to-Doctor Specialist Consultations (Plain Language Patient View)
+        if (referrals.isNotEmpty()) {
+            val currentLanguage = if (strings.namaste == "नमस्ते") AppLanguage.HINDI else AppLanguage.ENGLISH
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    Text(
+                        text = if (currentLanguage == AppLanguage.HINDI) "विशेषज्ञ डॉक्टर परामर्श (${referrals.size})" else "Specialist Referrals (${referrals.size})",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = textPrimaryColor
+                    )
+
+                    referrals.forEach { ref ->
+                        com.vitalsense.app.feature.patient.components.ReferralStatusCard(
+                            referral = ref,
+                            language = currentLanguage,
+                            onScheduleCall = onNavigateToAppointments
+                        )
+                    }
+                }
             }
         }
 
@@ -616,20 +697,50 @@ fun PatientHomeScreen(
                         }
 
                         rx.medicines.forEach { med ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp)
                             ) {
-                                Text(
-                                    text = "• ${med.name} (${med.dosage})",
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = textPrimaryColor
-                                )
-                                Text(
-                                    text = "${med.frequency} · ${med.duration}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = textSecondaryColor
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "• ${med.name} (${med.dosage})",
+                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                            color = textPrimaryColor
+                                        )
+                                        Text(
+                                            text = "${med.frequency} · ${med.duration}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = textSecondaryColor
+                                        )
+                                        if (med.hasAlternativeAvailable) {
+                                            Text(
+                                                text = "💡 Doctor suggested alternative available",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = GlumeAlertCoral
+                                            )
+                                        }
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = { selectedMedicineForNearby = med },
+                                        modifier = Modifier.height(34.dp),
+                                        shape = PillShape,
+                                        border = BorderStroke(1.dp, NagarSevaPrimary),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "📍 Find nearby",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = NagarSevaPrimary
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -646,13 +757,34 @@ fun PatientHomeScreen(
         }
 
         // 5. District Health Advisories
-        if (adminAdvisories.isNotEmpty()) {
+        if (adminAdvisories.isNotEmpty() || dismissedAdvisoryIds.isNotEmpty()) {
             item {
-                Text(
-                    text = strings.districtAdvisories,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = textPrimaryColor
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = strings.districtAdvisories,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = textPrimaryColor
+                    )
+                    if (dismissedAdvisoryIds.isNotEmpty()) {
+                        TextButton(
+                            onClick = {
+                                DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                dismissedAdvisoryIds = emptySet()
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "🔄 Restore (${dismissedAdvisoryIds.size})",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = NagarSevaPrimary
+                            )
+                        }
+                    }
+                }
             }
 
             items(adminAdvisories) { advisory ->
@@ -864,6 +996,14 @@ fun PatientHomeScreen(
         GovernmentSchemesDialog(
             schemes = schemes,
             onDismiss = { showSchemesDialog = false }
+        )
+    }
+
+    selectedMedicineForNearby?.let { med ->
+        FindMedicineNearbySheet(
+            patient = patient,
+            medicine = med,
+            onDismiss = { selectedMedicineForNearby = null }
         )
     }
 }

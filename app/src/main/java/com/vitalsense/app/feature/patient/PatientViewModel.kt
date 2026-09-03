@@ -52,4 +52,8 @@ class PatientViewModel @Inject constructor(
             }
         }
     }
+
+    fun getReferralsForPatient(patientId: String): kotlinx.coroutines.flow.Flow<List<com.vitalsense.app.core.data.model.Referral>> {
+        return repository.getReferralsForPatient(patientId)
+    }
 }

@@ -270,6 +270,45 @@ interface VitalSenseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMedicalHistoryEntries(entries: List<MedicalHistoryEntity>)
+
+    // --- Nearby Pharmacy Cache ---
+    @Query("SELECT * FROM nearby_pharmacy_cache")
+    suspend fun getAllCachedPharmacies(): List<NearbyPharmacyCacheEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCachedPharmacies(pharmacies: List<NearbyPharmacyCacheEntity>)
+
+    // --- Call Logs ---
+    @Query("SELECT * FROM call_logs ORDER BY timestamp DESC")
+    fun getAllCallLogs(): Flow<List<CallLogEntity>>
+
+    @Query("SELECT * FROM call_logs WHERE patientId = :patientId ORDER BY timestamp DESC")
+    fun getCallLogsForPatient(patientId: String): Flow<List<CallLogEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCallLog(callLog: CallLogEntity)
+
+    @Query("UPDATE appointments SET status = :status WHERE id = :appointmentId")
+    suspend fun updateAppointmentStatus(appointmentId: String, status: String)
+
+    // --- Doctor-to-Doctor Referrals ---
+    @Query("SELECT * FROM referrals ORDER BY createdAt DESC")
+    fun getAllReferrals(): Flow<List<ReferralEntity>>
+
+    @Query("SELECT * FROM referrals WHERE patientId = :patientId ORDER BY createdAt DESC")
+    fun getReferralsForPatient(patientId: String): Flow<List<ReferralEntity>>
+
+    @Query("SELECT * FROM referrals WHERE referringDoctorId = :doctorId ORDER BY createdAt DESC")
+    fun getReferralsByReferringDoctor(doctorId: String): Flow<List<ReferralEntity>>
+
+    @Query("SELECT * FROM referrals WHERE targetDoctorId = :doctorId OR (targetDoctorId IS NULL AND targetSpecialty = :specialty) ORDER BY CASE urgency WHEN 'EMERGENCY' THEN 1 WHEN 'URGENT' THEN 2 ELSE 3 END, createdAt DESC")
+    fun getReferralsForDoctorOrSpecialty(doctorId: String, specialty: String): Flow<List<ReferralEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertReferral(referral: ReferralEntity)
+
+    @Update
+    suspend fun updateReferral(referral: ReferralEntity)
 }
 
 

@@ -38,9 +38,12 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         BioMedicalEquipmentEntity::class,
         DoctorDaySlotEntity::class,
         QueueEntryEntity::class,
-        MedicalHistoryEntity::class
+        MedicalHistoryEntity::class,
+        NearbyPharmacyCacheEntity::class,
+        CallLogEntity::class,
+        ReferralEntity::class
     ],
-    version = 7,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -94,6 +97,80 @@ abstract class VitalSenseDatabase : RoomDatabase() {
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `nearby_pharmacy_cache` (
+                        `placeId` TEXT NOT NULL PRIMARY KEY,
+                        `name` TEXT NOT NULL,
+                        `address` TEXT NOT NULL,
+                        `latitude` REAL NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `phoneNumber` TEXT,
+                        `cachedAt` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `appointments` ADD COLUMN `callType` TEXT NOT NULL DEFAULT 'VIDEO'")
+                db.execSQL("ALTER TABLE `appointments` ADD COLUMN `scheduledTimestamp` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `call_logs` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `callType` TEXT NOT NULL,
+                        `callMode` TEXT NOT NULL,
+                        `patientId` TEXT NOT NULL,
+                        `patientName` TEXT NOT NULL,
+                        `doctorId` TEXT NOT NULL,
+                        `doctorName` TEXT NOT NULL,
+                        `timestamp` INTEGER NOT NULL,
+                        `durationSeconds` INTEGER NOT NULL,
+                        `outcome` TEXT NOT NULL,
+                        `outcomeNotes` TEXT
+                    )
+                """.trimIndent())
+            }
+        }
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `referrals` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `patientId` TEXT NOT NULL,
+                        `patientName` TEXT NOT NULL,
+                        `referringDoctorId` TEXT NOT NULL,
+                        `referringDoctorName` TEXT NOT NULL,
+                        `referringDoctorSpecialty` TEXT NOT NULL,
+                        `targetDoctorId` TEXT,
+                        `targetDoctorName` TEXT,
+                        `targetSpecialty` TEXT NOT NULL,
+                        `reason` TEXT NOT NULL,
+                        `clinicalQuestion` TEXT NOT NULL,
+                        `urgency` TEXT NOT NULL,
+                        `attachedRecordIds` TEXT NOT NULL,
+                        `status` TEXT NOT NULL,
+                        `declineReason` TEXT,
+                        `suggestedSpecialtyOrDoctor` TEXT,
+                        `infoRequestNote` TEXT,
+                        `specialistFindings` TEXT,
+                        `specialistRecommendations` TEXT,
+                        `specialistFollowUpNeeded` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `respondedAt` INTEGER,
+                        `completedAt` INTEGER
+                    )
+                """.trimIndent())
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_referrals_patientId` ON `referrals` (`patientId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_referrals_referringDoctorId` ON `referrals` (`referringDoctorId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_referrals_targetDoctorId` ON `referrals` (`targetDoctorId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_referrals_targetSpecialty` ON `referrals` (`targetSpecialty`)")
+            }
+        }
+
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS `medical_history` (
                         `id` TEXT NOT NULL PRIMARY KEY,
                         `patientId` TEXT NOT NULL,
@@ -119,7 +196,7 @@ abstract class VitalSenseDatabase : RoomDatabase() {
                     VitalSenseDatabase::class.java,
                     "vitalsense_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -346,4 +346,73 @@ class DoctorViewModel @Inject constructor(
             repository.defineDoctorSlot(config)
         }
     }
+
+    // --- Doctor-to-Doctor Specialist Referrals ---
+    val allReferrals: StateFlow<List<Referral>> = repository.getAllReferrals()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val doctorReferrals: StateFlow<List<Referral>> = activeDoctor.flatMapLatest { doctor ->
+        repository.getReferralsForDoctorOrSpecialty(doctor.id, doctor.specialty.displayName)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun createReferral(referral: Referral) {
+        viewModelScope.launch {
+            repository.createReferral(referral)
+        }
+    }
+
+    fun acceptReferral(referralId: String) {
+        viewModelScope.launch {
+            val ref = allReferrals.value.find { it.id == referralId } ?: return@launch
+            val updated = ref.copy(
+                status = ReferralStatus.ACCEPTED,
+                respondedAt = System.currentTimeMillis()
+            )
+            repository.updateReferral(updated)
+        }
+    }
+
+    fun declineReferral(referralId: String, reason: String, suggestedReroute: String?) {
+        viewModelScope.launch {
+            val ref = allReferrals.value.find { it.id == referralId } ?: return@launch
+            val updated = ref.copy(
+                status = ReferralStatus.DECLINED,
+                declineReason = reason,
+                suggestedSpecialtyOrDoctor = suggestedReroute,
+                respondedAt = System.currentTimeMillis()
+            )
+            repository.updateReferral(updated)
+        }
+    }
+
+    fun requestMoreInfo(referralId: String, infoNote: String) {
+        viewModelScope.launch {
+            val ref = allReferrals.value.find { it.id == referralId } ?: return@launch
+            val updated = ref.copy(
+                status = ReferralStatus.INFO_REQUESTED,
+                infoRequestNote = infoNote,
+                respondedAt = System.currentTimeMillis()
+            )
+            repository.updateReferral(updated)
+        }
+    }
+
+    fun submitSpecialistFindings(
+        referralId: String,
+        findings: String,
+        recommendations: String,
+        followUpNeeded: Boolean
+    ) {
+        viewModelScope.launch {
+            val ref = allReferrals.value.find { it.id == referralId } ?: return@launch
+            val updated = ref.copy(
+                status = ReferralStatus.COMPLETED,
+                specialistFindings = findings,
+                specialistRecommendations = recommendations,
+                specialistFollowUpNeeded = followUpNeeded,
+                completedAt = System.currentTimeMillis()
+            )
+            repository.updateReferral(updated)
+        }
+    }
 }

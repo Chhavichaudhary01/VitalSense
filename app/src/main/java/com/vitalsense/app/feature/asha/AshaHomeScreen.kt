@@ -4,10 +4,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +41,8 @@ fun AshaHomeScreen(
     onImmunizationClick: () -> Unit = {},
     onDailyRoundsClick: () -> Unit = {},
     onMedicineRestockClick: () -> Unit = {},
+    referrals: List<com.vitalsense.app.core.data.model.Referral> = emptyList(),
+    scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -62,7 +66,7 @@ fun AshaHomeScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
 
     var clearedSosIds by remember { mutableStateOf(DismissedNoticeHelper.getClearedSosIds(context)) }
-    var dismissedAdvisoryIds by remember { mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "asha")) }
+    var dismissedAdvisoryIds by remember(asha.id) { mutableStateOf(DismissedNoticeHelper.getDismissedAdvisoryIds(context, "asha")) }
     var sosToClear by remember { mutableStateOf<BroadcastNotice?>(null) }
 
     val emergencySosAlerts = remember(notices, clearedSosIds) {
@@ -73,6 +77,7 @@ fun AshaHomeScreen(
     }
 
     LazyColumn(
+        state = scrollState,
         modifier = modifier
             .fillMaxSize()
             .background(GlumeBackground)
@@ -361,6 +366,70 @@ fun AshaHomeScreen(
             }
         }
 
+        // 5.9 Village Specialist Referrals Tracking
+        val villageReferrals = referrals.filter { ref -> patients.any { it.id == ref.patientId } }
+        if (villageReferrals.isNotEmpty()) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    Text(
+                        text = "🔄 Specialist Referrals (${villageReferrals.size})",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = GlumeTextPrimary
+                    )
+
+                    villageReferrals.forEach { ref ->
+                        val isCompleted = ref.status == com.vitalsense.app.core.data.model.ReferralStatus.COMPLETED
+                        VitalSenseCard(
+                            backgroundColor = if (isCompleted) GlumeSuccessContainer.copy(alpha = 0.25f) else GlumeSurfaceCard,
+                            border = BorderStroke(1.dp, if (isCompleted) GlumeSuccessMint else GlumePrimaryPurple.copy(alpha = 0.5f))
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "${ref.patientName} ➔ ${ref.targetSpecialty}",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = if (isCompleted) GlumeSuccessMint else GlumeTextPrimary
+                                    )
+                                    Surface(
+                                        shape = PillShape,
+                                        color = when (ref.urgency) {
+                                            com.vitalsense.app.core.data.model.ReferralUrgency.EMERGENCY -> GlumeAlertCoral
+                                            com.vitalsense.app.core.data.model.ReferralUrgency.URGENT -> GlumeWarningAmber
+                                            com.vitalsense.app.core.data.model.ReferralUrgency.ROUTINE -> GlumeSuccessMint
+                                        }
+                                    ) {
+                                        Text(
+                                            text = ref.urgency.displayName,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = "Referred by Dr. ${ref.referringDoctorName} · Status: ${ref.status.displayName}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = GlumeTextSecondary
+                                )
+
+                                if (isCompleted && ref.specialistRecommendations != null) {
+                                    Text(
+                                        text = "Specialist Plan: ${ref.specialistRecommendations}",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                        color = GlumeSuccessMint
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // 6. Caseload Summary Banner
         item {
             Row(
@@ -407,7 +476,10 @@ fun AshaHomeScreen(
         } else {
             items(patients) { patient ->
                 val isHighRisk = patient.currentRiskLevel == SeverityLevel.HIGH || patient.currentRiskLevel == SeverityLevel.SEVERE
-                val isAssignedToThisAsha = patient.ashaWorkerId == asha.id
+                val isAssignedToThisAsha = patient.ashaWorkerId == asha.id ||
+                    patient.villageName in asha.assignedVillages ||
+                    asha.assignedVillages.any { it.equals(patient.villageName, ignoreCase = true) } ||
+                    patient.villageId in asha.assignedVillages
                 val isSosInFlight = loadingSosPatientId == patient.id
 
                 VitalSenseCard(
@@ -596,13 +668,34 @@ fun AshaHomeScreen(
         }
 
         // 9. District Health Advisories
-        if (adminAdvisories.isNotEmpty()) {
+        if (adminAdvisories.isNotEmpty() || dismissedAdvisoryIds.isNotEmpty()) {
             item {
-                Text(
-                    text = strings.districtAdvisories,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = GlumeTextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = strings.districtAdvisories,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = GlumeTextPrimary
+                    )
+                    if (dismissedAdvisoryIds.isNotEmpty()) {
+                        TextButton(
+                            onClick = {
+                                DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                dismissedAdvisoryIds = emptySet()
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "🔄 Restore (${dismissedAdvisoryIds.size})",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = NagarSevaPrimary
+                            )
+                        }
+                    }
+                }
             }
 
             items(adminAdvisories) { notice ->

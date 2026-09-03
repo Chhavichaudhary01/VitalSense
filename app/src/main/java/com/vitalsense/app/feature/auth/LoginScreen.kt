@@ -31,6 +31,7 @@ import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.util.AudioGuidanceHelper
+import com.vitalsense.app.core.util.DismissedNoticeHelper
 import com.vitalsense.app.core.ui.util.touchSpring
 
 
@@ -492,14 +493,17 @@ fun LoginScreen(
                                                     onToggleSignUp = { isSignUpMode = !isSignUpMode },
                                                     onSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onPatientLogin(samplePatients.first())
                                                     },
                                                     onGoogleSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onPatientLogin(samplePatients.first())
                                                     },
                                                     onDemoSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onPatientLogin(samplePatients.first())
                                                     },
                                                     onScanQrClaim = { showAshaQrClaimDialog = true }
@@ -515,10 +519,12 @@ fun LoginScreen(
                                                     onPasswordChange = { doctorPassword = it },
                                                     onSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onDoctorLogin(sampleDoctors.first())
                                                     },
                                                     onDemoSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onDoctorLogin(sampleDoctors.first())
                                                     }
                                                 )
@@ -533,10 +539,12 @@ fun LoginScreen(
                                                     onPinChange = { ashaPinInput = it },
                                                     onSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onAshaLogin(sampleAshas.first())
                                                     },
                                                     onDemoSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onAshaLogin(sampleAshas.first())
                                                     }
                                                 )
@@ -553,10 +561,12 @@ fun LoginScreen(
                                                     onToggleSignUp = { isSignUpMode = !isSignUpMode },
                                                     onSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onAdminLogin()
                                                     },
                                                     onDemoSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
                                                         onAdminLogin()
                                                     }
                                                 )
