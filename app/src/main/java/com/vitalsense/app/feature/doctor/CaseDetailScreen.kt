@@ -43,6 +43,8 @@ fun CaseDetailScreen(
     onReferCase: (targetSpecialty: DoctorSpecialty, referralNotes: String) -> Unit,
     onOrderLabTest: (LabReport) -> Unit = {},
     onIssueMedicalCertificate: (MedicalCertificate) -> Unit = {},
+    referrals: List<Referral> = emptyList(),
+    onSendStructuredReferral: (Referral) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -247,25 +249,103 @@ fun CaseDetailScreen(
             }
         }
 
-        // 4. Clinical Referral Badge
-        if (record.referredByDoctorId != null) {
+        // 4. Clinical Referral Badge & Specialist Loop Closure Findings
+        val patientReferrals = referrals.filter { it.patientId == record.patientId }
+        if (patientReferrals.isNotEmpty() || record.referredByDoctorId != null) {
             item {
-                VitalSenseCard(
-                    backgroundColor = GlumeSurfaceElevated,
-                    border = BorderStroke(1.dp, GlumePrimaryPurple.copy(alpha = 0.4f))
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-                        Text(
-                            text = "↗ Referred by Dr. ${record.referredByDoctorName ?: "Colleague"}",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = GlumePrimaryPurpleLight
-                        )
-                        if (!record.referralNotes.isNullOrBlank()) {
-                            Text(
-                                text = "Referral Notes: ${record.referralNotes}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = GlumeTextPrimary
-                            )
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    if (record.referredByDoctorId != null) {
+                        VitalSenseCard(
+                            backgroundColor = GlumeSurfaceElevated,
+                            border = BorderStroke(1.dp, GlumePrimaryPurple.copy(alpha = 0.4f))
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                                Text(
+                                    text = "↗ Referred by Dr. ${record.referredByDoctorName ?: "Colleague"}",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumePrimaryPurpleLight
+                                )
+                                if (!record.referralNotes.isNullOrBlank()) {
+                                    Text(
+                                        text = "Referral Notes: ${record.referralNotes}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GlumeTextPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    patientReferrals.forEach { ref ->
+                        val isCompleted = ref.status == ReferralStatus.COMPLETED
+                        VitalSenseCard(
+                            backgroundColor = if (isCompleted) GlumeSuccessContainer.copy(alpha = 0.25f) else GlumeSurfaceElevated,
+                            border = BorderStroke(1.dp, if (isCompleted) GlumeSuccessMint else GlumePrimaryPurple.copy(alpha = 0.5f))
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (isCompleted) "✅ Specialist Consultation Completed" else "🔄 Referral: ${ref.targetSpecialty}",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = if (isCompleted) GlumeSuccessMint else GlumePrimaryPurpleLight
+                                    )
+                                    Surface(
+                                        shape = PillShape,
+                                        color = when (ref.urgency) {
+                                            ReferralUrgency.EMERGENCY -> GlumeAlertCoral.copy(alpha = 0.2f)
+                                            ReferralUrgency.URGENT -> GlumeWarningAmber.copy(alpha = 0.2f)
+                                            ReferralUrgency.ROUTINE -> GlumeSuccessMint.copy(alpha = 0.2f)
+                                        }
+                                    ) {
+                                        Text(
+                                            text = ref.urgency.displayName,
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = when (ref.urgency) {
+                                                    ReferralUrgency.EMERGENCY -> GlumeAlertCoral
+                                                    ReferralUrgency.URGENT -> GlumeWarningAmber
+                                                    ReferralUrgency.ROUTINE -> GlumeSuccessMint
+                                                }
+                                            ),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = "Clinical Ask: \"${ref.clinicalQuestion}\"",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = GlumeTextPrimary
+                                )
+
+                                if (isCompleted) {
+                                    ref.specialistFindings?.let { f ->
+                                        Text(
+                                            text = "Specialist Diagnostic Findings: $f",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = GlumeTextPrimary
+                                        )
+                                    }
+                                    ref.specialistRecommendations?.let { r ->
+                                        Text(
+                                            text = "Specialist Recommendations: $r",
+                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                            color = GlumeSuccessMint
+                                        )
+                                    }
+                                } else {
+                                    Text(
+                                        text = "Status: ${ref.status.displayName} · Target: ${ref.targetDoctorName ?: ref.targetSpecialty}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = GlumeTextSecondary
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -555,11 +635,23 @@ fun CaseDetailScreen(
     }
 
     if (showReferDialog) {
-        ReferCaseDialog(
-            patientName = record.patientName,
-            currentSpecialty = currentDoctor.specialty,
+        CreateReferralDialog(
+            patient = patient,
+            patientNameFallback = record.patientName,
+            currentDoctor = currentDoctor,
+            priorPrescriptions = priorPrescriptions,
+            allConditions = allConditions,
             onDismiss = { showReferDialog = false },
-            onRefer = onReferCase
+            onSendReferral = { ref ->
+                onSendStructuredReferral(ref)
+                onReferCase(
+                    DoctorSpecialty.values().find { it.displayName == ref.targetSpecialty } ?: DoctorSpecialty.GENERAL_PHYSICIAN,
+                    "${ref.reason}\n\nClinical Ask: ${ref.clinicalQuestion}"
+                )
+            },
+            onEmergencyCallTrigger = {
+                showTeleConsultModal = true
+            }
         )
     }
 

@@ -41,6 +41,7 @@ fun AshaHomeScreen(
     onImmunizationClick: () -> Unit = {},
     onDailyRoundsClick: () -> Unit = {},
     onMedicineRestockClick: () -> Unit = {},
+    referrals: List<com.vitalsense.app.core.data.model.Referral> = emptyList(),
     scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
@@ -361,6 +362,70 @@ fun AshaHomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         style = ButtonStyle.SECONDARY
                     )
+                }
+            }
+        }
+
+        // 5.9 Village Specialist Referrals Tracking
+        val villageReferrals = referrals.filter { ref -> patients.any { it.id == ref.patientId } }
+        if (villageReferrals.isNotEmpty()) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    Text(
+                        text = "🔄 Specialist Referrals (${villageReferrals.size})",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = GlumeTextPrimary
+                    )
+
+                    villageReferrals.forEach { ref ->
+                        val isCompleted = ref.status == com.vitalsense.app.core.data.model.ReferralStatus.COMPLETED
+                        VitalSenseCard(
+                            backgroundColor = if (isCompleted) GlumeSuccessContainer.copy(alpha = 0.25f) else GlumeSurfaceCard,
+                            border = BorderStroke(1.dp, if (isCompleted) GlumeSuccessMint else GlumePrimaryPurple.copy(alpha = 0.5f))
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "${ref.patientName} ➔ ${ref.targetSpecialty}",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = if (isCompleted) GlumeSuccessMint else GlumeTextPrimary
+                                    )
+                                    Surface(
+                                        shape = PillShape,
+                                        color = when (ref.urgency) {
+                                            com.vitalsense.app.core.data.model.ReferralUrgency.EMERGENCY -> GlumeAlertCoral
+                                            com.vitalsense.app.core.data.model.ReferralUrgency.URGENT -> GlumeWarningAmber
+                                            com.vitalsense.app.core.data.model.ReferralUrgency.ROUTINE -> GlumeSuccessMint
+                                        }
+                                    ) {
+                                        Text(
+                                            text = ref.urgency.displayName,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = "Referred by Dr. ${ref.referringDoctorName} · Status: ${ref.status.displayName}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = GlumeTextSecondary
+                                )
+
+                                if (isCompleted && ref.specialistRecommendations != null) {
+                                    Text(
+                                        text = "Specialist Plan: ${ref.specialistRecommendations}",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                        color = GlumeSuccessMint
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

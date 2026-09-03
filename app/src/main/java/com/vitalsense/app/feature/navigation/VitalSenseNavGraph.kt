@@ -33,6 +33,7 @@ import com.vitalsense.app.feature.doctor.CaseDetailScreen
 import com.vitalsense.app.feature.doctor.DoctorHomeScreen
 import com.vitalsense.app.feature.doctor.DoctorViewModel
 import com.vitalsense.app.feature.doctor.DoctorQueueScreen
+import com.vitalsense.app.feature.doctor.SpecialistReferralsScreen
 import com.vitalsense.app.feature.ipd.IpdBedTrackerScreen
 import com.vitalsense.app.feature.lab.LabReportsScreen
 import com.vitalsense.app.feature.opd.OpdQueueScreen
@@ -218,6 +219,7 @@ fun VitalSenseNavGraph(
                                             var currentPatientScreen by remember { mutableStateOf("home") }
                                             val patientHomeScrollState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
                                             val familyMembers by repository.getFamilyMembers(effectivePatient.id).collectAsStateWithLifecycle(initialValue = emptyList())
+                                            val patientReferrals by repository.getReferralsForPatient(effectivePatient.id).collectAsStateWithLifecycle(initialValue = emptyList())
 
                                             AnimatedContent(
                                                 targetState = currentPatientScreen,
@@ -330,6 +332,7 @@ fun VitalSenseNavGraph(
                                                             prescriptions = allPrescriptions.filter { it.patientId == effectivePatient.id },
                                                             schemes = schemes,
                                                             familyMembers = familyMembers,
+                                                            referrals = patientReferrals,
                                                             onCategoryClick = { category ->
                                                                 if (category == ConditionCategory.MENTAL_HEALTH) {
                                                                     currentPatientScreen = "mental_wellness"
@@ -368,6 +371,7 @@ fun VitalSenseNavGraph(
                                             val immunizations by repository.getImmunizationRecords().collectAsStateWithLifecycle(initialValue = emptyList())
                                             val dailyRounds by repository.getDailyRounds().collectAsStateWithLifecycle(initialValue = emptyList())
                                             val ashaMedicines by repository.getAshaMedicines().collectAsStateWithLifecycle(initialValue = emptyList())
+                                            val ashaReferrals by repository.getAllReferrals().collectAsStateWithLifecycle(initialValue = emptyList())
 
                                             AnimatedContent(
                                                 targetState = currentAshaScreen,
@@ -442,7 +446,8 @@ fun VitalSenseNavGraph(
                                                             },
                                                             onImmunizationClick = { currentAshaScreen = "immunization" },
                                                             onDailyRoundsClick = { currentAshaScreen = "daily_rounds" },
-                                                            onMedicineRestockClick = { currentAshaScreen = "medicine_restock" }
+                                                            onMedicineRestockClick = { currentAshaScreen = "medicine_restock" },
+                                                            referrals = ashaReferrals
                                                         )
                                                     }
                                                 }
@@ -452,6 +457,8 @@ fun VitalSenseNavGraph(
                                         UserRole.DOCTOR -> {
                                             var currentDoctorScreen by remember { mutableStateOf("home") }
                                             val doctorHomeScrollState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
+                                            val doctorReferrals by doctorViewModel.doctorReferrals.collectAsStateWithLifecycle()
+                                            val allReferrals by doctorViewModel.allReferrals.collectAsStateWithLifecycle()
 
                                             AnimatedContent(
                                                 targetState = selectedDoctorCase,
@@ -520,7 +527,9 @@ fun VitalSenseNavGraph(
                                                             coroutineScope.launch {
                                                                 repository.saveMedicalCertificate(cert)
                                                             }
-                                                        }
+                                                        },
+                                                        referrals = allReferrals,
+                                                        onSendStructuredReferral = { doctorViewModel.createReferral(it) }
                                                     )
                                                 } else {
                                                     val doctorQueue by doctorViewModel.todaysQueue.collectAsStateWithLifecycle()
@@ -583,6 +592,34 @@ fun VitalSenseNavGraph(
                                                                 onUpdateSlotConfig = { cap, open, start, end -> doctorViewModel.updateSlotConfig(cap, open, start, end) }
                                                             )
                                                         }
+                                                        "specialist_referrals" -> {
+                                                            BackHandler { currentDoctorScreen = "home" }
+                                                            SpecialistReferralsScreen(
+                                                                doctor = activeDoctor,
+                                                                referrals = doctorReferrals,
+                                                                onBack = { currentDoctorScreen = "home" },
+                                                                onAcceptReferral = { doctorViewModel.acceptReferral(it) },
+                                                                onDeclineReferral = { refId, reason, sugg -> doctorViewModel.declineReferral(refId, reason, sugg) },
+                                                                onRequestMoreInfo = { refId, note -> doctorViewModel.requestMoreInfo(refId, note) },
+                                                                onSubmitFindings = { refId, findings, recs, followUp -> doctorViewModel.submitSpecialistFindings(refId, findings, recs, followUp) },
+                                                                onStartConsultCall = { ref ->
+                                                                    val dummyAppt = Appointment(
+                                                                        id = "appt_ref_${ref.id}",
+                                                                        patientId = ref.patientId,
+                                                                        patientName = ref.patientName,
+                                                                        doctorId = activeDoctor.id,
+                                                                        doctorName = activeDoctor.name,
+                                                                        doctorSpecialty = activeDoctor.specialty.displayName,
+                                                                        dateFormatted = "Today",
+                                                                        timeSlot = "Now",
+                                                                        status = "Confirmed",
+                                                                        proposedBy = UserRole.DOCTOR,
+                                                                        callType = CallType.VIDEO
+                                                                    )
+                                                                    com.vitalsense.app.core.call.TeleCallingManager.startAppointmentCall(dummyAppt, isDoctor = true)
+                                                                }
+                                                            )
+                                                        }
                                                         else -> {
                                                             BackHandler {
                                                                 appStateHolder.logout()
@@ -619,6 +656,8 @@ fun VitalSenseNavGraph(
                                                                 onNavigateToIpdBeds = { currentDoctorScreen = "ipd_beds" },
                                                                 onNavigateToExternalReferrals = { currentDoctorScreen = "referrals" },
                                                                 onNavigateToLiveQueue = { currentDoctorScreen = "live_queue" },
+                                                                onNavigateToSpecialistReferrals = { currentDoctorScreen = "specialist_referrals" },
+                                                                referrals = doctorReferrals,
                                                                 onRemindAdminRestock = { item ->
                                                                     doctorViewModel.sendNotice(
                                                                         BroadcastNotice(

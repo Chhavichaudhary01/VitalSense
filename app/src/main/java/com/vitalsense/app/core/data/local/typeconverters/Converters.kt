@@ -76,4 +76,16 @@ class Converters {
 
     @TypeConverter
     fun toQueueEntryStatus(value: String): QueueEntryStatus = runCatching { QueueEntryStatus.valueOf(value) }.getOrDefault(QueueEntryStatus.WAITING)
+
+    @TypeConverter
+    fun fromReferralUrgency(value: ReferralUrgency): String = value.name
+
+    @TypeConverter
+    fun toReferralUrgency(value: String): ReferralUrgency = runCatching { ReferralUrgency.valueOf(value) }.getOrDefault(ReferralUrgency.ROUTINE)
+
+    @TypeConverter
+    fun fromReferralStatus(value: ReferralStatus): String = value.name
+
+    @TypeConverter
+    fun toReferralStatus(value: String): ReferralStatus = runCatching { ReferralStatus.valueOf(value) }.getOrDefault(ReferralStatus.SENT)
 }

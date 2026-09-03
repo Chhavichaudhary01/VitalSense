@@ -48,6 +48,7 @@ fun PatientHomeScreen(
     onNavigateToBloodBank: () -> Unit = {},
     onNavigateToAppointments: () -> Unit = {},
     onNavigateToLiveQueue: () -> Unit = {},
+    referrals: List<com.vitalsense.app.core.data.model.Referral> = emptyList(),
     scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
@@ -572,6 +573,28 @@ fun PatientHomeScreen(
                             )
                         }
                         Text("→", fontSize = 20.sp, color = GlumePrimaryPurple)
+                    }
+                }
+            }
+        }
+
+        // 3.9 Doctor-to-Doctor Specialist Consultations (Plain Language Patient View)
+        if (referrals.isNotEmpty()) {
+            val currentLanguage = if (strings.namaste == "नमस्ते") AppLanguage.HINDI else AppLanguage.ENGLISH
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    Text(
+                        text = if (currentLanguage == AppLanguage.HINDI) "विशेषज्ञ डॉक्टर परामर्श (${referrals.size})" else "Specialist Referrals (${referrals.size})",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = textPrimaryColor
+                    )
+
+                    referrals.forEach { ref ->
+                        com.vitalsense.app.feature.patient.components.ReferralStatusCard(
+                            referral = ref,
+                            language = currentLanguage,
+                            onScheduleCall = onNavigateToAppointments
+                        )
                     }
                 }
             }

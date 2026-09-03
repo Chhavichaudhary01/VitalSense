@@ -830,5 +830,67 @@ object SeedDataProvider {
     fun getBioMedicalEquipmentEntities(): List<BioMedicalEquipmentEntity> = initialBioMedicalEquipment.map {
         BioMedicalEquipmentEntity(it.id, it.assetCode, it.name, it.department, it.status, it.lastServiceDate, it.nextServiceDue, it.location, it.inChargeContact)
     }
+
+    val initialReferrals = listOf(
+        Referral(
+            id = "ref_101",
+            patientId = "pat_ramesh",
+            patientName = "Ramesh Kumar",
+            referringDoctorId = "doc_rajesh",
+            referringDoctorName = "Dr. Rajesh Varma",
+            referringDoctorSpecialty = "General Physician",
+            targetDoctorId = "doc_anita_cardio",
+            targetDoctorName = "Dr. Anita Sharma",
+            targetSpecialty = "Cardiology",
+            reason = "Persistent severe chest tightness, exertional dyspnea, and irregular pulse noted during PHC evaluation.",
+            clinicalQuestion = "Please evaluate for ischemic heart disease or arrhythmia; advise on 2D-ECHO and medical optimization.",
+            urgency = ReferralUrgency.URGENT,
+            attachedRecordIds = listOf("cond_1", "rx_1"),
+            status = ReferralStatus.SENT,
+            createdAt = System.currentTimeMillis() - 3600000 * 4
+        ),
+        Referral(
+            id = "ref_102",
+            patientId = "pat_anita",
+            patientName = "Anita Sharma",
+            referringDoctorId = "doc_rajesh",
+            referringDoctorName = "Dr. Rajesh Varma",
+            referringDoctorSpecialty = "General Physician",
+            targetDoctorId = "doc_sunita_gynae",
+            targetDoctorName = "Dr. Sunita Rao",
+            targetSpecialty = "Gynecologist & Maternal Care",
+            reason = "2nd Trimester Routine Prenatal with borderline hemoglobin (9.4 g/dL) and elevated pedal edema.",
+            clinicalQuestion = "Confirm maternal nutrition & iron titration plan, check for preeclampsia risk markers.",
+            urgency = ReferralUrgency.ROUTINE,
+            attachedRecordIds = listOf("cond_2"),
+            status = ReferralStatus.ACCEPTED,
+            createdAt = System.currentTimeMillis() - 3600000 * 20,
+            respondedAt = System.currentTimeMillis() - 3600000 * 18
+        ),
+        Referral(
+            id = "ref_103",
+            patientId = "pat_vikram",
+            patientName = "Vikram Singh",
+            referringDoctorId = "doc_rajesh",
+            referringDoctorName = "Dr. Rajesh Varma",
+            referringDoctorSpecialty = "General Physician",
+            targetDoctorId = "doc_arun_ortho",
+            targetDoctorName = "Dr. Arun Kumar",
+            targetSpecialty = "Orthopedic Surgeon",
+            reason = "Severe osteoarthritis of bilateral knees with limited ambulation, refractory to NSAIDs.",
+            clinicalQuestion = "Evaluate suitability for intra-articular steroid injection or total knee replacement candidate.",
+            urgency = ReferralUrgency.ROUTINE,
+            attachedRecordIds = listOf("cond_3"),
+            status = ReferralStatus.COMPLETED,
+            specialistFindings = "Patient has Grade IV Kellgren-Lawrence bilateral knee osteoarthritis. Right knee effusion present without acute septic signs.",
+            specialistRecommendations = "Administered right knee Triamcinolone 40mg injection under aseptic precautions. Advised isometric quadriceps physiotherapy and scheduled follow-up in 4 weeks. Candidate for staged TKR once glycemic control stabilizes.",
+            specialistFollowUpNeeded = true,
+            createdAt = System.currentTimeMillis() - 3600000 * 48,
+            respondedAt = System.currentTimeMillis() - 3600000 * 40,
+            completedAt = System.currentTimeMillis() - 3600000 * 24
+        )
+    )
+
+    fun getReferralEntities(): List<ReferralEntity> = initialReferrals.map { it.toEntity() }
 }
 

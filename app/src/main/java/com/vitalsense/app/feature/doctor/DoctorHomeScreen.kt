@@ -50,6 +50,8 @@ fun DoctorHomeScreen(
     onNavigateToIpdBeds: () -> Unit = {},
     onNavigateToExternalReferrals: () -> Unit = {},
     onNavigateToLiveQueue: () -> Unit = {},
+    onNavigateToSpecialistReferrals: () -> Unit = {},
+    referrals: List<Referral> = emptyList(),
     onRemindAdminRestock: (DispensaryItem) -> Unit = {},
     todaysQueue: List<QueueEntry> = emptyList(),
     scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
@@ -298,6 +300,83 @@ fun DoctorHomeScreen(
                     badgeText = "Today",
                     badgeColor = GlumeSuccessMint
                 )
+            }
+        }
+
+        // 3.1 Specialist Referrals Queue Card
+        item {
+            val pendingReferrals = referrals.filter { it.status == ReferralStatus.SENT }
+            val hasEmergency = pendingReferrals.any { it.urgency == ReferralUrgency.EMERGENCY }
+            val hasUrgent = pendingReferrals.any { it.urgency == ReferralUrgency.URGENT }
+
+            VitalSenseCard(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = if (hasEmergency) GlumeAlertContainer.copy(alpha = 0.35f) else GlumeSurfaceCard,
+                border = BorderStroke(
+                    1.5.dp,
+                    when {
+                        hasEmergency -> GlumeAlertCoral
+                        hasUrgent -> GlumeWarningAmber
+                        pendingReferrals.isNotEmpty() -> GlumePrimaryPurpleLight
+                        else -> GlumeBorder
+                    }
+                ),
+                onClick = onNavigateToSpecialistReferrals
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = if (hasEmergency) GlumeAlertCoral.copy(alpha = 0.2f) else GlumePrimaryPurpleContainer,
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(if (hasEmergency) "🚨" else "📥", fontSize = 20.sp)
+                            }
+                        }
+                        Column {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "Specialist Referrals Queue",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumeTextPrimary
+                                )
+                                if (pendingReferrals.isNotEmpty()) {
+                                    Surface(
+                                        shape = PillShape,
+                                        color = if (hasEmergency) GlumeAlertCoral else GlumePrimaryPurple
+                                    ) {
+                                        Text(
+                                            text = "${pendingReferrals.size} PENDING",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            ),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Text(
+                                text = "Triage incoming consults & closed-loop specialist evaluations",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = GlumeTextSecondary
+                            )
+                        }
+                    }
+                    Text("➔", fontSize = 20.sp, color = GlumeTextSecondary)
+                }
             }
         }
 

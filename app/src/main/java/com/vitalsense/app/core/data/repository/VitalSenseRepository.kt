@@ -134,5 +134,13 @@ interface VitalSenseRepository {
     // --- Tele-Consultation Call Logs ---
     fun getCallLogs(): Flow<List<CallLog>>
     suspend fun saveCallLog(callLog: CallLog)
+
+    // --- Doctor-to-Doctor Specialist Referrals ---
+    fun getAllReferrals(): Flow<List<Referral>>
+    fun getReferralsForPatient(patientId: String): Flow<List<Referral>>
+    fun getReferralsByReferringDoctor(doctorId: String): Flow<List<Referral>>
+    fun getReferralsForDoctorOrSpecialty(doctorId: String, specialty: String): Flow<List<Referral>>
+    suspend fun createReferral(referral: Referral)
+    suspend fun updateReferral(referral: Referral)
 }
 

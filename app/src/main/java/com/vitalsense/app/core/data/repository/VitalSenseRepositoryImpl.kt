@@ -90,6 +90,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 SeedDataProvider.getOtSurgeryBookingEntities().forEach { dao.insertOtSurgeryBooking(it) }
                 SeedDataProvider.getExternalReferralEntities().forEach { dao.insertExternalReferral(it) }
                 SeedDataProvider.getBioMedicalEquipmentEntities().forEach { dao.insertBioMedicalEquipment(it) }
+                SeedDataProvider.getReferralEntities().forEach { dao.insertReferral(it) }
             } catch (e: Exception) {
                 // Fallback to in-memory state
             }
@@ -1343,6 +1344,49 @@ class VitalSenseRepositoryImpl @Inject constructor(
             durationSeconds = durationSeconds,
             outcome = try { EmergencyCallOutcome.valueOf(outcome) } catch (e: Exception) { EmergencyCallOutcome.CONNECTED },
             outcomeNotes = outcomeNotes
+        )
+    }
+
+    // --- Doctor-to-Doctor Specialist Referrals ---
+    override fun getAllReferrals(): Flow<List<Referral>> {
+        return dao.getAllReferrals().map { list -> list.map { it.toModel() } }
+    }
+
+    override fun getReferralsForPatient(patientId: String): Flow<List<Referral>> {
+        return dao.getReferralsForPatient(patientId).map { list -> list.map { it.toModel() } }
+    }
+
+    override fun getReferralsByReferringDoctor(doctorId: String): Flow<List<Referral>> {
+        return dao.getReferralsByReferringDoctor(doctorId).map { list -> list.map { it.toModel() } }
+    }
+
+    override fun getReferralsForDoctorOrSpecialty(doctorId: String, specialty: String): Flow<List<Referral>> {
+        return dao.getReferralsForDoctorOrSpecialty(doctorId, specialty).map { list -> list.map { it.toModel() } }
+    }
+
+    override suspend fun createReferral(referral: Referral) {
+        dao.insertReferral(referral.toEntity())
+        val outboxId = "outbox_ref_${referral.id}"
+        dao.insertOutboxRecord(
+            com.vitalsense.app.core.data.local.entity.OutboxEntity(
+                id = outboxId,
+                actionType = "CREATE_REFERRAL",
+                entityId = referral.id,
+                payloadJson = gson.toJson(referral)
+            )
+        )
+    }
+
+    override suspend fun updateReferral(referral: Referral) {
+        dao.updateReferral(referral.toEntity())
+        val outboxId = "outbox_ref_upd_${referral.id}_${System.currentTimeMillis()}"
+        dao.insertOutboxRecord(
+            com.vitalsense.app.core.data.local.entity.OutboxEntity(
+                id = outboxId,
+                actionType = "UPDATE_REFERRAL",
+                entityId = referral.id,
+                payloadJson = gson.toJson(referral)
+            )
         )
     }
 }

@@ -1,6 +1,7 @@
 package com.vitalsense.app.core.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.vitalsense.app.core.data.model.*
 
@@ -376,6 +377,93 @@ data class CallLogEntity(
     val durationSeconds: Int,
     val outcome: String,
     val outcomeNotes: String? = null
+)
+
+@Entity(
+    tableName = "referrals",
+    indices = [
+        Index("patientId"),
+        Index("referringDoctorId"),
+        Index("targetDoctorId"),
+        Index("targetSpecialty")
+    ]
+)
+data class ReferralEntity(
+    @PrimaryKey val id: String,
+    val patientId: String,
+    val patientName: String,
+    val referringDoctorId: String,
+    val referringDoctorName: String,
+    val referringDoctorSpecialty: String,
+    val targetDoctorId: String?,
+    val targetDoctorName: String?,
+    val targetSpecialty: String,
+    val reason: String,
+    val clinicalQuestion: String,
+    val urgency: ReferralUrgency,
+    val attachedRecordIds: List<String>,
+    val status: ReferralStatus,
+    val declineReason: String?,
+    val suggestedSpecialtyOrDoctor: String?,
+    val infoRequestNote: String?,
+    val specialistFindings: String?,
+    val specialistRecommendations: String?,
+    val specialistFollowUpNeeded: Boolean,
+    val createdAt: Long,
+    val respondedAt: Long?,
+    val completedAt: Long?
+) {
+    fun toModel(): Referral = Referral(
+        id = id,
+        patientId = patientId,
+        patientName = patientName,
+        referringDoctorId = referringDoctorId,
+        referringDoctorName = referringDoctorName,
+        referringDoctorSpecialty = referringDoctorSpecialty,
+        targetDoctorId = targetDoctorId,
+        targetDoctorName = targetDoctorName,
+        targetSpecialty = targetSpecialty,
+        reason = reason,
+        clinicalQuestion = clinicalQuestion,
+        urgency = urgency,
+        attachedRecordIds = attachedRecordIds,
+        status = status,
+        declineReason = declineReason,
+        suggestedSpecialtyOrDoctor = suggestedSpecialtyOrDoctor,
+        infoRequestNote = infoRequestNote,
+        specialistFindings = specialistFindings,
+        specialistRecommendations = specialistRecommendations,
+        specialistFollowUpNeeded = specialistFollowUpNeeded,
+        createdAt = createdAt,
+        respondedAt = respondedAt,
+        completedAt = completedAt
+    )
+}
+
+fun Referral.toEntity(): ReferralEntity = ReferralEntity(
+    id = id,
+    patientId = patientId,
+    patientName = patientName,
+    referringDoctorId = referringDoctorId,
+    referringDoctorName = referringDoctorName,
+    referringDoctorSpecialty = referringDoctorSpecialty,
+    targetDoctorId = targetDoctorId,
+    targetDoctorName = targetDoctorName,
+    targetSpecialty = targetSpecialty,
+    reason = reason,
+    clinicalQuestion = clinicalQuestion,
+    urgency = urgency,
+    attachedRecordIds = attachedRecordIds,
+    status = status,
+    declineReason = declineReason,
+    suggestedSpecialtyOrDoctor = suggestedSpecialtyOrDoctor,
+    infoRequestNote = infoRequestNote,
+    specialistFindings = specialistFindings,
+    specialistRecommendations = specialistRecommendations,
+    specialistFollowUpNeeded = specialistFollowUpNeeded,
+    createdAt = createdAt,
+    respondedAt = respondedAt,
+    completedAt = completedAt
 )
 
 

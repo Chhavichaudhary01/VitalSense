@@ -45,10 +45,10 @@ enum class CallType {
     VOICE
 }
 
-enum class DoctorAvailabilityStatus {
-    AVAILABLE,
-    BUSY,
-    OFFLINE
+enum class DoctorAvailabilityStatus(val displayName: String) {
+    AVAILABLE("🟢 On-Call"),
+    BUSY("🟡 Busy"),
+    OFFLINE("🔴 Offline")
 }
 
 enum class EmergencyCallOutcome {
@@ -418,4 +418,139 @@ data class DoctorQueueSummary(
     val avgWaitSeconds: Long,
     val isQueueOpen: Boolean
 )
+
+// --- Doctor-to-Doctor Referral Domain Models ---
+
+enum class ReferralUrgency(val displayName: String) {
+    ROUTINE("Routine"),
+    URGENT("Urgent (Within 24 Hours)"),
+    EMERGENCY("Emergency (Immediate Critical Risk)")
+}
+
+enum class ReferralStatus(val displayName: String) {
+    DRAFT("Draft"),
+    SENT("Sent / Pending Review"),
+    ACCEPTED("Accepted"),
+    DECLINED("Declined"),
+    INFO_REQUESTED("Info Requested"),
+    IN_PROGRESS("In Progress"),
+    COMPLETED("Completed"),
+    CANCELLED("Cancelled")
+}
+
+data class Referral(
+    val id: String,
+    val patientId: String,
+    val patientName: String,
+    val referringDoctorId: String,
+    val referringDoctorName: String,
+    val referringDoctorSpecialty: String,
+    val targetDoctorId: String? = null,
+    val targetDoctorName: String? = null,
+    val targetSpecialty: String,
+    val reason: String,
+    val clinicalQuestion: String,
+    val urgency: ReferralUrgency = ReferralUrgency.ROUTINE,
+    val attachedRecordIds: List<String> = emptyList(),
+    val status: ReferralStatus = ReferralStatus.SENT,
+    val declineReason: String? = null,
+    val suggestedSpecialtyOrDoctor: String? = null,
+    val infoRequestNote: String? = null,
+    val specialistFindings: String? = null,
+    val specialistRecommendations: String? = null,
+    val specialistFollowUpNeeded: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis(),
+    val respondedAt: Long? = null,
+    val completedAt: Long? = null
+)
+
+data class SpecialistDoctor(
+    val id: String,
+    val name: String,
+    val specialty: DoctorSpecialty,
+    val qualification: String,
+    val hospitalAffiliation: String,
+    val availabilityStatus: DoctorAvailabilityStatus = DoctorAvailabilityStatus.AVAILABLE
+)
+
+object SpecialistDirectoryProvider {
+    val specialists: List<SpecialistDoctor> = listOf(
+        SpecialistDoctor(
+            id = "doc_anita_cardio",
+            name = "Dr. Anita Sharma",
+            specialty = DoctorSpecialty.CARDIOLOGIST,
+            qualification = "MD, DM (Cardiology, AIIMS)",
+            hospitalAffiliation = "District Civil Hospital",
+            availabilityStatus = DoctorAvailabilityStatus.AVAILABLE
+        ),
+        SpecialistDoctor(
+            id = "doc_vikram_derma",
+            name = "Dr. Vikram Patel",
+            specialty = DoctorSpecialty.DERMATOLOGIST,
+            qualification = "MD (Dermatology & Venereology)",
+            hospitalAffiliation = "District Specialist Center",
+            availabilityStatus = DoctorAvailabilityStatus.AVAILABLE
+        ),
+        SpecialistDoctor(
+            id = "doc_priya_pedia",
+            name = "Dr. Priya Singh",
+            specialty = DoctorSpecialty.PEDIATRICIAN,
+            qualification = "MD (Pediatrics), DNB",
+            hospitalAffiliation = "Maternal & Child Health Wing",
+            availabilityStatus = DoctorAvailabilityStatus.AVAILABLE
+        ),
+        SpecialistDoctor(
+            id = "doc_sunita_gynae",
+            name = "Dr. Sunita Rao",
+            specialty = DoctorSpecialty.GYNECOLOGIST,
+            qualification = "MS (Obstetrics & Gynecology)",
+            hospitalAffiliation = "District Women's Hospital",
+            availabilityStatus = DoctorAvailabilityStatus.AVAILABLE
+        ),
+        SpecialistDoctor(
+            id = "doc_arun_ortho",
+            name = "Dr. Arun Kumar",
+            specialty = DoctorSpecialty.ORTHOPEDIC_SURGEON,
+            qualification = "MS (Orthopedics, MCh)",
+            hospitalAffiliation = "Trauma & Ortho Pavilion",
+            availabilityStatus = DoctorAvailabilityStatus.BUSY
+        ),
+        SpecialistDoctor(
+            id = "doc_meera_psych",
+            name = "Dr. Meera Nambiar",
+            specialty = DoctorSpecialty.PSYCHOLOGIST,
+            qualification = "M.Phil, Ph.D (Clinical Psychology, NIMHANS)",
+            hospitalAffiliation = "District Mental Health Unit",
+            availabilityStatus = DoctorAvailabilityStatus.AVAILABLE
+        ),
+        SpecialistDoctor(
+            id = "doc_rajesh_varma",
+            name = "Dr. Rajesh Varma",
+            specialty = DoctorSpecialty.GENERAL_PHYSICIAN,
+            qualification = "MBBS, MD (Internal Medicine)",
+            hospitalAffiliation = "Primary Health Network",
+            availabilityStatus = DoctorAvailabilityStatus.AVAILABLE
+        )
+    )
+
+    fun getSpecialistsForSpecialty(specialty: String): List<SpecialistDoctor> {
+        val normalized = specialty.trim().lowercase()
+        return specialists.filter { 
+            val dName = it.specialty.displayName.lowercase()
+            val eName = it.specialty.name.lowercase()
+            dName == normalized ||
+            eName == normalized ||
+            dName.contains(normalized) ||
+            normalized.contains(dName) ||
+            (normalized.startsWith("cardio") && it.specialty == DoctorSpecialty.CARDIOLOGIST) ||
+            (normalized.startsWith("derma") && it.specialty == DoctorSpecialty.DERMATOLOGIST) ||
+            (normalized.startsWith("ortho") && it.specialty == DoctorSpecialty.ORTHOPEDIC_SURGEON) ||
+            (normalized.startsWith("pedia") && it.specialty == DoctorSpecialty.PEDIATRICIAN) ||
+            (normalized.startsWith("gyna") && it.specialty == DoctorSpecialty.GYNECOLOGIST) ||
+            (normalized.startsWith("gyne") && it.specialty == DoctorSpecialty.GYNECOLOGIST) ||
+            (normalized.startsWith("psych") && it.specialty == DoctorSpecialty.PSYCHOLOGIST)
+        }
+    }
+}
+
 

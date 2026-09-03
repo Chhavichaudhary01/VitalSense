@@ -39,9 +39,10 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         DoctorDaySlotEntity::class,
         QueueEntryEntity::class,
         NearbyPharmacyCacheEntity::class,
-        CallLogEntity::class
+        CallLogEntity::class,
+        ReferralEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -130,6 +131,42 @@ abstract class VitalSenseDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `referrals` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `patientId` TEXT NOT NULL,
+                        `patientName` TEXT NOT NULL,
+                        `referringDoctorId` TEXT NOT NULL,
+                        `referringDoctorName` TEXT NOT NULL,
+                        `referringDoctorSpecialty` TEXT NOT NULL,
+                        `targetDoctorId` TEXT,
+                        `targetDoctorName` TEXT,
+                        `targetSpecialty` TEXT NOT NULL,
+                        `reason` TEXT NOT NULL,
+                        `clinicalQuestion` TEXT NOT NULL,
+                        `urgency` TEXT NOT NULL,
+                        `attachedRecordIds` TEXT NOT NULL,
+                        `status` TEXT NOT NULL,
+                        `declineReason` TEXT,
+                        `suggestedSpecialtyOrDoctor` TEXT,
+                        `infoRequestNote` TEXT,
+                        `specialistFindings` TEXT,
+                        `specialistRecommendations` TEXT,
+                        `specialistFollowUpNeeded` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `respondedAt` INTEGER,
+                        `completedAt` INTEGER
+                    )
+                """.trimIndent())
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_referrals_patientId` ON `referrals` (`patientId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_referrals_referringDoctorId` ON `referrals` (`referringDoctorId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_referrals_targetDoctorId` ON `referrals` (`targetDoctorId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_referrals_targetSpecialty` ON `referrals` (`targetSpecialty`)")
+            }
+        }
+
         fun getDatabase(context: Context): VitalSenseDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -137,7 +174,7 @@ abstract class VitalSenseDatabase : RoomDatabase() {
                     VitalSenseDatabase::class.java,
                     "vitalsense_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
