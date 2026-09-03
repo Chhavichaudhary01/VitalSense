@@ -29,6 +29,7 @@ import com.vitalsense.app.feature.doctor.components.DashboardAccordionItem
 import com.vitalsense.app.feature.doctor.components.PatientHistoryDialog
 import com.vitalsense.app.feature.doctor.components.ScheduleAppointmentDialog
 import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
+import com.vitalsense.app.feature.doctor.components.CaseAnalyticsCard
 import com.vitalsense.app.core.util.DismissedNoticeHelper
 import com.vitalsense.app.core.util.AudioGuidanceHelper
 
@@ -36,6 +37,7 @@ import com.vitalsense.app.core.util.AudioGuidanceHelper
 fun DoctorHomeScreen(
     doctor: Doctor,
     cases: List<ConditionRecord>,
+    caseAnalytics: DoctorCaseAnalytics,
     appointments: List<Appointment>,
     dispensaryStock: List<DispensaryItem>,
     patients: List<Patient> = emptyList(),
@@ -263,6 +265,14 @@ fun DoctorHomeScreen(
                     )
                 }
             }
+        }
+
+        // 2.5 Case Analytics Card
+        item {
+            CaseAnalyticsCard(
+                analytics = caseAnalytics,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         // 3. Glume Stat Display Pattern (3-Column Compact Grid)

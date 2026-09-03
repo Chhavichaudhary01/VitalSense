@@ -86,6 +86,8 @@ fun VitalSenseNavGraph(
     val selectedDoctorCase by doctorViewModel.selectedCase.collectAsStateWithLifecycle()
     val patientPrescriptions by doctorViewModel.patientPrescriptions.collectAsStateWithLifecycle()
     val patientProfile by doctorViewModel.patientProfile.collectAsStateWithLifecycle()
+    val doctorCaseAnalytics by doctorViewModel.caseAnalytics.collectAsStateWithLifecycle()
+    val patientMedicalHistory by doctorViewModel.patientMedicalHistory.collectAsStateWithLifecycle()
 
     // Data streams from repository for general components
     val villages by repository.getVillages().collectAsStateWithLifecycle(initialValue = emptyList())
@@ -490,6 +492,7 @@ fun VitalSenseNavGraph(
                                                         priorPrescriptions = patientPrescriptions,
                                                         dispensaryStock = doctorDispensaryStock,
                                                         currentDoctor = activeDoctor,
+                                                        medicalHistory = patientMedicalHistory,
                                                         allConditions = allConditions.filter { it.patientId == currentDoctorCase.patientId },
                                                         allAppointments = allAppointments.filter { it.patientId == currentDoctorCase.patientId },
                                                         onBack = { doctorViewModel.clearSelectedCase() },
@@ -635,6 +638,7 @@ fun VitalSenseNavGraph(
                                                                 doctor = activeDoctor,
                                                                 scrollState = doctorHomeScrollState,
                                                                 cases = doctorCases,
+                                                                caseAnalytics = doctorCaseAnalytics,
                                                                 appointments = doctorAppointments,
                                                                 dispensaryStock = doctorDispensaryStock,
                                                                 patients = patients,

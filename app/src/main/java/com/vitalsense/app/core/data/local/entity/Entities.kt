@@ -353,6 +353,22 @@ data class QueueEntryEntity(
     val isPendingSync: Boolean
 )
 
+@Entity(tableName = "medical_history")
+data class MedicalHistoryEntity(
+    @PrimaryKey val id: String,
+    val patientId: String,
+    val type: String, // "CONDITION" or "MEDICATION"
+    val title: String,
+    val details: String,
+    val severity: String?, // SeverityLevel name or null
+    val doctorId: String,
+    val doctorName: String,
+    val caseId: String?,
+    val prescriptionId: String?,
+    val timestamp: Long,
+    val dateFormatted: String
+)
+
 @Entity(tableName = "nearby_pharmacy_cache")
 data class NearbyPharmacyCacheEntity(
     @PrimaryKey val placeId: String,
@@ -465,6 +481,3 @@ fun Referral.toEntity(): ReferralEntity = ReferralEntity(
     respondedAt = respondedAt,
     completedAt = completedAt
 )
-
-
-

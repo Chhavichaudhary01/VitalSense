@@ -38,11 +38,12 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         BioMedicalEquipmentEntity::class,
         DoctorDaySlotEntity::class,
         QueueEntryEntity::class,
+        MedicalHistoryEntity::class,
         NearbyPharmacyCacheEntity::class,
         CallLogEntity::class,
         ReferralEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -167,6 +168,27 @@ abstract class VitalSenseDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `medical_history` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `patientId` TEXT NOT NULL,
+                        `type` TEXT NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `details` TEXT NOT NULL,
+                        `severity` TEXT,
+                        `doctorId` TEXT NOT NULL,
+                        `doctorName` TEXT NOT NULL,
+                        `caseId` TEXT,
+                        `prescriptionId` TEXT,
+                        `timestamp` INTEGER NOT NULL,
+                        `dateFormatted` TEXT NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): VitalSenseDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -174,7 +196,7 @@ abstract class VitalSenseDatabase : RoomDatabase() {
                     VitalSenseDatabase::class.java,
                     "vitalsense_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -183,6 +183,30 @@ class FirestoreDataSource @Inject constructor(
         }
     }
 
+    suspend fun uploadMedicalHistory(entry: MedicalHistoryEntry) {
+        try {
+            val data = hashMapOf(
+                "id" to entry.id,
+                "patientId" to entry.patientId,
+                "type" to entry.type.name,
+                "title" to entry.title,
+                "details" to entry.details,
+                "severity" to (entry.severity?.name ?: ""),
+                "doctorId" to entry.doctorId,
+                "doctorName" to entry.doctorName,
+                "caseId" to (entry.caseId ?: ""),
+                "prescriptionId" to (entry.prescriptionId ?: ""),
+                "timestamp" to entry.timestamp,
+                "dateFormatted" to entry.dateFormatted
+            )
+            firestore.collection("patientMedicalHistory").document(entry.id).set(data).await()
+            Log.d(TAG, "✅ Successfully uploaded medical history: ${entry.id}")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to upload medical history: ${e.message}", e)
+            throw e
+        }
+    }
+
     // --- REAL-TIME LISTENERS (Reads) ---
 
     fun getConditionRecordsStream(): Flow<List<ConditionRecord>> = callbackFlow {

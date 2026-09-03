@@ -1276,6 +1276,69 @@ class VitalSenseRepositoryImpl @Inject constructor(
         }
     }
 
+    // --- Patient Medical History ---
+
+    override fun getMedicalHistoryForPatient(patientId: String): Flow<List<MedicalHistoryEntry>> {
+        return dao.getMedicalHistoryForPatient(patientId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun addMedicalHistoryEntry(entry: MedicalHistoryEntry) {
+        // 1. Save to local cache
+        dao.insertMedicalHistoryEntry(entry.toEntity())
+        
+        // 2. Try pushing to Firestore
+        try {
+            firestoreDataSource.uploadMedicalHistory(entry)
+        } catch (e: Exception) {
+            // 3. Store in Outbox for offline sync
+            val outbox = OutboxEntity(
+                id = UUID.randomUUID().toString(),
+                actionType = "MEDICAL_HISTORY_ENTRY",
+                entityId = entry.id,
+                payloadJson = gson.toJson(entry),
+                timestamp = System.currentTimeMillis()
+            )
+            dao.insertOutboxRecord(outbox)
+            syncManager.triggerImmediateSync()
+        }
+    }
+
+    private fun com.vitalsense.app.core.data.local.entity.MedicalHistoryEntity.toDomain(): MedicalHistoryEntry {
+        return MedicalHistoryEntry(
+            id = id,
+            patientId = patientId,
+            type = runCatching { MedicalHistoryType.valueOf(type) }.getOrDefault(MedicalHistoryType.CONDITION),
+            title = title,
+            details = details,
+            severity = severity?.takeIf { it.isNotBlank() }?.let { runCatching { SeverityLevel.valueOf(it) }.getOrNull() },
+            doctorId = doctorId,
+            doctorName = doctorName,
+            caseId = caseId?.takeIf { it.isNotBlank() },
+            prescriptionId = prescriptionId?.takeIf { it.isNotBlank() },
+            timestamp = timestamp,
+            dateFormatted = dateFormatted
+        )
+    }
+
+    private fun MedicalHistoryEntry.toEntity(): com.vitalsense.app.core.data.local.entity.MedicalHistoryEntity {
+        return com.vitalsense.app.core.data.local.entity.MedicalHistoryEntity(
+            id = id,
+            patientId = patientId,
+            type = type.name,
+            title = title,
+            details = details,
+            severity = severity?.name,
+            doctorId = doctorId,
+            doctorName = doctorName,
+            caseId = caseId,
+            prescriptionId = prescriptionId,
+            timestamp = timestamp,
+            dateFormatted = dateFormatted
+        )
+    }
+
     private fun QueueEntry.toEntity(): com.vitalsense.app.core.data.local.entity.QueueEntryEntity {
         return com.vitalsense.app.core.data.local.entity.QueueEntryEntity(
             id = id,

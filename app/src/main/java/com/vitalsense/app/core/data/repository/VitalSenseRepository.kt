@@ -131,6 +131,10 @@ interface VitalSenseRepository {
     suspend fun prioritizeEntry(entryId: String)
     suspend fun cancelQueueEntry(entryId: String)
 
+    // --- Patient Medical History ---
+    fun getMedicalHistoryForPatient(patientId: String): Flow<List<MedicalHistoryEntry>>
+    suspend fun addMedicalHistoryEntry(entry: MedicalHistoryEntry)
+
     // --- Tele-Consultation Call Logs ---
     fun getCallLogs(): Flow<List<CallLog>>
     suspend fun saveCallLog(callLog: CallLog)
@@ -143,4 +147,5 @@ interface VitalSenseRepository {
     suspend fun createReferral(referral: Referral)
     suspend fun updateReferral(referral: Referral)
 }
+
 
