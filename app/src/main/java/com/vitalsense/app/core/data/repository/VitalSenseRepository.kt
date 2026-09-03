@@ -130,5 +130,9 @@ interface VitalSenseRepository {
     suspend fun skipEntry(entryId: String)
     suspend fun prioritizeEntry(entryId: String)
     suspend fun cancelQueueEntry(entryId: String)
+
+    // --- Tele-Consultation Call Logs ---
+    fun getCallLogs(): Flow<List<CallLog>>
+    suspend fun saveCallLog(callLog: CallLog)
 }
 

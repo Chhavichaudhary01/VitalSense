@@ -267,6 +267,19 @@ interface VitalSenseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCachedPharmacies(pharmacies: List<NearbyPharmacyCacheEntity>)
+
+    // --- Call Logs ---
+    @Query("SELECT * FROM call_logs ORDER BY timestamp DESC")
+    fun getAllCallLogs(): Flow<List<CallLogEntity>>
+
+    @Query("SELECT * FROM call_logs WHERE patientId = :patientId ORDER BY timestamp DESC")
+    fun getCallLogsForPatient(patientId: String): Flow<List<CallLogEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCallLog(callLog: CallLogEntity)
+
+    @Query("UPDATE appointments SET status = :status WHERE id = :appointmentId")
+    suspend fun updateAppointmentStatus(appointmentId: String, status: String)
 }
 
 

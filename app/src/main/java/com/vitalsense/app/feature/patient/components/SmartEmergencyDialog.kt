@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,29 +16,32 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vitalsense.app.core.data.model.Patient
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vitalsense.app.core.call.*
+import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.components.VitalSenseDialog
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.util.AudioGuidanceHelper
 import com.vitalsense.app.core.util.EmergencySosHelper
+import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
 import kotlinx.coroutines.delay
 
 /**
  * Smart Emergency Screen with 3-Second Countdown & Auto-GPS/SMS Dispatch
- * as specified in VitalSense_UX_Architecture.md §3.4.
- *
- * Prevents accidental triggers via a 3-second visible & audible abort window
- * while executing direct one-tap cellular call & background GPS SMS.
+ * and Immediate On-Call Video / Voice Routing.
  */
 @Composable
 fun SmartEmergencyDialog(
     patient: Patient,
     language: AppLanguage = AppLanguage.HINDI,
+    assignedDoctor: Doctor? = null,
+    onCallDoctors: List<Doctor> = emptyList(),
     onDismiss: () -> Unit,
     onSosDispatched: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val activeSession by TeleCallingManager.currentSession.collectAsStateWithLifecycle()
 
     // Countdown state: 3 -> 2 -> 1 -> 0 (Triggered)
     var countdownSeconds by remember { mutableStateOf(3) }
@@ -209,10 +213,105 @@ fun SmartEmergencyDialog(
 
                     HorizontalDivider(color = GlumeBorder)
 
-                    // BUTTON 1: Giant Red "Call for Help Now (108)" (72dp height touch target)
+                    // Live Emergency Call Routing State
+                    if (activeSession != null && activeSession?.mode == CallMode.EMERGENCY) {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = GlumeAlertContainer,
+                            border = BorderStroke(1.5.dp, GlumeAlertCoral),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text("🚨", fontSize = 20.sp)
+                                    Text(
+                                        text = "EMERGENCY CALL IN PROGRESS",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = GlumeAlertText
+                                    )
+                                }
+                                Text(
+                                    text = activeSession?.statusMessage ?: "Connecting…",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumeTextPrimary
+                                )
+                                Text(
+                                    text = "Target: Dr. ${activeSession?.doctorName} (${activeSession?.doctorSpecialty})",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = GlumeTextSecondary
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    if (activeSession?.type == CallType.VIDEO) {
+                                        OutlinedButton(
+                                            onClick = { TeleCallingManager.switchToVoice() },
+                                            shape = PillShape,
+                                            modifier = Modifier.weight(1f).height(40.dp)
+                                        ) {
+                                            Text("Switch to Voice", style = MaterialTheme.typography.labelSmall, color = GlumeWarningAmber)
+                                        }
+                                    }
+                                    Button(
+                                        onClick = { TeleCallingManager.endCall("Emergency call cancelled by user") },
+                                        shape = PillShape,
+                                        colors = ButtonDefaults.buttonColors(containerColor = GlumeSurfaceElevated),
+                                        border = BorderStroke(1.dp, GlumeBorder),
+                                        modifier = Modifier.weight(1f).height(40.dp)
+                                    ) {
+                                        Text("End Call", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // EMERGENCY CALL BUTTON 1: Giant Voice Call Now (Default / Low-Bandwidth primary)
                     Button(
                         onClick = {
-                            EmergencySosHelper.dialEmergencyCall(context, "108")
+                            TeleCallingManager.startEmergencyCall(
+                                context = context,
+                                patient = patient,
+                                callType = CallType.VOICE,
+                                assignedDoctor = assignedDoctor,
+                                onCallDoctors = onCallDoctors
+                            )
+                        },
+                        shape = CardShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint),
+                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            Text("🎙️", fontSize = 20.sp)
+                            Text(
+                                text = if (language == AppLanguage.HINDI) "आपातकालीन वॉयस कॉल (On-Call Doctor)" else "🎙️ Voice Call Now (On-Call Doctor)",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = GlumeBackground
+                            )
+                        }
+                    }
+
+                    // EMERGENCY CALL BUTTON 2: Giant Video Call Now
+                    Button(
+                        onClick = {
+                            TeleCallingManager.startEmergencyCall(
+                                context = context,
+                                patient = patient,
+                                callType = CallType.VIDEO,
+                                assignedDoctor = assignedDoctor,
+                                onCallDoctors = onCallDoctors
+                            )
                         },
                         shape = CardShape,
                         colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral),
@@ -222,16 +321,38 @@ fun SmartEmergencyDialog(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
-                            Text("📞 108", fontSize = 20.sp, color = Color.White)
+                            Text("🎥", fontSize = 20.sp)
                             Text(
-                                text = if (language == AppLanguage.HINDI) "तुरंत 108 एम्बुलेंस कॉल करें" else "Call 108 Ambulance Now",
+                                text = if (language == AppLanguage.HINDI) "आपातकालीन वीडियो कॉल (Video SOS)" else "🎥 Video Call Now (Emergency SOS)",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = Color.White
                             )
                         }
                     }
 
-                    // BUTTON 2: Giant Orange "Message Doctor / ASHA" (56dp height touch target)
+                    // BUTTON 3: Giant Red "Call for Help Now (108)" (72dp height touch target)
+                    Button(
+                        onClick = {
+                            EmergencySosHelper.dialEmergencyCall(context, "108")
+                        },
+                        shape = CardShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = GlumeAlertCoral.copy(alpha = 0.85f)),
+                        modifier = Modifier.fillMaxWidth().height(52.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            Text("📞 108", fontSize = 18.sp, color = Color.White)
+                            Text(
+                                text = if (language == AppLanguage.HINDI) "तुरंत 108 एम्बुलेंस कॉल करें" else "Call 108 Ambulance Now",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    // BUTTON 4: Giant Orange "Call ASHA" (52dp height touch target)
                     Button(
                         onClick = {
                             EmergencySosHelper.dialEmergencyCall(context, patient.emergencyContact)
@@ -246,7 +367,7 @@ fun SmartEmergencyDialog(
                         ) {
                             Text("👩‍⚕️", fontSize = 18.sp)
                             Text(
-                                text = if (language == AppLanguage.HINDI) "आशा कार्यकर्ता को कॉल करें ()" else "Call ASHA ()",
+                                text = if (language == AppLanguage.HINDI) "आशा कार्यकर्ता को कॉल करें" else "Call ASHA Worker",
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                 color = Color.White
                             )
@@ -255,5 +376,22 @@ fun SmartEmergencyDialog(
                 }
             }
         }
+    }
+
+    // Active in-call modal for emergency
+    if (activeSession?.state == CallSessionState.CONNECTED) {
+        TeleConsultationModal(
+            patientName = patient.name,
+            doctorName = activeSession?.doctorName ?: "Doctor",
+            specialty = activeSession?.doctorSpecialty ?: "Emergency On-Call",
+            villageName = patient.villageName,
+            patientAge = patient.age,
+            onDismiss = {
+                TeleCallingManager.endCall("Patient ended call")
+            },
+            onEndCall = {
+                TeleCallingManager.endCall("Emergency consultation finished")
+            }
+        )
     }
 }

@@ -114,6 +114,14 @@ fun VitalSenseNavGraph(
 
     var showSplash by remember { mutableStateOf(true) }
 
+    LaunchedEffect(Unit) {
+        com.vitalsense.app.core.call.TeleCallingManager.onCallCompletedListener = { callLog ->
+            coroutineScope.launch {
+                repository.saveCallLog(callLog)
+            }
+        }
+    }
+
     AnimatedContent(
         targetState = showSplash,
         transitionSpec = {
@@ -274,7 +282,12 @@ fun VitalSenseNavGraph(
                                                                 patientQueueViewModel.checkIn(apptId)
                                                                 currentPatientScreen = "queue_status"
                                                             },
-                                                            onViewLiveQueue = { currentPatientScreen = "queue_status" }
+                                                            onViewLiveQueue = { currentPatientScreen = "queue_status" },
+                                                            onBookAppointment = { appt ->
+                                                                coroutineScope.launch {
+                                                                    repository.scheduleAppointment(appt)
+                                                                }
+                                                            }
                                                         )
                                                     }
                                                     "queue_status" -> {

@@ -2,6 +2,7 @@ package com.vitalsense.app.feature.doctor
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vitalsense.app.core.ui.util.touchSpring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vitalsense.app.core.call.*
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
@@ -55,6 +58,10 @@ fun DoctorHomeScreen(
     var activeTeleConsultationPatient by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var restockToastMessage by remember { mutableStateOf<String?>(null) }
+    var onCallStatus by remember { mutableStateOf(doctor.onCallStatus) }
+
+    // Live calling session
+    val activeCallSession by TeleCallingManager.currentSession.collectAsStateWithLifecycle()
 
     // Accordion expansion states
     var expandedSos by remember { mutableStateOf(false) }
@@ -92,22 +99,90 @@ fun DoctorHomeScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
         contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
-        // 1. Glume Header Greeting: "Hi, Dr. Rajesh!"
+        // 1. Glume Header Greeting: "Hi, Dr. Rajesh!" & On-Call Status Toggle
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-                Text(
-                    text = "Hi, ${doctor.name}!",
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
+                ) {
+                    Text(
+                        text = "Hi, ${doctor.name}!",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp
+                        ),
+                        color = GlumeTextPrimary
+                    )
+                    Text(
+                        text = "${doctor.specialty.displayName} · ${doctor.hospitalName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = GlumeTextSecondary
+                    )
+                }
+
+                // On-Call Status Toggle Button (Available / Busy / Offline)
+                Surface(
+                    shape = PillShape,
+                    color = when (onCallStatus) {
+                        DoctorAvailabilityStatus.AVAILABLE -> GlumeSuccessContainer
+                        DoctorAvailabilityStatus.BUSY -> GlumeWarningContainer
+                        DoctorAvailabilityStatus.OFFLINE -> GlumeSurfaceElevated
+                    },
+                    border = BorderStroke(
+                        1.dp,
+                        when (onCallStatus) {
+                            DoctorAvailabilityStatus.AVAILABLE -> GlumeSuccessMint
+                            DoctorAvailabilityStatus.BUSY -> GlumeWarningAmber
+                            DoctorAvailabilityStatus.OFFLINE -> GlumeBorder
+                        }
                     ),
-                    color = GlumeTextPrimary
-                )
-                Text(
-                    text = "${doctor.specialty.displayName} · ${doctor.hospitalName}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = GlumeTextSecondary
-                )
+                    modifier = Modifier.clickable {
+                        onCallStatus = when (onCallStatus) {
+                            DoctorAvailabilityStatus.AVAILABLE -> DoctorAvailabilityStatus.BUSY
+                            DoctorAvailabilityStatus.BUSY -> DoctorAvailabilityStatus.OFFLINE
+                            DoctorAvailabilityStatus.OFFLINE -> DoctorAvailabilityStatus.AVAILABLE
+                        }
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    when (onCallStatus) {
+                                        DoctorAvailabilityStatus.AVAILABLE -> GlumeSuccessMint
+                                        DoctorAvailabilityStatus.BUSY -> GlumeWarningAmber
+                                        DoctorAvailabilityStatus.OFFLINE -> GlumeTextSecondary
+                                    }
+                                )
+                        )
+                        Text(
+                            text = when (onCallStatus) {
+                                DoctorAvailabilityStatus.AVAILABLE -> "🟢 On-Call"
+                                DoctorAvailabilityStatus.BUSY -> "🟡 Busy"
+                                DoctorAvailabilityStatus.OFFLINE -> "🔴 Offline"
+                            },
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = when (onCallStatus) {
+                                    DoctorAvailabilityStatus.AVAILABLE -> GlumeSuccessMint
+                                    DoctorAvailabilityStatus.BUSY -> GlumeWarningAmber
+                                    DoctorAvailabilityStatus.OFFLINE -> GlumeTextSecondary
+                                }
+                            )
+                        )
+                    }
+                }
             }
         }
 
@@ -649,16 +724,34 @@ fun DoctorHomeScreen(
                                             color = GlumeTextSecondary
                                         )
                                     }
-                                    Surface(
-                                        shape = PillShape,
-                                        color = if (isPending) GlumeWarningContainer else GlumeSuccessContainer
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        Text(
-                                            text = appointment.status,
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp),
-                                            color = if (isPending) GlumeWarningAmber else GlumeSuccessText
-                                        )
+                                        // Call Type Badge
+                                        Surface(
+                                            shape = PillShape,
+                                            color = GlumePrimaryPurpleContainer
+                                        ) {
+                                            Text(
+                                                text = if (appointment.callType == CallType.VOICE) "🎙️ Voice" else "📹 Video",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp),
+                                                color = GlumePrimaryPurpleLight
+                                            )
+                                        }
+
+                                        Surface(
+                                            shape = PillShape,
+                                            color = if (isPending) GlumeWarningContainer else GlumeSuccessContainer
+                                        ) {
+                                            Text(
+                                                text = appointment.status,
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = 2.dp),
+                                                color = if (isPending) GlumeWarningAmber else GlumeSuccessText
+                                            )
+                                        }
                                     }
                                 }
 
@@ -685,32 +778,82 @@ fun DoctorHomeScreen(
                                         }
                                     }
                                 } else {
+                                    val joinWindowStatus = AppointmentScheduleHelper.evaluateJoinWindow(appointment)
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.End,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Button(
-                                            onClick = {
-                                                activeTeleConsultationPatient = appointment.patientName
-                                            },
-                                            shape = PillShape,
-                                            colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
-                                            contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
-                                            modifier = Modifier.defaultMinSize(minHeight = 32.dp)
-                                        ) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Text("📹", fontSize = 12.sp)
-                                                Text(
-                                                    text = "Join Tele-Consultation Call",
-                                                    style = MaterialTheme.typography.labelSmall.copy(
-                                                        color = Color.White,
-                                                        fontWeight = FontWeight.Bold
+                                        when (joinWindowStatus) {
+                                            JoinWindowStatus.JOIN_ACTIVE -> {
+                                                Surface(
+                                                    shape = PillShape,
+                                                    color = GlumeSuccessContainer
+                                                ) {
+                                                    Text(
+                                                        text = "● Room Open",
+                                                        style = MaterialTheme.typography.labelSmall.copy(
+                                                            color = GlumeSuccessMint,
+                                                            fontWeight = FontWeight.Bold
+                                                        ),
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                     )
+                                                }
+
+                                                Button(
+                                                    onClick = {
+                                                        activeTeleConsultationPatient = appointment.patientName
+                                                    },
+                                                    shape = PillShape,
+                                                    colors = ButtonDefaults.buttonColors(containerColor = GlumePrimaryPurple),
+                                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                                    modifier = Modifier.defaultMinSize(minHeight = 32.dp)
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                    ) {
+                                                        Text(if (appointment.callType == CallType.VOICE) "🎙️" else "📹", fontSize = 12.sp)
+                                                        Text(
+                                                            text = if (appointment.callType == CallType.VOICE) "Join Voice Call" else "Join Video Call",
+                                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                                color = Color.White,
+                                                                fontWeight = FontWeight.Bold
+                                                            )
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            JoinWindowStatus.BEFORE_WINDOW -> {
+                                                Text(
+                                                    text = "Room opens 10m before ${appointment.timeSlot}",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = GlumeTextSecondary
                                                 )
+                                                OutlinedButton(
+                                                    onClick = { showScheduleDialog = true },
+                                                    shape = PillShape,
+                                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                                    modifier = Modifier.defaultMinSize(minHeight = 30.dp)
+                                                ) {
+                                                    Text("Reschedule", style = MaterialTheme.typography.labelSmall, color = GlumePrimaryPurpleLight)
+                                                }
+                                            }
+                                            JoinWindowStatus.AFTER_WINDOW_MISSED -> {
+                                                Text(
+                                                    text = "Patient didn't join within window",
+                                                    style = MaterialTheme.typography.labelSmall.copy(color = GlumeAlertCoral),
+                                                )
+                                                Button(
+                                                    onClick = { showScheduleDialog = true },
+                                                    shape = PillShape,
+                                                    colors = ButtonDefaults.buttonColors(containerColor = GlumeSurfaceElevated),
+                                                    border = BorderStroke(1.dp, GlumeBorder),
+                                                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xxs),
+                                                    modifier = Modifier.defaultMinSize(minHeight = 30.dp)
+                                                ) {
+                                                    Text("Reschedule", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                                                }
                                             }
                                         }
                                     }
@@ -1017,9 +1160,138 @@ fun DoctorHomeScreen(
             patientName = patName,
             doctorName = doctor.name,
             specialty = doctor.specialty.displayName,
-            onDismiss = { activeTeleConsultationPatient = null },
+            onDismiss = {
+                activeTeleConsultationPatient = null
+                TeleCallingManager.endCall("Doctor dismissed call modal")
+            },
             onEndCall = { notes ->
                 activeTeleConsultationPatient = null
+                TeleCallingManager.endCall(notes)
+            }
+        )
+    }
+
+    // Incoming Call Modal Dialog (Distinct UI for Appointment vs Emergency)
+    val incomingSession = activeCallSession
+    if (incomingSession != null && incomingSession.state == CallSessionState.INCOMING_RINGING) {
+        val isEmergency = incomingSession.mode == CallMode.EMERGENCY
+
+        AlertDialog(
+            onDismissRequest = {
+                TeleCallingManager.declineCall()
+            },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(if (isEmergency) "🚨" else "📅", fontSize = 24.sp)
+                    Text(
+                        text = if (isEmergency) "CRITICAL EMERGENCY CALL" else "Incoming Appointment Call",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = if (isEmergency) GlumeAlertCoral else GlumePrimaryPurple
+                    )
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Patient: ${incomingSession.patientName} (${incomingSession.patientAge} yrs)",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                        color = GlumeTextPrimary
+                    )
+                    Text(
+                        text = "Village: ${incomingSession.villageName}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GlumeTextSecondary
+                    )
+
+                    if (isEmergency) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = GlumeAlertContainer,
+                            border = BorderStroke(1.dp, GlumeAlertCoral)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text(
+                                    text = "LIVE VITALS STATUS HALO",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = GlumeAlertText
+                                    )
+                                )
+                                Text(
+                                    text = incomingSession.patientVitalsSummary,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                    color = GlumeTextPrimary
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "Type: ${if (incomingSession.type == CallType.VOICE) "🎙️ Voice Consultation" else "📹 Video Consultation"}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = GlumeTextSecondary
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        TeleCallingManager.acceptCall()
+                        activeTeleConsultationPatient = incomingSession.patientName
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isEmergency) GlumeAlertCoral else GlumeSuccessMint
+                    ),
+                    shape = PillShape,
+                    modifier = Modifier.defaultMinSize(minHeight = 44.dp)
+                ) {
+                    Text(
+                        text = if (isEmergency) "🚨 Accept Emergency Call" else "Accept Call ✓",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                if (isEmergency) {
+                    OutlinedButton(
+                        onClick = {
+                            val targetPatient = patients.firstOrNull { it.id == incomingSession.patientId } ?: Patient(
+                                id = incomingSession.patientId,
+                                name = incomingSession.patientName,
+                                age = incomingSession.patientAge,
+                                gender = "M",
+                                phone = "9876543210",
+                                villageId = "vil_sundarpura",
+                                villageName = incomingSession.villageName,
+                                ashaWorkerId = "asha_1",
+                                ashaWorkerName = "Sarita Devi",
+                                currentRiskLevel = SeverityLevel.MODERATE,
+                                lastCondition = "Emergency triage",
+                                lastVisitDate = "Today",
+                                nextAppointmentDate = null,
+                                emergencyContact = "108"
+                            )
+                            TeleCallingManager.escalateEmergencyCall(context, targetPatient, listOf(doctor))
+                        },
+                        shape = PillShape
+                    ) {
+                        Text("Transfer to Next On-Call", color = GlumeWarningAmber)
+                    }
+                } else {
+                    TextButton(
+                        onClick = {
+                            TeleCallingManager.declineCall()
+                        },
+                        shape = PillShape
+                    ) {
+                        Text("Decline", color = GlumeTextSecondary)
+                    }
+                }
             }
         )
     }

@@ -1,29 +1,37 @@
 package com.vitalsense.app.feature.patient
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vitalsense.app.core.call.AppointmentScheduleHelper
+import com.vitalsense.app.core.call.JoinWindowStatus
+import com.vitalsense.app.core.call.TeleCallingManager
 import com.vitalsense.app.core.data.model.Appointment
+import com.vitalsense.app.core.data.model.CallType
+import com.vitalsense.app.core.data.model.UserRole
 import com.vitalsense.app.core.ui.components.TabularStatusChip
-import com.vitalsense.app.core.ui.components.VitalSenseButton
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.ui.util.AdaptiveScreenContainer
 import com.vitalsense.app.core.ui.util.touchSpring
+import com.vitalsense.app.core.util.AudioGuidanceHelper
+import com.vitalsense.app.feature.doctor.components.TeleConsultationModal
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,9 +42,15 @@ fun AppointmentsScreen(
     onRequestNew: () -> Unit,
     onBackClick: () -> Unit,
     onCheckIn: (appointmentId: String) -> Unit,
-    onViewLiveQueue: () -> Unit
+    onViewLiveQueue: () -> Unit,
+    onBookAppointment: (Appointment) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val today = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) }
+
+    var showBookCallDialog by remember { mutableStateOf(false) }
+    var activeCallAppt by remember { mutableStateOf<Appointment?>(null) }
+    var waitingRoomAppt by remember { mutableStateOf<Appointment?>(null) }
 
     AdaptiveScreenContainer {
         Scaffold(
@@ -44,7 +58,7 @@ fun AppointmentsScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "My Appointments",
+                            text = "My Consultations & Visits",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GlumeTextPrimary
                         )
@@ -56,6 +70,17 @@ fun AppointmentsScreen(
                                 contentDescription = "Back",
                                 tint = GlumeTextPrimary
                             )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            AudioGuidanceHelper.speak(
+                                context = context,
+                                text = "यहाँ आपके सभी डॉक्टर अपॉइंटमेंट और वीडियो कॉल उपलब्ध हैं। समय होने पर आप कॉल से जुड़ सकते हैं।",
+                                language = AppLanguage.HINDI
+                            )
+                        }) {
+                            Text("🔊", fontSize = 20.sp)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -77,7 +102,7 @@ fun AppointmentsScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Button(
-                            onClick = onRequestNew,
+                            onClick = { showBookCallDialog = true },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(48.dp)
@@ -87,7 +112,7 @@ fun AppointmentsScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Book Visit", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("Book a Call", fontWeight = FontWeight.Bold, color = Color.White)
                         }
 
                         OutlinedButton(
@@ -122,14 +147,14 @@ fun AppointmentsScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text("📅", fontSize = 32.sp)
+                                    Text("📅", fontSize = 36.sp)
                                     Text(
                                         text = "No appointments scheduled",
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                         color = GlumeTextPrimary
                                     )
                                     Text(
-                                        text = "Book a new clinical consultation with a village doctor.",
+                                        text = "Book a scheduled video or voice consultation with a verified specialist.",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = GlumeTextSecondary
                                     )
@@ -139,7 +164,9 @@ fun AppointmentsScreen(
                     }
                 } else {
                     items(appointments, key = { it.id }) { appt ->
-                        val canCheckIn = appt.dateFormatted == today || appt.status.contains("Confirm", ignoreCase = true)
+                        val joinStatus = AppointmentScheduleHelper.evaluateJoinWindow(appt)
+                        val isVideo = appt.callType == CallType.VIDEO
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -147,8 +174,12 @@ fun AppointmentsScreen(
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = NagarSevaSurfaceLight),
                             border = BorderStroke(
-                                1.dp,
-                                if (canCheckIn) NagarSevaPrimary.copy(alpha = 0.4f) else NagarSevaBorderLight
+                                1.5.dp,
+                                when (joinStatus) {
+                                    JoinWindowStatus.JOIN_ACTIVE -> GlumeSuccessMint
+                                    JoinWindowStatus.AFTER_WINDOW_MISSED -> GlumeAlertCoral.copy(alpha = 0.5f)
+                                    JoinWindowStatus.BEFORE_WINDOW -> NagarSevaBorderLight
+                                }
                             ),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
@@ -163,47 +194,122 @@ fun AppointmentsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column {
-                                        Text(
-                                            text = "Dr. ${appt.doctorName}",
-                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = GlumeTextPrimary
-                                        )
-                                        Text(
-                                            text = "${appt.dateFormatted} · ${appt.timeSlot}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = GlumeTextSecondary
-                                        )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = if (isVideo) GlumePrimaryPurpleContainer else GlumeSuccessContainer,
+                                            modifier = Modifier.size(42.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text(if (isVideo) "📹" else "🎙️", fontSize = 20.sp)
+                                            }
+                                        }
+
+                                        Column {
+                                            Text(
+                                                text = "Dr. ${appt.doctorName}",
+                                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                                color = GlumeTextPrimary
+                                            )
+                                            Text(
+                                                text = "${appt.dateFormatted} · ${appt.timeSlot} · ${if (isVideo) "Video Call" else "Voice Call"}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = GlumeTextSecondary
+                                            )
+                                        }
                                     }
 
                                     TabularStatusChip(
-                                        statusText = appt.status.uppercase(),
-                                        containerColor = if (appt.status.contains("Confirm", ignoreCase = true)) NagarSevaStatusNormalBg else NagarSevaStatusProgressBg,
-                                        textColor = if (appt.status.contains("Confirm", ignoreCase = true)) NagarSevaStatusNormal else NagarSevaStatusProgress
+                                        statusText = when (joinStatus) {
+                                            JoinWindowStatus.JOIN_ACTIVE -> "READY TO JOIN"
+                                            JoinWindowStatus.AFTER_WINDOW_MISSED -> "MISSED"
+                                            JoinWindowStatus.BEFORE_WINDOW -> appt.status.uppercase()
+                                        },
+                                        containerColor = when (joinStatus) {
+                                            JoinWindowStatus.JOIN_ACTIVE -> NagarSevaStatusNormalBg
+                                            JoinWindowStatus.AFTER_WINDOW_MISSED -> GlumeAlertContainer
+                                            JoinWindowStatus.BEFORE_WINDOW -> NagarSevaStatusProgressBg
+                                        },
+                                        textColor = when (joinStatus) {
+                                            JoinWindowStatus.JOIN_ACTIVE -> NagarSevaStatusNormal
+                                            JoinWindowStatus.AFTER_WINDOW_MISSED -> GlumeAlertCoral
+                                            JoinWindowStatus.BEFORE_WINDOW -> NagarSevaStatusProgress
+                                        }
                                     )
                                 }
 
-                                if (canCheckIn) {
-                                    Button(
-                                        onClick = { onCheckIn(appt.id) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(44.dp)
-                                            .touchSpring(),
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            tint = Color.White
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "Check In for Today's Visit",
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White
-                                        )
+                                // Interactive join or reschedule action (56dp min height touch targets)
+                                when (joinStatus) {
+                                    JoinWindowStatus.JOIN_ACTIVE -> {
+                                        Button(
+                                            onClick = {
+                                                TeleCallingManager.startAppointmentCall(appt, isDoctor = false)
+                                                waitingRoomAppt = appt
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(56.dp)
+                                                .touchSpring(),
+                                            shape = RoundedCornerShape(12.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint)
+                                        ) {
+                                            Text(if (isVideo) "📹" else "🎙️", fontSize = 18.sp)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = if (isVideo) "Join Video Consultation Now" else "Join Voice Consultation Now",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp,
+                                                color = GlumeBackground
+                                            )
+                                        }
+                                    }
+
+                                    JoinWindowStatus.BEFORE_WINDOW -> {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Room opens 10m before ${appt.timeSlot}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = GlumeTextSecondary
+                                            )
+                                            OutlinedButton(
+                                                onClick = { showBookCallDialog = true },
+                                                shape = RoundedCornerShape(8.dp),
+                                                modifier = Modifier.height(38.dp)
+                                            ) {
+                                                Text("Reschedule", fontWeight = FontWeight.Bold, color = NagarSevaPrimary)
+                                            }
+                                        }
+                                    }
+
+                                    JoinWindowStatus.AFTER_WINDOW_MISSED -> {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Doctor didn't join · Rebook slot?",
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    color = GlumeAlertCoral,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            )
+                                            Button(
+                                                onClick = { showBookCallDialog = true },
+                                                shape = RoundedCornerShape(8.dp),
+                                                colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
+                                                modifier = Modifier.height(38.dp)
+                                            ) {
+                                                Text("Rebook Call", color = Color.White, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -212,5 +318,209 @@ fun AppointmentsScreen(
                 }
             }
         }
+    }
+
+    // Waiting Room Dialog (Calm state with estimated queue position)
+    waitingRoomAppt?.let { appt ->
+        AlertDialog(
+            onDismissRequest = {
+                waitingRoomAppt = null
+                TeleCallingManager.endCall("Patient left waiting room")
+            },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("⏳", fontSize = 24.sp)
+                    Text(
+                        text = "Waiting for Doctor to Join…",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = GlumeTextPrimary
+                    )
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "You are in the waiting room for Dr. ${appt.doctorName}.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = GlumeTextPrimary
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = GlumePrimaryPurpleContainer,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "STATUS: Next in Queue",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = GlumePrimaryPurpleLight
+                                )
+                            )
+                            Text(
+                                text = "The doctor is wrapping up their previous patient note and will join momentarily. Please do not close the app.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GlumeTextPrimary
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Call Type: ${if (appt.callType == CallType.VOICE) "🎙️ Voice Only (Low Bandwidth)" else "📹 Video Consultation"}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = GlumeTextSecondary
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val current = waitingRoomAppt
+                        waitingRoomAppt = null
+                        activeCallAppt = current
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = GlumeSuccessMint),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Enter Consultation Room →", color = GlumeBackground, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        waitingRoomAppt = null
+                        TeleCallingManager.endCall("Patient cancelled waiting")
+                    }
+                ) {
+                    Text("Cancel / Leave", color = GlumeAlertCoral)
+                }
+            }
+        )
+    }
+
+    // Active In-Call Screen
+    activeCallAppt?.let { appt ->
+        TeleConsultationModal(
+            patientName = appt.patientName,
+            doctorName = appt.doctorName,
+            specialty = appt.doctorSpecialty,
+            onDismiss = {
+                activeCallAppt = null
+                TeleCallingManager.endCall("Patient ended consultation")
+            },
+            onEndCall = {
+                activeCallAppt = null
+                TeleCallingManager.endCall("Consultation completed")
+            }
+        )
+    }
+
+    // Book a Call Dialog
+    if (showBookCallDialog) {
+        var selectedCallType by remember { mutableStateOf(CallType.VIDEO) }
+        var selectedTimeSlot by remember { mutableStateOf("11:30 AM") }
+
+        AlertDialog(
+            onDismissRequest = { showBookCallDialog = false },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("📅", fontSize = 24.sp)
+                    Text("Book Tele-Consultation", fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Select consultation mode based on your internet connection:")
+
+                    // Video Call Option
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (selectedCallType == CallType.VIDEO) GlumePrimaryPurpleContainer else NagarSevaCanvasLight,
+                        border = BorderStroke(
+                            1.5.dp,
+                            if (selectedCallType == CallType.VIDEO) GlumePrimaryPurple else NagarSevaBorderLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedCallType = CallType.VIDEO }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("📹", fontSize = 24.sp)
+                            Column {
+                                Text("Video Call (HD)", fontWeight = FontWeight.Bold, color = GlumeTextPrimary)
+                                Text("Requires 4G / Wi-Fi signal", style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
+                            }
+                        }
+                    }
+
+                    // Voice Call Option (Recommended for 2G / rural areas)
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (selectedCallType == CallType.VOICE) GlumeSuccessContainer else NagarSevaCanvasLight,
+                        border = BorderStroke(
+                            1.5.dp,
+                            if (selectedCallType == CallType.VOICE) GlumeSuccessMint else NagarSevaBorderLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedCallType = CallType.VOICE }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("🎙️", fontSize = 24.sp)
+                            Column {
+                                Text("Voice Call (Low Bandwidth)", fontWeight = FontWeight.Bold, color = GlumeTextPrimary)
+                                Text("Recommended for 2G / weak village signal", style = MaterialTheme.typography.labelSmall, color = GlumeSuccessMint)
+                            }
+                        }
+                    }
+
+                    Text("Time Slot: Today, $selectedTimeSlot", style = MaterialTheme.typography.bodySmall, color = GlumeTextSecondary)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val newAppt = Appointment(
+                            id = "appt_${UUID.randomUUID().toString().take(8)}",
+                            patientId = "pat_ramesh",
+                            patientName = "Ramesh Kumar",
+                            doctorId = "doc_rajesh",
+                            doctorName = "Dr. Rajesh Varma",
+                            doctorSpecialty = "General Physician",
+                            dateFormatted = today,
+                            timeSlot = selectedTimeSlot,
+                            status = "Confirmed",
+                            proposedBy = UserRole.PATIENT,
+                            callType = selectedCallType,
+                            scheduledTimestamp = System.currentTimeMillis()
+                        )
+                        onBookAppointment(newAppt)
+                        showBookCallDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = NagarSevaPrimary),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Confirm Booking ✓", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBookCallDialog = false }) {
+                    Text("Cancel", color = GlumeTextSecondary)
+                }
+            }
+        )
     }
 }

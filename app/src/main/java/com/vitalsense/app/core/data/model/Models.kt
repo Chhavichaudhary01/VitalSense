@@ -40,6 +40,37 @@ data class AshaWorker(
     val alertCount: Int
 )
 
+enum class CallType {
+    VIDEO,
+    VOICE
+}
+
+enum class DoctorAvailabilityStatus {
+    AVAILABLE,
+    BUSY,
+    OFFLINE
+}
+
+enum class EmergencyCallOutcome {
+    CONNECTED,
+    ESCALATED_NEXT_DOCTOR,
+    FELL_BACK_TO_SMS
+}
+
+data class CallLog(
+    val id: String,
+    val callType: CallType,
+    val callMode: String, // "APPOINTMENT" or "EMERGENCY"
+    val patientId: String,
+    val patientName: String,
+    val doctorId: String,
+    val doctorName: String,
+    val timestamp: Long,
+    val durationSeconds: Int,
+    val outcome: EmergencyCallOutcome,
+    val outcomeNotes: String? = null
+)
+
 data class Doctor(
     val id: String,
     val name: String,
@@ -48,7 +79,8 @@ data class Doctor(
     val hospitalName: String,
     val distanceKm: Double,
     val phone: String,
-    val availableDays: String
+    val availableDays: String,
+    val onCallStatus: DoctorAvailabilityStatus = DoctorAvailabilityStatus.AVAILABLE
 )
 
 data class ConditionRecord(
@@ -110,9 +142,11 @@ data class Appointment(
     val doctorSpecialty: String,
     val dateFormatted: String,
     val timeSlot: String,
-    val status: String, // "Confirmed", "Pending", "Declined", "Completed"
+    val status: String, // "Confirmed", "Pending", "Declined", "Completed", "Missed"
     val proposedBy: UserRole,
-    val outcomeNotes: String? = null
+    val outcomeNotes: String? = null,
+    val callType: CallType = CallType.VIDEO,
+    val scheduledTimestamp: Long = 0L
 )
 
 data class BroadcastNotice(

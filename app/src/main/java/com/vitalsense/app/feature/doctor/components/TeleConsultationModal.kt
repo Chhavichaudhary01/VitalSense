@@ -259,7 +259,9 @@ fun TeleConsultationModal(
                     }
                 }
 
-                // 3. Live Tele-Vitals HUD Card (Left Side Overlay)
+                // 3. Live Tele-Vitals HUD Card (Left Side Overlay) & Full Vitals Toggle
+                var showVitalsSidePanel by remember { mutableStateOf(false) }
+
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = Color(0xCC181824),
@@ -267,20 +269,28 @@ fun TeleConsultationModal(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .padding(start = Spacing.md)
-                        .width(130.dp)
+                        .width(140.dp)
+                        .clickable { showVitalsSidePanel = !showVitalsSidePanel }
                 ) {
                     Column(
                         modifier = Modifier.padding(8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            text = "LIVE VITALS",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = GlumeTextSecondary
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "LIVE VITALS",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = GlumeTextSecondary
+                                )
                             )
-                        )
+                            Text(if (showVitalsSidePanel) "◀" else "▶", fontSize = 10.sp, color = GlumePrimaryPurple)
+                        }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -309,6 +319,56 @@ fun TeleConsultationModal(
                             Text("🌡️ Temp", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = GlumeTextSecondary))
                             Text("98.4°F", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GlumeTextPrimary))
                         }
+
+                        Text(
+                            text = "Tap to expand",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, color = GlumePrimaryPurple)
+                        )
+                    }
+                }
+
+                // Vitals Side Panel Overlay
+                if (showVitalsSidePanel) {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xF0181826),
+                        border = BorderStroke(1.5.dp, GlumePrimaryPurple),
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = Spacing.md)
+                            .width(220.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Patient Health Vitals",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "✕",
+                                    fontSize = 14.sp,
+                                    color = GlumeTextSecondary,
+                                    modifier = Modifier.clickable { showVitalsSidePanel = false }
+                                )
+                            }
+                            HorizontalDivider(color = GlumeBorder)
+                            Text("Patient: $patientName ($patientAge yrs)", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = GlumeTextPrimary)
+                            Text("Village: $villageName", style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
+                            Text("• Blood Pressure: 118/78 mmHg (Normal)", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                            Text("• Heart Rate: 74 bpm (Stable)", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                            Text("• Blood Oxygen: 98% SpO2 (Healthy)", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                            Text("• Temperature: 98.4°F", style = MaterialTheme.typography.labelSmall, color = GlumeTextPrimary)
+                            Text("• Chronic Condition: None", style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
+                            Text("• Last Visit: 12 days ago (PHC OPD)", style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
+                        }
                     }
                 }
 
@@ -320,7 +380,7 @@ fun TeleConsultationModal(
                     shadowElevation = 8.dp,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = Spacing.md, bottom = 120.dp)
+                        .padding(end = Spacing.md, bottom = 135.dp)
                         .size(width = 100.dp, height = 140.dp)
                 ) {
                     Box(
@@ -378,38 +438,69 @@ fun TeleConsultationModal(
                             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                         verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
+                        // Always-visible Switch to Voice call banner during video mode
+                        if (!isLowBandwidthMode) {
+                            Surface(
+                                shape = PillShape,
+                                color = GlumeWarningAmber.copy(alpha = 0.2f),
+                                border = BorderStroke(1.dp, GlumeWarningAmber),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        isLowBandwidthMode = true
+                                        isCameraOff = true
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text("🎙️", fontSize = 14.sp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Switch to Voice Call (Save Bandwidth / Weak Signal)",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = GlumeWarningAmber,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Mic Button
+                            // Mic Button (56dp touch target)
                             Surface(
                                 shape = CircleShape,
                                 color = if (isMuted) GlumeAlertCoral else GlumeSurfaceElevated,
                                 modifier = Modifier
-                                    .size(48.dp)
+                                    .size(56.dp)
                                     .clickable { isMuted = !isMuted }
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text(if (isMuted) "🔇" else "🎙️", fontSize = 20.sp)
+                                    Text(if (isMuted) "🔇" else "🎙️", fontSize = 22.sp)
                                 }
                             }
 
-                            // Camera Button
+                            // Camera Button (56dp touch target)
                             Surface(
                                 shape = CircleShape,
                                 color = if (isCameraOff) GlumeSurfaceSubtle else GlumeSurfaceElevated,
                                 modifier = Modifier
-                                    .size(48.dp)
+                                    .size(56.dp)
                                     .clickable { isCameraOff = !isCameraOff }
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text(if (isCameraOff) "🚫" else "📹", fontSize = 20.sp)
+                                    Text(if (isCameraOff) "🚫" else "📹", fontSize = 22.sp)
                                 }
                             }
 
-                            // 2G Mode Button
+                            // 2G Mode / Voice Button (56dp touch target)
                             Surface(
                                 shape = CircleShape,
                                 color = if (isLowBandwidthMode) GlumeWarningAmber.copy(alpha = 0.3f) else GlumeSurfaceElevated,
@@ -418,20 +509,23 @@ fun TeleConsultationModal(
                                     if (isLowBandwidthMode) GlumeWarningAmber else Color.Transparent
                                 ),
                                 modifier = Modifier
-                                    .size(48.dp)
-                                    .clickable { isLowBandwidthMode = !isLowBandwidthMode }
+                                    .size(56.dp)
+                                    .clickable {
+                                        isLowBandwidthMode = !isLowBandwidthMode
+                                        if (isLowBandwidthMode) isCameraOff = true
+                                    }
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text("📡", fontSize = 20.sp)
+                                    Text("📡", fontSize = 22.sp)
                                 }
                             }
 
-                            // End Call Button (Red Circle)
+                            // End Call Button (Red Circle, 64dp touch target)
                             Surface(
                                 shape = CircleShape,
                                 color = GlumeAlertCoral,
                                 modifier = Modifier
-                                    .size(56.dp)
+                                    .size(64.dp)
                                     .clickable {
                                         onEndCall("Tele-consultation completed ($formattedTime). Vitals verified, medication advised.")
                                     }
@@ -441,7 +535,7 @@ fun TeleConsultationModal(
                                         imageVector = Icons.Default.CallEnd,
                                         contentDescription = "End Call",
                                         tint = Color.White,
-                                        modifier = Modifier.size(28.dp)
+                                        modifier = Modifier.size(32.dp)
                                     )
                                 }
                             }

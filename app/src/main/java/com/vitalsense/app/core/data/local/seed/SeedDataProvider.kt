@@ -516,7 +516,7 @@ object SeedDataProvider {
         AppointmentEntity(
             it.id, it.patientId, it.patientName, it.doctorId, it.doctorName,
             it.doctorSpecialty, it.dateFormatted, it.timeSlot, it.status, it.proposedBy,
-            it.outcomeNotes
+            it.outcomeNotes, it.callType.name, it.scheduledTimestamp
         )
     }
 

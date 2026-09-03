@@ -38,9 +38,10 @@ import com.vitalsense.app.core.data.local.typeconverters.Converters
         BioMedicalEquipmentEntity::class,
         DoctorDaySlotEntity::class,
         QueueEntryEntity::class,
-        NearbyPharmacyCacheEntity::class
+        NearbyPharmacyCacheEntity::class,
+        CallLogEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -107,6 +108,28 @@ abstract class VitalSenseDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `appointments` ADD COLUMN `callType` TEXT NOT NULL DEFAULT 'VIDEO'")
+                db.execSQL("ALTER TABLE `appointments` ADD COLUMN `scheduledTimestamp` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `call_logs` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `callType` TEXT NOT NULL,
+                        `callMode` TEXT NOT NULL,
+                        `patientId` TEXT NOT NULL,
+                        `patientName` TEXT NOT NULL,
+                        `doctorId` TEXT NOT NULL,
+                        `doctorName` TEXT NOT NULL,
+                        `timestamp` INTEGER NOT NULL,
+                        `durationSeconds` INTEGER NOT NULL,
+                        `outcome` TEXT NOT NULL,
+                        `outcomeNotes` TEXT
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): VitalSenseDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -114,7 +137,7 @@ abstract class VitalSenseDatabase : RoomDatabase() {
                     VitalSenseDatabase::class.java,
                     "vitalsense_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

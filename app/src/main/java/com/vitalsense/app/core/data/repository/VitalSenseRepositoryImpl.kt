@@ -485,7 +485,8 @@ class VitalSenseRepositoryImpl @Inject constructor(
                     appointment.id, appointment.patientId, appointment.patientName,
                     appointment.doctorId, appointment.doctorName, appointment.doctorSpecialty,
                     appointment.dateFormatted, appointment.timeSlot, appointment.status,
-                    appointment.proposedBy, appointment.outcomeNotes
+                    appointment.proposedBy, appointment.outcomeNotes,
+                    appointment.callType.name, appointment.scheduledTimestamp
                 )
             )
 
@@ -535,7 +536,8 @@ class VitalSenseRepositoryImpl @Inject constructor(
                         appt.id, appt.patientId, appt.patientName,
                         appt.doctorId, appt.doctorName, appt.doctorSpecialty,
                         appt.dateFormatted, appt.timeSlot, appt.status,
-                        appt.proposedBy, appt.outcomeNotes
+                        appt.proposedBy, appt.outcomeNotes,
+                        appt.callType.name, appt.scheduledTimestamp
                     )
                 )
 
@@ -1293,6 +1295,54 @@ class VitalSenseRepositoryImpl @Inject constructor(
             completedAt = completedAt,
             outcomeNotes = outcomeNotes,
             isPendingSync = isPendingSync
+        )
+    }
+
+    override fun getCallLogs(): Flow<List<CallLog>> {
+        return dao.getAllCallLogs().map { entities ->
+            entities.map { it.toCallLog() }
+        }
+    }
+
+    override suspend fun saveCallLog(callLog: CallLog) {
+        val entity = CallLogEntity(
+            id = callLog.id,
+            callType = callLog.callType.name,
+            callMode = callLog.callMode,
+            patientId = callLog.patientId,
+            patientName = callLog.patientName,
+            doctorId = callLog.doctorId,
+            doctorName = callLog.doctorName,
+            timestamp = callLog.timestamp,
+            durationSeconds = callLog.durationSeconds,
+            outcome = callLog.outcome.name,
+            outcomeNotes = callLog.outcomeNotes
+        )
+        dao.insertCallLog(entity)
+        val outboxId = "outbox_call_${callLog.id}"
+        dao.insertOutboxRecord(
+            com.vitalsense.app.core.data.local.entity.OutboxEntity(
+                id = outboxId,
+                actionType = "CALL_LOG",
+                entityId = callLog.id,
+                payloadJson = gson.toJson(callLog)
+            )
+        )
+    }
+
+    private fun CallLogEntity.toCallLog(): CallLog {
+        return CallLog(
+            id = id,
+            callType = try { CallType.valueOf(callType) } catch (e: Exception) { CallType.VIDEO },
+            callMode = callMode,
+            patientId = patientId,
+            patientName = patientName,
+            doctorId = doctorId,
+            doctorName = doctorName,
+            timestamp = timestamp,
+            durationSeconds = durationSeconds,
+            outcome = try { EmergencyCallOutcome.valueOf(outcome) } catch (e: Exception) { EmergencyCallOutcome.CONNECTED },
+            outcomeNotes = outcomeNotes
         )
     }
 }

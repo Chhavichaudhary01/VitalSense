@@ -113,7 +113,9 @@ data class AppointmentEntity(
     val timeSlot: String,
     val status: String,
     val proposedBy: UserRole,
-    val outcomeNotes: String? = null
+    val outcomeNotes: String? = null,
+    val callType: String = "VIDEO",
+    val scheduledTimestamp: Long = 0L
 )
 
 @Entity(tableName = "broadcast_notices")
@@ -360,5 +362,21 @@ data class NearbyPharmacyCacheEntity(
     val phoneNumber: String?,
     val cachedAt: Long
 )
+
+@Entity(tableName = "call_logs")
+data class CallLogEntity(
+    @PrimaryKey val id: String,
+    val callType: String,
+    val callMode: String,
+    val patientId: String,
+    val patientName: String,
+    val doctorId: String,
+    val doctorName: String,
+    val timestamp: Long,
+    val durationSeconds: Int,
+    val outcome: String,
+    val outcomeNotes: String? = null
+)
+
 
 
