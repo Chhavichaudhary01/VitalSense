@@ -29,7 +29,19 @@ import com.vitalsense.app.core.ui.theme.*
 import kotlinx.coroutines.delay
 import com.vitalsense.app.R
 import androidx.compose.ui.res.stringResource
+import android.Manifest
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun TeleConsultationModal(
     patientName: String,
@@ -46,6 +58,19 @@ fun TeleConsultationModal(
     var callSeconds by remember { mutableIntStateOf(0) }
     var consultationNotes by remember { mutableStateOf("") }
     var showRxSheet by remember { mutableStateOf(false) }
+
+    val permissionState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
+    )
+
+    LaunchedEffect(Unit) {
+        if (!permissionState.allPermissionsGranted) {
+            permissionState.launchMultiplePermissionRequest()
+        }
+    }
 
     // Live call duration timer
     LaunchedEffect(Unit) {
@@ -392,19 +417,23 @@ fun TeleConsultationModal(
                         if (isCameraOff) {
                             Text("📷 Off", style = MaterialTheme.typography.labelSmall, color = GlumeTextSecondary)
                         } else {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Text("👨‍⚕️", fontSize = 42.sp)
-                                Text(
-                                    text = "You",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
+                            if (permissionState.allPermissionsGranted) {
+                                CameraPreview(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(14.dp)))
+                            } else {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text("👨‍⚕️", fontSize = 42.sp)
+                                    Text(
+                                        text = "You",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
 
@@ -547,4 +576,41 @@ fun TeleConsultationModal(
             }
         }
     }
+}
+
+@Composable
+fun CameraPreview(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    AndroidView(
+        modifier = modifier,
+        factory = { ctx ->
+            val previewView = PreviewView(ctx).apply {
+                this.scaleType = PreviewView.ScaleType.FILL_CENTER
+            }
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
+                val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        cameraSelector,
+                        preview
+                    )
+                } catch (exc: Exception) {
+                    // Ignore exceptions for simplicity
+                }
+            }, ContextCompat.getMainExecutor(ctx))
+
+            previewView
+        }
+    )
 }
