@@ -46,6 +46,7 @@ fun CameraCaptureView(
     onPhotoCaptured: (File) -> Unit,
     onManualEntryFallback: () -> Unit,
     onClose: () -> Unit,
+    onLaunchDocumentScanner: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -277,6 +278,23 @@ fun CameraCaptureView(
                     } else {
                         Text("📷", fontSize = 26.sp)
                     }
+                }
+            }
+
+            if (onLaunchDocumentScanner != null) {
+                Button(
+                    onClick = onLaunchDocumentScanner,
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = GlumePrimaryPurple,
+                        contentColor = Color.White
+                    ),
+                    contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.xs)
+                ) {
+                    Text(
+                        text = "✨ Google Auto-Crop & Clean Scanner",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                    )
                 }
             }
 

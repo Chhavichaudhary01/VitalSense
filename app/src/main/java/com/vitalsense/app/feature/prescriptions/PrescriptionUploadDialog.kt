@@ -29,6 +29,13 @@ import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.prescriptions.ocr.CameraCaptureView
 import com.vitalsense.app.feature.prescriptions.ocr.PrescriptionOcrResultScreen
 import com.vitalsense.app.feature.prescriptions.ocr.PrescriptionPhotoReviewScreen
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -49,6 +56,56 @@ fun PrescriptionUploadDialog(
     var selectedTab by remember { mutableStateOf(0) } // 0: Camera / AI Scan, 1: Write Down (Manual)
     var ocrStep by remember { mutableStateOf(OcrStep.CAPTURE) }
     var capturedPhotoFile by remember { mutableStateOf<File?>(null) }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context as? Activity
+
+    val scannerOptions = remember {
+        GmsDocumentScannerOptions.Builder()
+            .setGalleryImportAllowed(true)
+            .setPageLimit(1)
+            .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
+            .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+            .build()
+    }
+
+    val docScannerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
+            val pageUri = scanResult?.pages?.firstOrNull()?.imageUri
+            if (pageUri != null) {
+                try {
+                    val cacheFile = File(context.cacheDir, "doc_scan_${System.currentTimeMillis()}.jpg")
+                    context.contentResolver.openInputStream(pageUri)?.use { input ->
+                        cacheFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    capturedPhotoFile = cacheFile
+                    ocrStep = OcrStep.RESULT
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    val launchDocumentScanner: () -> Unit = {
+        if (activity != null) {
+            val scannerClient = GmsDocumentScanning.getClient(scannerOptions)
+            scannerClient.getStartScanIntent(activity)
+                .addOnSuccessListener { intentSender ->
+                    docScannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+                }
+                .addOnFailureListener { e ->
+                    ocrStep = OcrStep.CAPTURE
+                }
+        } else {
+            ocrStep = OcrStep.CAPTURE
+        }
+    }
 
     // --- Manual Entry State ---
     var manualDoctorName by remember { mutableStateOf("") }
@@ -149,6 +206,7 @@ fun PrescriptionUploadDialog(
                                     selectedTab = 1
                                 },
                                 onClose = onDismiss,
+                                onLaunchDocumentScanner = launchDocumentScanner,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
