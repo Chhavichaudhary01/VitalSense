@@ -63,7 +63,7 @@ fun ChangeLanguageDialog(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = Icons.Default.Language,
+                                    imageVector = Icons.Outlined.Language,
                                     contentDescription = "Language",
                                     tint = VS_Primary,
                                     modifier = Modifier.size(22.dp)
