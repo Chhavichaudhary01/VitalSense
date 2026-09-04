@@ -3,8 +3,8 @@ package com.vitalsense.app.core.ui.components
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,7 +31,7 @@ fun InlineHelpBanner(
     ) {
         Surface(
             shape = CardShape,
-            color = LavenderSecondary.copy(alpha = 0.25f),
+            color = VS_PrimaryContainer.copy(alpha = 0.25f),
             modifier = modifier
                 .fillMaxWidth()
                 .padding(vertical = 6.dp)
@@ -46,7 +46,7 @@ fun InlineHelpBanner(
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = "Help Guide",
-                    tint = TextPrimaryNearBlack,
+                    tint = VS_OnBackground,
                     modifier = Modifier.size(20.dp)
                 )
 
@@ -57,13 +57,13 @@ fun InlineHelpBanner(
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         ),
-                        color = TextPrimaryNearBlack
+                        color = VS_OnBackground
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = message,
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                        color = TextSecondaryMuted
+                        color = VS_OnSurfaceVariant
                     )
                 }
 
@@ -77,7 +77,7 @@ fun InlineHelpBanner(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Dismiss",
-                        tint = TextSecondaryMuted,
+                        tint = VS_OnSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                 }
