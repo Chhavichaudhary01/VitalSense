@@ -89,7 +89,7 @@ fun ChangeLanguageDialog(
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector = Icons.Outlined.Close,
                             contentDescription = "Close",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -165,7 +165,7 @@ fun ChangeLanguageDialog(
                                         )
                                     }
                                     Icon(
-                                        imageVector = Icons.Default.CheckCircle,
+                                        imageVector = Icons.Outlined.CheckCircle,
                                         contentDescription = "Selected",
                                         tint = VS_Primary,
                                         modifier = Modifier.size(20.dp)
@@ -179,3 +179,4 @@ fun ChangeLanguageDialog(
         }
     }
 }
+

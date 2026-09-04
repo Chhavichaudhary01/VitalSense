@@ -140,11 +140,11 @@ fun AshaHomeScreen(
                         )
                     }
 
-                    GlumeProgressRing(
-                        progressFraction = followUpFraction,
-                        size = 72.dp,
+                    CircularProgressIndicator(
+                        progress = followUpFraction,
+                        modifier = Modifier.size(72.dp),
                         strokeWidth = 7.dp,
-                        ringColor = VS_Primary,
+                        color = VS_Primary,
                         trackColor = VS_SurfaceVariant
                     )
                 }

@@ -257,13 +257,13 @@ fun DoctorHomeScreen(
                         )
                     }
 
-                    GlumeProgressRing(
-                        progressFraction = completionFraction,
-                        size = 72.dp,
-                        strokeWidth = 7.dp,
-                        ringColor = VS_Success,
-                        trackColor = VS_SurfaceVariant
-                    )
+                    CircularProgressIndicator(
+progress = completionFraction,
+modifier = Modifier.size(72.dp),
+strokeWidth = 7.dp,
+color = VS_Success,
+trackColor = VS_SurfaceVariant
+)
                 }
             }
         }
@@ -1469,3 +1469,4 @@ fun DoctorHomeScreen(
         )
     }
 }
+

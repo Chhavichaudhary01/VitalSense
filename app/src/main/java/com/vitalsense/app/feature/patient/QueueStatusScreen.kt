@@ -101,7 +101,7 @@ fun QueueStatusScreen(
                                     colors = ButtonDefaults.buttonColors(containerColor = VS_Primary),
                                     modifier = Modifier.touchSpring()
                                 ) {
-                                    Icon(Icons.Default.ConfirmationNumber, contentDescription = null, tint = Color.White)
+                                    Icon(Icons.Outlined.ConfirmationNumber, contentDescription = null, tint = Color.White)
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text("Get Instant Token for Today", fontWeight = FontWeight.Bold, color = Color.White)
                                 }
@@ -280,7 +280,7 @@ fun QueueStatusScreen(
                             border = BorderStroke(1.dp, VS_Error.copy(alpha = 0.5f))
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Close,
+                                imageVector = Icons.Outlined.Close,
                                 contentDescription = null,
                                 tint = VS_Error,
                                 modifier = Modifier.size(18.dp)
@@ -298,4 +298,5 @@ fun QueueStatusScreen(
         }
     }
 }
+
 

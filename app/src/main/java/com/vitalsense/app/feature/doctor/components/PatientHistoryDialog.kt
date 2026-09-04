@@ -303,8 +303,7 @@ fun PatientHistoryDialog(
                         val steps = medicalHistory.sortedByDescending { it.timestamp }.map { entry ->
                             com.vitalsense.app.core.ui.components.VSTimelineStep(
                                 title = entry.title,
-                                timestamp = entry.dateFormatted,
-                                description = "${entry.details}\nBy ${entry.doctorName}",
+                                timestamp = "${entry.dateFormatted}\n${entry.details}\nBy ${entry.doctorName}",
                                 completed = true
                             )
                         }
@@ -322,3 +321,4 @@ fun PatientHistoryDialog(
         }
     }
 }
+

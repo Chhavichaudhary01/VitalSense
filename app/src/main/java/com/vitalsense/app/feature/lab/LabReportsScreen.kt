@@ -95,7 +95,7 @@ fun LabReportsScreen(
                 actions = {
                     IconButton(onClick = { showOrderDialog = true }) {
                         Icon(
-                            imageVector = Icons.Default.AddCircle,
+                            imageVector = Icons.Outlined.AddCircle,
                             contentDescription = stringResource(R.string.viewLabDiagnostics),
                             tint = VS_Primary
                         )
@@ -196,7 +196,7 @@ fun LabReportsScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
-                                imageVector = Icons.Default.Science,
+                                imageVector = Icons.Outlined.Science,
                                 contentDescription = null,
                                 modifier = Modifier.size(48.dp),
                                 tint = VS_OnSurfaceVariant
@@ -275,7 +275,7 @@ fun LabReportCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Science,
+                            imageVector = Icons.Outlined.Science,
                             contentDescription = null,
                             tint = VS_Primary,
                             modifier = Modifier.size(18.dp)
@@ -408,7 +408,7 @@ fun LabReportDetailModal(
                     )
                 }
                 IconButton(onClick = onDismiss) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = VS_OnSurfaceVariant)
+                    Icon(imageVector = Icons.Outlined.Close, contentDescription = "Close", tint = VS_OnSurfaceVariant)
                 }
             }
         },
@@ -655,4 +655,5 @@ fun OrderLabTestDialog(
         containerColor = VS_Background
     )
 }
+
 

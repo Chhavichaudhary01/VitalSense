@@ -79,7 +79,7 @@ fun OpdQueueScreen(
                 actions = {
                     IconButton(onClick = { showBookTokenDialog = true }) {
                         Icon(
-                            imageVector = Icons.Default.ConfirmationNumber,
+                            imageVector = Icons.Outlined.ConfirmationNumber,
                             contentDescription = stringResource(R.string.bookOpdToken),
                             tint = VS_Primary
                         )
@@ -340,7 +340,7 @@ fun NoActiveTokenCard(
             verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             Icon(
-                imageVector = Icons.Default.ConfirmationNumber,
+                imageVector = Icons.Outlined.ConfirmationNumber,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
                 tint = VS_Primary
@@ -549,4 +549,5 @@ fun BookOpdTokenDialog(
         containerColor = VS_Background
     )
 }
+
 

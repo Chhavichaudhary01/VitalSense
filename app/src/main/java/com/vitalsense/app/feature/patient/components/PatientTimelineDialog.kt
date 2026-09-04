@@ -94,8 +94,7 @@ fun PatientTimelineDialog(
                 val steps = events.map { event ->
                     VSTimelineStep(
                         title = event.title,
-                        timestamp = event.date,
-                        description = event.description + (if (event.doctorName != null) "\nAttending: ${event.doctorName}" else ""),
+                        timestamp = "${event.date}\n${event.description}" + (if (event.doctorName != null) "\nAttending: ${event.doctorName}" else ""),
                         completed = true
                     )
                 }
