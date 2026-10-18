@@ -585,6 +585,229 @@ class FirestoreDataSource @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    fun getPatientsStream(): Flow<List<Patient>> = callbackFlow {
+        val listener = patientsCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.w(TAG, "Patients stream transient error: ${error.message}")
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val list = snapshot.documents.mapNotNull { doc ->
+                    try {
+                        val riskStr = doc.getString("currentRiskLevel") ?: SeverityLevel.LOW.name
+                        val risk = runCatching { SeverityLevel.valueOf(riskStr) }.getOrDefault(SeverityLevel.LOW)
+                        Patient(
+                            id = doc.getString("id") ?: doc.id,
+                            name = doc.getString("name") ?: "",
+                            age = doc.getLong("age")?.toInt() ?: 0,
+                            gender = doc.getString("gender") ?: "Other",
+                            phone = doc.getString("phone") ?: "",
+                            villageId = doc.getString("villageId") ?: "",
+                            villageName = doc.getString("villageName") ?: "",
+                            ashaWorkerId = doc.getString("ashaWorkerId") ?: "",
+                            ashaWorkerName = doc.getString("ashaWorkerName") ?: "",
+                            currentRiskLevel = risk,
+                            lastCondition = doc.getString("lastCondition") ?: "",
+                            lastVisitDate = doc.getString("lastVisitDate") ?: "",
+                            nextAppointmentDate = doc.getString("nextAppointmentDate"),
+                            emergencyContact = doc.getString("emergencyContact") ?: "",
+                            profilePhotoUrl = doc.getString("profilePhotoUrl")
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                trySend(list)
+            }
+        }
+        awaitClose { listener.remove() }
+    }
+
+    fun getPrescriptionsStream(): Flow<List<Prescription>> = callbackFlow {
+        val listener = prescriptionsCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.w(TAG, "Prescriptions stream transient error: ${error.message}")
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val list = snapshot.documents.mapNotNull { doc ->
+                    try {
+                        @Suppress("UNCHECKED_CAST")
+                        val medsRaw = doc.get("medicines") as? List<Map<String, Any>> ?: emptyList()
+                        val meds = medsRaw.mapNotNull { m ->
+                            try {
+                                PrescribedMedicine(
+                                    name = m["name"] as? String ?: "",
+                                    dosage = m["dosage"] as? String ?: "",
+                                    frequency = m["frequency"] as? String ?: "",
+                                    duration = m["duration"] as? String ?: "",
+                                    quantity = (m["quantity"] as? Number)?.toInt() ?: 1
+                                )
+                            } catch (e: Exception) { null }
+                        }
+                        Prescription(
+                            id = doc.getString("id") ?: doc.id,
+                            caseId = doc.getString("caseId")?.takeIf { it.isNotBlank() },
+                            patientId = doc.getString("patientId") ?: "",
+                            patientName = doc.getString("patientName") ?: "",
+                            doctorId = doc.getString("doctorId") ?: "",
+                            doctorName = doc.getString("doctorName") ?: "",
+                            doctorSpecialty = doc.getString("doctorSpecialty") ?: "",
+                            timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis(),
+                            dateFormatted = doc.getString("dateFormatted") ?: "",
+                            medicines = meds,
+                            instructions = doc.getString("instructions") ?: "",
+                            isOcrExtracted = doc.getBoolean("isOcrExtracted") ?: false
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                trySend(list)
+            }
+        }
+        awaitClose { listener.remove() }
+    }
+
+    fun getAppointmentsStream(): Flow<List<Appointment>> = callbackFlow {
+        val listener = appointmentsCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.w(TAG, "Appointments stream transient error: ${error.message}")
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val list = snapshot.documents.mapNotNull { doc ->
+                    try {
+                        val proposedByStr = doc.getString("proposedBy") ?: UserRole.DOCTOR.name
+                        val proposedBy = runCatching { UserRole.valueOf(proposedByStr) }.getOrDefault(UserRole.DOCTOR)
+                        val callTypeStr = doc.getString("callType") ?: CallType.VIDEO.name
+                        val callType = runCatching { CallType.valueOf(callTypeStr) }.getOrDefault(CallType.VIDEO)
+                        Appointment(
+                            id = doc.getString("id") ?: doc.id,
+                            patientId = doc.getString("patientId") ?: "",
+                            patientName = doc.getString("patientName") ?: "",
+                            doctorId = doc.getString("doctorId") ?: "",
+                            doctorName = doc.getString("doctorName") ?: "",
+                            doctorSpecialty = doc.getString("doctorSpecialty") ?: "",
+                            dateFormatted = doc.getString("dateFormatted") ?: "",
+                            timeSlot = doc.getString("timeSlot") ?: "",
+                            status = doc.getString("status") ?: "SCHEDULED",
+                            proposedBy = proposedBy,
+                            outcomeNotes = doc.getString("outcomeNotes")?.takeIf { it.isNotBlank() },
+                            callType = callType,
+                            scheduledTimestamp = doc.getLong("scheduledTimestamp") ?: 0L
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                trySend(list)
+            }
+        }
+        awaitClose { listener.remove() }
+    }
+
+    fun getQueueEntriesStream(): Flow<List<QueueEntry>> = callbackFlow {
+        val listener = queueEntriesCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.w(TAG, "Queue entries stream transient error: ${error.message}")
+                return@addSnapshotListener
+            }
+            val list = snapshot?.documents?.mapNotNull { doc ->
+                try {
+                    val sourceStr = doc.getString("source") ?: QueueEntrySource.WALK_IN.name
+                    val source = runCatching { QueueEntrySource.valueOf(sourceStr) }.getOrDefault(QueueEntrySource.WALK_IN)
+                    val statusStr = doc.getString("status") ?: QueueEntryStatus.WAITING.name
+                    val status = runCatching { QueueEntryStatus.valueOf(statusStr) }.getOrDefault(QueueEntryStatus.WAITING)
+                    QueueEntry(
+                        id = doc.getString("id") ?: doc.id,
+                        doctorId = doc.getString("doctorId") ?: "",
+                        doctorName = doc.getString("doctorName") ?: "",
+                        dateFormatted = doc.getString("dateFormatted") ?: "",
+                        tokenNumber = doc.getLong("tokenNumber")?.toInt() ?: 0,
+                        provisionalToken = doc.getBoolean("provisionalToken") ?: false,
+                        appointmentId = doc.getString("appointmentId")?.ifEmpty { null },
+                        patientId = doc.getString("patientId") ?: "",
+                        patientName = doc.getString("patientName") ?: "",
+                        source = source,
+                        status = status,
+                        priorityFlag = doc.getBoolean("priorityFlag") ?: false,
+                        checkedInAt = doc.getLong("checkedInAt") ?: 0L,
+                        calledAt = doc.getLong("calledAt")?.takeIf { it > 0L },
+                        consultationStartedAt = doc.getLong("consultationStartedAt")?.takeIf { it > 0L },
+                        completedAt = doc.getLong("completedAt")?.takeIf { it > 0L },
+                        outcomeNotes = doc.getString("outcomeNotes")?.ifEmpty { null },
+                        isPendingSync = false
+                    )
+                } catch (e: Exception) { null }
+            } ?: emptyList()
+            trySend(list)
+        }
+        awaitClose { listener.remove() }
+    }
+
+    fun getReferralsStream(): Flow<List<Referral>> = callbackFlow {
+        val listener = referralsCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.w(TAG, "Referrals stream transient error: ${error.message}")
+                return@addSnapshotListener
+            }
+            val list = snapshot?.documents?.mapNotNull { doc ->
+                try {
+                    @Suppress("UNCHECKED_CAST")
+                    val historyRaw = doc.get("statusHistory") as? List<Map<String, Any>> ?: emptyList()
+                    val history = historyRaw.mapNotNull { h ->
+                        try {
+                            val stStr = h["status"] as? String ?: ReferralStatus.CREATED.name
+                            val st = runCatching { ReferralStatus.valueOf(stStr) }.getOrDefault(ReferralStatus.CREATED)
+                            ReferralStatusHistory(
+                                status = st,
+                                timestamp = (h["timestamp"] as? Number)?.toLong() ?: 0L,
+                                changedByUserId = h["changedByUserId"] as? String ?: "",
+                                note = h["note"] as? String
+                            )
+                        } catch (e: Exception) { null }
+                    }
+                    @Suppress("UNCHECKED_CAST")
+                    val attachedRaw = doc.get("attachedRecordIds") as? List<String> ?: emptyList()
+                    val urgencyStr = doc.getString("urgency") ?: ReferralUrgency.ROUTINE.name
+                    val urgency = runCatching { ReferralUrgency.valueOf(urgencyStr) }.getOrDefault(ReferralUrgency.ROUTINE)
+                    val statusStr = doc.getString("status") ?: ReferralStatus.CREATED.name
+                    val status = runCatching { ReferralStatus.valueOf(statusStr) }.getOrDefault(ReferralStatus.CREATED)
+                    Referral(
+                        id = doc.getString("id") ?: doc.id,
+                        patientId = doc.getString("patientId") ?: "",
+                        patientName = doc.getString("patientName") ?: "",
+                        referringUserId = doc.getString("referringUserId") ?: "",
+                        referringUserName = doc.getString("referringUserName") ?: "",
+                        referringUserSpecialty = doc.getString("referringUserSpecialty") ?: "",
+                        targetDoctorId = doc.getString("targetDoctorId")?.ifEmpty { null },
+                        targetDoctorName = doc.getString("targetDoctorName")?.ifEmpty { null },
+                        targetSpecialty = doc.getString("targetSpecialty") ?: "",
+                        reason = doc.getString("reason") ?: "",
+                        clinicalQuestion = doc.getString("clinicalQuestion") ?: "",
+                        urgency = urgency,
+                        attachedRecordIds = attachedRaw,
+                        status = status,
+                        statusHistory = history,
+                        declineReason = doc.getString("declineReason")?.ifEmpty { null },
+                        suggestedSpecialtyOrDoctor = doc.getString("suggestedSpecialtyOrDoctor")?.ifEmpty { null },
+                        infoRequestNote = doc.getString("infoRequestNote")?.ifEmpty { null },
+                        specialistFindings = doc.getString("specialistFindings")?.ifEmpty { null },
+                        specialistRecommendations = doc.getString("specialistRecommendations")?.ifEmpty { null },
+                        specialistFollowUpNeeded = doc.getBoolean("specialistFollowUpNeeded") ?: false,
+                        createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
+                        updatedAt = doc.getLong("updatedAt") ?: System.currentTimeMillis(),
+                        respondedAt = doc.getLong("respondedAt")?.takeIf { it > 0L },
+                        completedAt = doc.getLong("completedAt")?.takeIf { it > 0L }
+                    )
+                } catch (e: Exception) { null }
+            } ?: emptyList()
+            trySend(list)
+        }
+        awaitClose { listener.remove() }
+    }
+
     // --- LIVE QUEUE & APPOINTMENTS ---
 
     suspend fun assignAuthoritativeTokenAndSave(entry: QueueEntry): QueueEntry {

@@ -46,9 +46,11 @@ fun AdminHomeScreen(
     onNavigateToQueueOversight: () -> Unit = {},
     onNavigateToFacilityQuality: () -> Unit = {},
     onNavigateToDiagnostics: () -> Unit = {},
+    onResetDemoData: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showBroadcastDialog by remember { mutableStateOf(false) }
+    var showResetDialog by remember { mutableStateOf(false) }
     var broadcastTitle by remember { mutableStateOf("") }
     var broadcastMessage by remember { mutableStateOf("") }
     var selectedVillageName by remember { mutableStateOf("All Villages") }
@@ -103,6 +105,14 @@ fun AdminHomeScreen(
                     color = VS_OnSurfaceVariant
                 )
             }
+        }
+
+        // 1.05 Bharat Healthcare Impact Metrics (Audio 10)
+        item {
+            ImpactMetricsCard(
+                collapsible = true,
+                initiallyExpanded = true
+            )
         }
 
 
@@ -282,6 +292,109 @@ fun AdminHomeScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 color = VS_OnBackground
             )
+        }
+
+        // 3.0 Active Disease Clusters Early Warning Feed (Audio 9)
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .touchSpring(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = VS_Surface),
+                border = BorderStroke(1.dp, VS_Error.copy(alpha = 0.4f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text("🚨", fontSize = 16.sp)
+                            Text(
+                                text = "Real-Time Cluster Detection",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = VS_OnBackground
+                            )
+                        }
+                        Surface(
+                            shape = PillShape,
+                            color = VS_ErrorContainer
+                        ) {
+                            Text(
+                                text = "9–14 Days Early Warning",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = VS_OnErrorContainer
+                                ),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Aggregated symptom telemetry from ASHA rounds & OPD visits detected 3 active pathogen clusters:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = VS_OnSurfaceVariant
+                    )
+
+                    // 3 Cluster Pills: Dengue, Malaria, Diarrheal
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // Dengue
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFDE8E8),
+                            border = BorderStroke(1.dp, Color(0xFFF98080))
+                        ) {
+                            Column(modifier = Modifier.padding(6.dp)) {
+                                Text("🦟 Dengue", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF9B1C1C)))
+                                Text("Sundarpura · 8 cases", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color(0xFF9B1C1C)))
+                            }
+                        }
+
+                        // Malaria
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFEF08A).copy(alpha = 0.5f),
+                            border = BorderStroke(1.dp, Color(0xFFFACC15))
+                        ) {
+                            Column(modifier = Modifier.padding(6.dp)) {
+                                Text("🧪 Malaria", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF854D0E)))
+                                Text("Khairpur · 5 cases", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color(0xFF854D0E)))
+                            }
+                        }
+
+                        // Diarrheal
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFDBEAFE),
+                            border = BorderStroke(1.dp, Color(0xFF93C5FD))
+                        ) {
+                            Column(modifier = Modifier.padding(6.dp)) {
+                                Text("💧 Diarrheal", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF1E40AF)))
+                                Text("Rampur N · Water alert", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color(0xFF1E40AF)))
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // 3.1 Google Maps Outbreak Surveillance View
@@ -766,6 +879,95 @@ fun AdminHomeScreen(
                     Text(stringResource(R.string.allStockAboveThresholds), color = VS_OnSurfaceVariant)
                 }
             }
+
+            // Developer / Stage Demo Controls
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .touchSpring(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = VS_Surface),
+                    border = BorderStroke(1.dp, VS_Outline.copy(alpha = 0.5f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("🛠️", fontSize = 20.sp)
+                            Column {
+                                Text(
+                                    text = "Stage Demo & Data Control",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = VS_OnBackground
+                                )
+                                Text(
+                                    text = "Purge practice test cases and reset to clean seed data",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = VS_OnSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { showResetDialog = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = VS_ErrorContainer,
+                                contentColor = VS_Error
+                            ),
+                            shape = PillShape,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Reset Database to Clean Seed State",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Reset Demo Data Confirmation Dialog
+    if (showResetDialog) {
+        VitalSenseDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = "Reset Demo Data?",
+            subtitle = "Restore pristine seed state for live presentation",
+            icon = { Text("⚠️", fontSize = 22.sp) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onResetDemoData()
+                        showResetDialog = false
+                    },
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = VS_Error)
+                ) {
+                    Text("Confirm Reset", color = Color.White, style = MaterialTheme.typography.labelLarge)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showResetDialog = false },
+                    shape = PillShape
+                ) {
+                    Text(stringResource(R.string.cancel), color = VS_OnSurfaceVariant, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        ) {
+            Text(
+                text = "Are you sure? All unsynced local testing data and newly added patients/prescriptions will be wiped, restoring clean Rampur District seed data.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = VS_OnSurfaceVariant
+            )
         }
     }
 

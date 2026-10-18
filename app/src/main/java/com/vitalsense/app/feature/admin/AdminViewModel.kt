@@ -93,4 +93,15 @@ class AdminViewModel @Inject constructor(
             }
         }
     }
+
+    fun resetToCleanSeedData() {
+        viewModelScope.launch {
+            try {
+                repository.resetToCleanSeedData()
+                _uiEvent.emit("Database and demo state successfully reset to pristine seed data!")
+            } catch (e: Exception) {
+                _uiEvent.emit("Failed to reset database: ${e.localizedMessage ?: "Unknown error"}")
+            }
+        }
+    }
 }

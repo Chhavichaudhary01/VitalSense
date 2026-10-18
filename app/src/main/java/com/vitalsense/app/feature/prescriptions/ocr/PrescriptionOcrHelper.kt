@@ -149,6 +149,78 @@ object PrescriptionOcrHelper {
     }
 
     /**
+     * Crops a photo file to the exact rectangular region of the camera viewfinder frame.
+     * Takes into account EXIF orientation and the CameraX PreviewView FILL_CENTER scale & offset.
+     */
+    fun cropImageToFrame(
+        photoFile: File,
+        screenWidth: Int,
+        screenHeight: Int,
+        frameLeft: Float,
+        frameTop: Float,
+        frameRight: Float,
+        frameBottom: Float
+    ) {
+        try {
+            if (!photoFile.exists() || screenWidth <= 0 || screenHeight <= 0) return
+
+            // 1. Get EXIF orientation degrees
+            val exifDegrees = getExifRotation(photoFile.absolutePath)
+
+            // 2. Decode raw bitmap
+            val rawBitmap = BitmapFactory.decodeFile(photoFile.absolutePath) ?: return
+
+            // 3. Rotate bitmap according to EXIF so its coordinate space matches the screen
+            val orientedBitmap = rotateBitmap(rawBitmap, exifDegrees)
+            val bmpW = orientedBitmap.width
+            val bmpH = orientedBitmap.height
+
+            // 4. Calculate how PreviewView with ScaleType.FILL_CENTER mapped the bitmap to the screen
+            val scale = maxOf(screenWidth.toFloat() / bmpW, screenHeight.toFloat() / bmpH)
+            val scaledW = bmpW * scale
+            val scaledH = bmpH * scale
+
+            val offsetX = (screenWidth - scaledW) / 2f
+            val offsetY = (screenHeight - scaledH) / 2f
+
+            // Resolve frame bounds (fallback to center 80% if invalid)
+            val effectiveLeft = if (frameRight > frameLeft) frameLeft else screenWidth * 0.08f
+            val effectiveRight = if (frameRight > frameLeft) frameRight else screenWidth * 0.92f
+            val effectiveTop = if (frameBottom > frameTop) frameTop else screenHeight * 0.16f
+            val effectiveBottom = if (frameBottom > frameTop) frameBottom else screenHeight * 0.84f
+
+            // 5. Convert screen viewfinder box coordinates to bitmap pixel coordinates
+            val cropLeft = ((effectiveLeft - offsetX) / scale).toInt().coerceIn(0, bmpW - 1)
+            val cropTop = ((effectiveTop - offsetY) / scale).toInt().coerceIn(0, bmpH - 1)
+            val cropRight = ((effectiveRight - offsetX) / scale).toInt().coerceIn(cropLeft + 1, bmpW)
+            val cropBottom = ((effectiveBottom - offsetY) / scale).toInt().coerceIn(cropTop + 1, bmpH)
+
+            val cropWidth = cropRight - cropLeft
+            val cropHeight = cropBottom - cropTop
+
+            if (cropWidth > 20 && cropHeight > 20) {
+                val croppedBitmap = Bitmap.createBitmap(orientedBitmap, cropLeft, cropTop, cropWidth, cropHeight)
+
+                // Overwrite the file with the cropped upright JPEG image
+                java.io.FileOutputStream(photoFile).use { out ->
+                    croppedBitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
+                }
+
+                if (croppedBitmap != orientedBitmap) {
+                    croppedBitmap.recycle()
+                }
+            }
+
+            if (orientedBitmap != rawBitmap) {
+                orientedBitmap.recycle()
+            }
+            rawBitmap.recycle()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    /**
      * Checks if a line contains prescription context indicators:
      * - Dosage (500mg, 10ml, 1 tab)
      * - Frequency (1-0-1, TDS, BD, OD, HS, SOS, daily, etc.)
@@ -429,10 +501,29 @@ object PrescriptionOcrHelper {
         }
 
         val mealTiming = extractMealTiming(line)
-        return if (mealTiming.isNotEmpty() && !baseFrequency.contains("after food", ignoreCase = true)) {
-            "$baseFrequency · $mealTiming"
-        } else {
-            baseFrequency
+        val route = extractRoute(line)
+        val parts = mutableListOf(baseFrequency)
+        if (mealTiming.isNotEmpty() && !baseFrequency.contains("after food", ignoreCase = true)) {
+            parts.add(mealTiming)
+        }
+        if (route.isNotEmpty()) {
+            parts.add(route)
+        }
+        return parts.joinToString(" · ")
+    }
+
+    /**
+     * Decodes administration route (PO = Orally / Per Os, IV, IM)
+     */
+    fun extractRoute(line: String): String {
+        return when {
+            Regex("""\b(po|p\.o\.|per os|oral|orally)\b""", RegexOption.IGNORE_CASE).containsMatchIn(line) ->
+                "Orally (मुँह से)"
+            Regex("""\b(iv|i\.v\.|intravenous)\b""", RegexOption.IGNORE_CASE).containsMatchIn(line) ->
+                "IV Route"
+            Regex("""\b(im|i\.m\.|intramuscular)\b""", RegexOption.IGNORE_CASE).containsMatchIn(line) ->
+                "IM Route"
+            else -> ""
         }
     }
 

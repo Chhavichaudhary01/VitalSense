@@ -1,0 +1,4 @@
+1
+00:00:00,400 --> 00:00:19,192
+A photo of a paper prescription is processed on-device with ML Kit OCR, auto-cropped, and digitized into structured dosages. Patients can then locate prescribed medicines at nearby Jan Aushadhi stores with real-time stock indicators.
+

@@ -442,6 +442,8 @@ fun VitalSenseNavGraph(
                                                             patients = patients.filter { it.ashaWorkerId == activeAsha.id },
                                                             scrollState = ashaHomeScrollState,
                                                             notices = notices,
+                                                            isOffline = isOffline,
+                                                            pendingOutboxCount = pendingOutboxCount,
                                                             onSelectProxyPatient = { selectedPatient ->
                                                                 appStateHolder.setProxyPatient(selectedPatient)
                                                                 appStateHolder.switchRole(UserRole.PATIENT)
@@ -850,7 +852,8 @@ fun VitalSenseNavGraph(
                                                             onNavigateToBioMedical = { currentAdminScreen = "biomedical" },
                                                             onNavigateToQueueOversight = { currentAdminScreen = "queue_oversight" },
                                                             onNavigateToFacilityQuality = { currentAdminScreen = "facility_quality" },
-                                                            onNavigateToDiagnostics = { currentAdminScreen = "diagnostics" }
+                                                            onNavigateToDiagnostics = { currentAdminScreen = "diagnostics" },
+                                                            onResetDemoData = { adminViewModel.resetToCleanSeedData() }
                                                         )
                                                     }
                                                 }

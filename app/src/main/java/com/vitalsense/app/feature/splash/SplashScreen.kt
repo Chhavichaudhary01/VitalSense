@@ -225,12 +225,33 @@ fun SplashScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text("🔒", fontSize = 11.sp)
+                    Text("🇮🇳", fontSize = 11.sp)
+                    Text(
+                        text = "Team AarogyaX · SIH26133 · Offline-First for Bharat",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = VS_Primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
+            Surface(
+                shape = PillShape,
+                color = VS_SurfaceVariant.copy(alpha = 0.7f),
+                border = BorderStroke(1.dp, VS_Outline.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text("🔒", fontSize = 10.sp)
                     Text(
                         text = stringResource(R.string.encryptedOfflineAbha),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = VS_OnSurfaceVariant,
-                            fontWeight = FontWeight.SemiBold
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     )
                 }

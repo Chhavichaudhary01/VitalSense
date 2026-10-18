@@ -51,6 +51,10 @@ class AppStateHolder @Inject constructor(
         try {
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(initialLang.code))
         } catch (_: Exception) {}
+
+        networkMonitor.setOnNetworkRestoredCallback {
+            triggerSync()
+        }
     }
 
     private val _isPresentationLightMode = MutableStateFlow(true)
@@ -159,6 +163,9 @@ class AppStateHolder @Inject constructor(
 
     fun toggleOffline() {
         networkMonitor.toggleManualOffline()
+        if (networkMonitor.isOnline()) {
+            triggerSync()
+        }
     }
 
     fun triggerSync() {

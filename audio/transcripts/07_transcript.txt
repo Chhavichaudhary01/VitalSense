@@ -1,0 +1,1 @@
+Paper prescriptions get damaged, lost or mistreated. Writers and scans of prescriptions directly with the phone camera. And on device AI extracts the text, no internet, no cloud upload. So patient data never leaves the device. It even understands medical shorthand automatically, expanding abbreviations so handwritten slip becomes a clean, structured, digital record instantly.

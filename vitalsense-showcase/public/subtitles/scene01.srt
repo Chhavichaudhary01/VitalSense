@@ -1,0 +1,4 @@
+1
+00:00:00,400 --> 00:00:12,712
+This is VitalSense, an offline-first Android application that connects rural patients, ASHA workers, doctors, and health administrators in one ecosystem.
+

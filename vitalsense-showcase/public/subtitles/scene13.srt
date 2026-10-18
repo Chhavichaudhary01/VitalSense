@@ -1,0 +1,4 @@
+1
+00:00:00,400 --> 00:00:11,488
+VitalSense: healthcare that keeps working, even when the network doesn't. Scan the QR code to test the live prototype on GitHub.
+

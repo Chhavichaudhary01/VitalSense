@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">VitalSense</string>
     <string name="tagline">SehatSetu — Rural Health Bridge</string>
+    <string name="default_web_client_id">1056788502080-dni72en90iveg7m6lafapukdab1263fn.apps.googleusercontent.com</string>
     <string name="online">Online</string>
     <string name="offline">Offline</string>
     <string name="exit">Exit</string>

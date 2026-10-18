@@ -1,0 +1,1 @@
+On the doctor's side, vitals and shows a live OPDQ prioritized automatically by triage severity, not just who are at first. During a video consultation, the doctor sees the patient's live vitals that are overly directly on the screen, BP, heart rate and blood pressure, without needing a second device or phone call to check numbers.

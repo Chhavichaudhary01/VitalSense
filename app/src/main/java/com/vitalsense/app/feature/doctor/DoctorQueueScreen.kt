@@ -59,6 +59,29 @@ fun DoctorQueueScreen(
     val waitingEntries = remember(todaysQueue) {
         todaysQueue.filter { it.status == QueueEntryStatus.WAITING }
     }
+    val triagePriorityEntries = remember(waitingEntries, patients) {
+        waitingEntries.filter { entry ->
+            val p = patients.find { it.id == entry.patientId || it.name.equals(entry.patientName, ignoreCase = true) }
+            val isSevereOrHigh = p?.currentRiskLevel == SeverityLevel.SEVERE || p?.currentRiskLevel == SeverityLevel.HIGH
+            entry.priorityFlag || isSevereOrHigh
+        }.sortedWith(
+            compareByDescending<QueueEntry> { it.priorityFlag }
+                .thenByDescending { entry ->
+                    val p = patients.find { it.id == entry.patientId || it.name.equals(entry.patientName, ignoreCase = true) }
+                    when (p?.currentRiskLevel) {
+                        SeverityLevel.SEVERE -> 3
+                        SeverityLevel.HIGH -> 2
+                        SeverityLevel.MODERATE -> 1
+                        else -> 0
+                    }
+                }
+                .thenBy { it.tokenNumber }
+        )
+    }
+    val routineEntries = remember(waitingEntries, triagePriorityEntries) {
+        waitingEntries.filter { entry -> triagePriorityEntries.none { it.id == entry.id } }
+            .sortedBy { it.tokenNumber }
+    }
     val completedCount = remember(todaysQueue) {
         todaysQueue.count { it.status == QueueEntryStatus.COMPLETED }
     }
@@ -253,6 +276,38 @@ fun DoctorQueueScreen(
                     }
                 }
 
+                // 1.5 Triage Prioritization Indicator (Audio 5)
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = VS_PrimaryContainer.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, VS_Primary.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("⚖️", fontSize = 16.sp)
+                            Column {
+                                Text(
+                                    text = "Automated Clinical Triage Prioritization Active",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = VS_Primary
+                                    )
+                                )
+                                Text(
+                                    text = "OPD Queue is prioritized by triage severity (Emergency & High-Risk Maternal first), not FIFO",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                    color = VS_OnSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // 2. In Consultation HUD (if active)
                 if (activeConsultation != null) {
                     item {
@@ -337,13 +392,22 @@ fun DoctorQueueScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Column {
+                            Text(
+                                text = "Waiting in Queue (${waitingEntries.size})",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = VS_OnBackground
+                            )
+                            if (triagePriorityEntries.isNotEmpty()) {
+                                Text(
+                                    text = "🚨 Triage Priority Sorted First",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = Color(0xFFDC2626)
+                                )
+                            }
+                        }
                         Text(
-                            text = "Waiting in Queue (${waitingEntries.size})",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = VS_OnBackground
-                        )
-                        Text(
-                            text = stringResource(R.string.orderedByCheckIn),
+                            text = if (triagePriorityEntries.isNotEmpty()) "${triagePriorityEntries.size} Urgent · ${routineEntries.size} Routine" else stringResource(R.string.orderedByCheckIn),
                             style = MaterialTheme.typography.labelSmall,
                             color = VS_OnSurfaceVariant
                         )
@@ -387,8 +451,10 @@ fun DoctorQueueScreen(
                     // Render called entry first if awaiting enter
                     if (calledEntry != null) {
                         item(key = "called_${calledEntry.id}") {
+                            val calledPatient = patients.find { it.id == calledEntry.patientId || it.name.equals(calledEntry.patientName, ignoreCase = true) }
                             QueueEntryListItem(
                                 entry = calledEntry,
+                                patient = calledPatient,
                                 isDoctorMode = true,
                                 onStartConsultation = { onStartConsultation(calledEntry.id) },
                                 onSkip = { onSkip(calledEntry.id) },
@@ -397,14 +463,126 @@ fun DoctorQueueScreen(
                         }
                     }
 
-                    items(waitingEntries, key = { it.id }) { entry ->
-                        QueueEntryListItem(
-                            entry = entry,
-                            isDoctorMode = true,
-                            onPrioritize = { onPrioritize(entry.id) },
-                            onSkip = { onSkip(entry.id) },
-                            onMarkNoShow = { onMarkNoShow(entry.id) }
-                        )
+                    // Elevated Clinical Triage Priority Section at TOP OF QUEUE
+                    if (triagePriorityEntries.isNotEmpty()) {
+                        item(key = "triage_priority_banner") {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                                border = BorderStroke(1.5.dp, Color(0xFFEF4444).copy(alpha = 0.6f))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(text = "🚨", fontSize = 18.sp)
+                                        Column {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Text(
+                                                    text = "CLINICAL TRIAGE PRIORITY",
+                                                    style = MaterialTheme.typography.titleSmall.copy(
+                                                        fontWeight = FontWeight.Black,
+                                                        letterSpacing = 0.5.sp
+                                                    ),
+                                                    color = Color(0xFF991B1B)
+                                                )
+                                                Surface(
+                                                    shape = RoundedCornerShape(4.dp),
+                                                    color = Color(0xFFDC2626)
+                                                ) {
+                                                    Text(
+                                                        text = "TOP OF QUEUE",
+                                                        style = MaterialTheme.typography.labelSmall.copy(
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.ExtraBold
+                                                        ),
+                                                        color = Color.White,
+                                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                            }
+                                            Text(
+                                                text = "Severe & High Risk Escalations · Ahead of routine queue",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color(0xFFB91C1C)
+                                            )
+                                        }
+                                    }
+                                    Surface(
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = Color(0xFFEF4444)
+                                    ) {
+                                        Text(
+                                            text = "${triagePriorityEntries.size} Urgent",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp),
+                                            color = Color.White,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        items(triagePriorityEntries, key = { "triage_${it.id}" }) { entry ->
+                            val p = patients.find { it.id == entry.patientId || it.name.equals(entry.patientName, ignoreCase = true) }
+                            QueueEntryListItem(
+                                entry = entry,
+                                patient = p,
+                                isDoctorMode = true,
+                                onPrioritize = { onPrioritize(entry.id) },
+                                onSkip = { onSkip(entry.id) },
+                                onMarkNoShow = { onMarkNoShow(entry.id) }
+                            )
+                        }
+                    }
+
+                    // Standard Queue Section
+                    if (routineEntries.isNotEmpty()) {
+                        if (triagePriorityEntries.isNotEmpty()) {
+                            item(key = "routine_queue_divider") {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp, bottom = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Standard Waiting Queue (${routineEntries.size})",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = VS_OnBackground
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.orderedByCheckIn),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = VS_OnSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        items(routineEntries, key = { "routine_${it.id}" }) { entry ->
+                            val p = patients.find { it.id == entry.patientId || it.name.equals(entry.patientName, ignoreCase = true) }
+                            QueueEntryListItem(
+                                entry = entry,
+                                patient = p,
+                                isDoctorMode = true,
+                                onPrioritize = { onPrioritize(entry.id) },
+                                onSkip = { onSkip(entry.id) },
+                                onMarkNoShow = { onMarkNoShow(entry.id) }
+                            )
+                        }
                     }
                 }
             }

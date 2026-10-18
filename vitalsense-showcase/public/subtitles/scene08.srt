@@ -1,0 +1,4 @@
+1
+00:00:00,400 --> 00:00:19,672
+Doctors receive an organized OPD queue sorted by clinical severity. From their consultation desk, doctors review longitudinal history, issue digital prescriptions, manage IPD bed admissions, and directly refer high-risk cases to tertiary specialists.
+

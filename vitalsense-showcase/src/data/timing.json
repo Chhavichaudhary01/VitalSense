@@ -1,0 +1,124 @@
+{
+  "fps": 30,
+  "total_duration_sec": 218.2,
+  "total_frames": 6546,
+  "scenes": [
+    {
+      "id": "scene01",
+      "title": "Title Card & SIH Problem Statement",
+      "audio_file": "audio/scene01.mp3",
+      "wav_file": "audio/scene01.wav",
+      "duration_sec": 13.31,
+      "frames": 399,
+      "text": "This is VitalSense, an offline-first Android application that connects rural patients, ASHA workers, doctors, and health administrators in one ecosystem."
+    },
+    {
+      "id": "scene02",
+      "title": "The Problem Context",
+      "audio_file": "audio/scene02.mp3",
+      "wav_file": "audio/scene02.wav",
+      "duration_sec": 14.37,
+      "frames": 431,
+      "text": "In many rural areas, weak connectivity and low digital literacy make timely healthcare hard to reach. VitalSense is built to work exactly where the internet doesn't."
+    },
+    {
+      "id": "scene03",
+      "title": "The 4-in-1 Solution Architecture",
+      "audio_file": "audio/scene03.mp3",
+      "wav_file": "audio/scene03.wav",
+      "duration_sec": 15.35,
+      "frames": 461,
+      "text": "One app, four roles. Patients, ASHA workers, doctors, and health administrators each get their own permission-aware workflow, inside a single native Android codebase."
+    },
+    {
+      "id": "scene04",
+      "title": "Role Selection & Multilingual Accessibility",
+      "audio_file": "audio/scene04.mp3",
+      "wav_file": "audio/scene04.wav",
+      "duration_sec": 16.12,
+      "frames": 484,
+      "text": "At launch, users select their role with a single tap. The interface instantly adapts to English, Hindi, Tamil, or Marathi, making navigation natural for vernacular communities."
+    },
+    {
+      "id": "scene05",
+      "title": "Patient Experience & IoT Vitals",
+      "audio_file": "audio/scene05.mp3",
+      "wav_file": "audio/scene05.wav",
+      "duration_sec": 18.83,
+      "frames": 565,
+      "text": "For patients like Ramesh, the dashboard presents a simple, icon-driven interface. Vitals like pulse rate and blood oxygen can be captured seamlessly from connected health sensors and saved directly to the offline health record."
+    },
+    {
+      "id": "scene06",
+      "title": "ASHA Proxy Care & Care Journey",
+      "audio_file": "audio/scene06.mp3",
+      "wav_file": "audio/scene06.wav",
+      "duration_sec": 18.47,
+      "frames": 554,
+      "text": "Frontline ASHA workers act as digital proxies for non-literate citizens\u2014conducting home visits, updating ABHA digital health cards, and tracking a unified longitudinal care journey across clinic visits and lab investigations."
+    },
+    {
+      "id": "scene07",
+      "title": "AI Prescription OCR & Jan Aushadhi Locator",
+      "audio_file": "audio/scene07.mp3",
+      "wav_file": "audio/scene07.wav",
+      "duration_sec": 19.79,
+      "frames": 594,
+      "text": "A photo of a paper prescription is processed on-device with ML Kit OCR, auto-cropped, and digitized into structured dosages. Patients can then locate prescribed medicines at nearby Jan Aushadhi stores with real-time stock indicators."
+    },
+    {
+      "id": "scene08",
+      "title": "Doctor Workflow & Specialist Referrals",
+      "audio_file": "audio/scene08.mp3",
+      "wav_file": "audio/scene08.wav",
+      "duration_sec": 20.27,
+      "frames": 608,
+      "text": "Doctors receive an organized OPD queue sorted by clinical severity. From their consultation desk, doctors review longitudinal history, issue digital prescriptions, manage IPD bed admissions, and directly refer high-risk cases to tertiary specialists."
+    },
+    {
+      "id": "scene09",
+      "title": "District Admin & Disease Surveillance",
+      "audio_file": "audio/scene09.mp3",
+      "wav_file": "audio/scene09.wav",
+      "duration_sec": 19.58,
+      "frames": 587,
+      "text": "District health officers monitor real-time disease outbreak heat maps and longitudinal symptom curves. When an outbreak like malaria is detected, administrators broadcast instant health directives to frontline workers across affected villages."
+    },
+    {
+      "id": "scene10",
+      "title": "Emergency SOS & Cellular SMS Fallback",
+      "audio_file": "audio/scene10.mp3",
+      "wav_file": "audio/scene10.wav",
+      "duration_sec": 18.5,
+      "frames": 555,
+      "text": "In a critical emergency, one tap triggers the SOS system. It transmits GPS coordinates to nearby doctors and ASHA workers, and automatically falls back to cellular SMS when mobile data is unavailable."
+    },
+    {
+      "id": "scene11",
+      "title": "Mental Wellness & Guided Box Breathing",
+      "audio_file": "audio/scene11.mp3",
+      "wav_file": "audio/scene11.wav",
+      "duration_sec": 15.47,
+      "frames": 464,
+      "text": "To address mental health in rural areas without stigma, VitalSense offers simple, icon-based emotional check-ins and guided box breathing exercises that guide users with visual cues."
+    },
+    {
+      "id": "scene12",
+      "title": "Offline-First Engine Architecture",
+      "audio_file": "audio/scene12.mp3",
+      "wav_file": "audio/scene12.wav",
+      "duration_sec": 16.05,
+      "frames": 481,
+      "text": "Under the hood, an atomic Room database outbox and WorkManager background synchronization keep every action functional in zero-connectivity dead-zones, syncing seamlessly once network connectivity resumes."
+    },
+    {
+      "id": "scene13",
+      "title": "Outro & Scan to Download Prototype",
+      "audio_file": "audio/scene13.mp3",
+      "wav_file": "audio/scene13.wav",
+      "duration_sec": 12.09,
+      "frames": 363,
+      "text": "VitalSense: healthcare that keeps working, even when the network doesn't. Scan the QR code to test the live prototype on GitHub."
+    }
+  ]
+}

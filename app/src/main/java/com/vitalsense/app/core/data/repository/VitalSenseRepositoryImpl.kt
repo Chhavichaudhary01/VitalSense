@@ -17,6 +17,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -63,7 +64,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
     private val _otSurgeryBookings = MutableStateFlow(SeedDataProvider.initialOtSurgeryBookings)
     private val _externalReferrals = MutableStateFlow(SeedDataProvider.initialExternalReferrals)
     private val _bioMedicalEquipment = MutableStateFlow(SeedDataProvider.initialBioMedicalEquipment)
-    private val _queueEntries = MutableStateFlow<List<QueueEntry>>(emptyList())
+    private val _queueEntries = MutableStateFlow(SeedDataProvider.initialQueueEntries)
     private val _doctorSlots = MutableStateFlow<List<DoctorDaySlotConfig>>(emptyList())
 
     init {
@@ -94,6 +95,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 SeedDataProvider.getExternalReferralEntities().forEach { dao.insertExternalReferral(it) }
                 SeedDataProvider.getBioMedicalEquipmentEntities().forEach { dao.insertBioMedicalEquipment(it) }
                 SeedDataProvider.getReferralEntities().forEach { dao.insertReferral(it) }
+                dao.upsertQueueEntries(SeedDataProvider.getQueueEntryEntities())
             } catch (e: Exception) {
                 // Fallback to in-memory state
             }
@@ -105,6 +107,32 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 firestoreDataSource.getConditionRecordsStream().collect { remoteRecords ->
                     if (remoteRecords.isNotEmpty()) {
                         _conditions.update { remoteRecords }
+                        dao.insertConditionRecords(remoteRecords.map { r ->
+                            ConditionRecordEntity(
+                                id = r.id,
+                                patientId = r.patientId,
+                                patientName = r.patientName,
+                                villageId = r.villageId,
+                                villageName = r.villageName,
+                                category = r.category,
+                                severity = r.severity,
+                                requestedDoctorType = r.requestedDoctorType,
+                                notes = r.notes,
+                                timestamp = r.timestamp,
+                                ashaProxyLogged = r.ashaProxyLogged,
+                                status = r.status,
+                                assignedDoctorId = r.assignedDoctorId,
+                                assignedDoctorName = r.assignedDoctorName,
+                                doctorResponse = r.doctorResponse,
+                                doctorResponseTimestamp = r.doctorResponseTimestamp,
+                                doctorResponseDoctorName = r.doctorResponseDoctorName,
+                                privateDoctorNotes = r.privateDoctorNotes,
+                                referredByDoctorId = r.referredByDoctorId,
+                                referredByDoctorName = r.referredByDoctorName,
+                                referralNotes = r.referralNotes,
+                                isPendingSync = false
+                            )
+                        })
                     }
                 }
             } catch (e: Exception) {
@@ -117,6 +145,132 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 firestoreDataSource.getBroadcastNoticesStream().collect { remoteNotices ->
                     if (remoteNotices.isNotEmpty()) {
                         _notices.update { remoteNotices }
+                        dao.insertNotices(remoteNotices.map { n ->
+                            BroadcastNoticeEntity(
+                                id = n.id,
+                                senderRole = n.senderRole,
+                                senderName = n.senderName,
+                                targetRole = n.targetRole,
+                                targetVillage = n.targetVillage,
+                                title = n.title,
+                                message = n.message,
+                                timestamp = n.timestamp,
+                                isUrgent = n.isUrgent
+                            )
+                        })
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline fallback
+            }
+        }
+
+        scope.launch {
+            try {
+                firestoreDataSource.getPatientsStream().collect { remotePatients ->
+                    if (remotePatients.isNotEmpty()) {
+                        _patients.update { remotePatients }
+                        dao.insertPatients(remotePatients.map { p ->
+                            PatientEntity(
+                                id = p.id,
+                                name = p.name,
+                                age = p.age,
+                                gender = p.gender,
+                                phone = p.phone,
+                                villageId = p.villageId,
+                                villageName = p.villageName,
+                                ashaWorkerId = p.ashaWorkerId,
+                                ashaWorkerName = p.ashaWorkerName,
+                                currentRiskLevel = p.currentRiskLevel,
+                                lastCondition = p.lastCondition,
+                                lastVisitDate = p.lastVisitDate,
+                                nextAppointmentDate = p.nextAppointmentDate,
+                                emergencyContact = p.emergencyContact,
+                                profilePhotoUrl = p.profilePhotoUrl
+                            )
+                        })
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline fallback
+            }
+        }
+
+        scope.launch {
+            try {
+                firestoreDataSource.getPrescriptionsStream().collect { remoteRx ->
+                    if (remoteRx.isNotEmpty()) {
+                        _prescriptions.update { remoteRx }
+                        dao.insertPrescriptions(remoteRx.map { rx ->
+                            PrescriptionEntity(
+                                id = rx.id,
+                                caseId = rx.caseId,
+                                patientId = rx.patientId,
+                                patientName = rx.patientName,
+                                doctorId = rx.doctorId,
+                                doctorName = rx.doctorName,
+                                doctorSpecialty = rx.doctorSpecialty,
+                                timestamp = rx.timestamp,
+                                dateFormatted = rx.dateFormatted,
+                                medicinesJson = gson.toJson(rx.medicines),
+                                instructions = rx.instructions,
+                                isOcrExtracted = rx.isOcrExtracted
+                            )
+                        })
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline fallback
+            }
+        }
+
+        scope.launch {
+            try {
+                firestoreDataSource.getAppointmentsStream().collect { remoteAppts ->
+                    if (remoteAppts.isNotEmpty()) {
+                        _appointments.update { remoteAppts }
+                        dao.insertAppointments(remoteAppts.map { appt ->
+                            AppointmentEntity(
+                                id = appt.id,
+                                patientId = appt.patientId,
+                                patientName = appt.patientName,
+                                doctorId = appt.doctorId,
+                                doctorName = appt.doctorName,
+                                doctorSpecialty = appt.doctorSpecialty,
+                                dateFormatted = appt.dateFormatted,
+                                timeSlot = appt.timeSlot,
+                                status = appt.status,
+                                proposedBy = appt.proposedBy,
+                                outcomeNotes = appt.outcomeNotes,
+                                callType = appt.callType.name,
+                                scheduledTimestamp = appt.scheduledTimestamp
+                            )
+                        })
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline fallback
+            }
+        }
+
+        scope.launch {
+            try {
+                firestoreDataSource.getQueueEntriesStream().collect { remoteEntries ->
+                    if (remoteEntries.isNotEmpty()) {
+                        _queueEntries.update { remoteEntries }
+                        dao.upsertQueueEntries(remoteEntries.map { it.toEntity() })
+                    }
+                }
+            } catch (e: Exception) {
+                // Offline fallback
+            }
+        }
+
+        scope.launch {
+            try {
+                firestoreDataSource.getReferralsStream().collect { remoteReferrals ->
+                    if (remoteReferrals.isNotEmpty()) {
+                        remoteReferrals.forEach { dao.insertReferral(it.toEntity()) }
                     }
                 }
             } catch (e: Exception) {
@@ -186,13 +340,17 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 )
             )
 
-            // 3. Remote Cloud Firestore sync attempt
-            try {
-                firestoreDataSource.uploadPatient(patient)
-                dao.deleteOutboxRecord(outboxId)
-            } catch (e: Exception) {
-                // Offline: remains saved locally in Room; WorkManager flushes upon network return
-                syncManager.triggerImmediateSync()
+            // 3. Remote Cloud Firestore sync attempt (only when online)
+            if (networkMonitor.isOnline()) {
+                try {
+                    firestoreDataSource.uploadPatient(patient)
+                    dao.deleteOutboxRecord(outboxId)
+                } catch (e: Exception) {
+                    // Network error: remains saved locally in Room; WorkManager flushes upon network return
+                    syncManager.triggerImmediateSync()
+                }
+            } else {
+                Log.d("VitalSenseRepo", "Offline mode active: Patient ${patient.name} queued in local Room outbox.")
             }
         }
     }
@@ -297,24 +455,28 @@ class VitalSenseRepositoryImpl @Inject constructor(
                 )
             )
 
-            try {
-                firestoreDataSource.uploadConditionRecord(record)
-                dao.deleteOutboxRecord(outboxId)
-                dao.insertConditionRecord(
-                    ConditionRecordEntity(
-                        record.id, record.patientId, record.patientName, record.villageId,
-                        record.villageName, record.category, record.severity,
-                        record.requestedDoctorType, record.notes, record.timestamp,
-                        record.ashaProxyLogged, record.status, record.assignedDoctorId,
-                        record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
-                        record.doctorResponseDoctorName, record.privateDoctorNotes,
-                        record.referredByDoctorId, record.referredByDoctorName,
-                        record.referralNotes, isPendingSync = false
+            if (networkMonitor.isOnline()) {
+                try {
+                    firestoreDataSource.uploadConditionRecord(record)
+                    dao.deleteOutboxRecord(outboxId)
+                    dao.insertConditionRecord(
+                        ConditionRecordEntity(
+                            record.id, record.patientId, record.patientName, record.villageId,
+                            record.villageName, record.category, record.severity,
+                            record.requestedDoctorType, record.notes, record.timestamp,
+                            record.ashaProxyLogged, record.status, record.assignedDoctorId,
+                            record.assignedDoctorName, record.doctorResponse, record.doctorResponseTimestamp,
+                            record.doctorResponseDoctorName, record.privateDoctorNotes,
+                            record.referredByDoctorId, record.referredByDoctorName,
+                            record.referralNotes, isPendingSync = false
+                        )
                     )
-                )
-            } catch (e: Exception) {
-                // Device offline: Outbox record remains persisted in Room SQLite; WorkManager will sync on network reconnection
-                syncManager.triggerImmediateSync()
+                } catch (e: Exception) {
+                    // Device offline / network failure: Outbox record remains persisted in Room SQLite; WorkManager will sync on network reconnection
+                    syncManager.triggerImmediateSync()
+                }
+            } else {
+                Log.d("VitalSenseRepo", "Offline mode active: Condition record ${record.id} queued in local Room outbox.")
             }
         }
     }
@@ -1196,7 +1358,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
         return _queueEntries.map { list ->
             val forDoctor = list.filter { 
                 (it.doctorId == doctorId || (doctorId == "doc_rajesh" && it.doctorName.contains("Rajesh", ignoreCase = true))) && 
-                (it.dateFormatted == date || it.dateFormatted == "Today" || it.dateFormatted.startsWith(date.take(7)))
+                (it.dateFormatted == date || it.dateFormatted == "Today" || it.dateFormatted == SeedDataProvider.todayDateFormatted || it.dateFormatted.startsWith(date.take(7)))
             }
             val (waiting, nonWaiting) = forDoctor.partition { it.status == QueueEntryStatus.WAITING }
             com.vitalsense.app.core.util.QueueEtaCalculator.sortWaitingEntries(waiting) +
@@ -1287,6 +1449,9 @@ class VitalSenseRepositoryImpl @Inject constructor(
         val entryId = "queue_${UUID.randomUUID()}"
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
+        val pat = _patients.value.find { it.id == appt.patientId }
+        val isTriageHighRisk = pat?.currentRiskLevel == SeverityLevel.SEVERE || pat?.currentRiskLevel == SeverityLevel.HIGH
+
         val provisionalEntry = QueueEntry(
             id = entryId,
             doctorId = appt.doctorId,
@@ -1299,7 +1464,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
             patientName = appt.patientName,
             source = QueueEntrySource.SCHEDULED,
             status = QueueEntryStatus.WAITING,
-            priorityFlag = false,
+            priorityFlag = isTriageHighRisk,
             checkedInAt = System.currentTimeMillis(),
             isPendingSync = true
         )
@@ -1337,6 +1502,9 @@ class VitalSenseRepositoryImpl @Inject constructor(
         val entryId = "queue_${UUID.randomUUID()}"
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
+        val pat = _patients.value.find { it.id == patientId }
+        val isTriageHighRisk = pat?.currentRiskLevel == SeverityLevel.SEVERE || pat?.currentRiskLevel == SeverityLevel.HIGH
+
         val provisionalEntry = QueueEntry(
             id = entryId,
             doctorId = doctorId,
@@ -1349,7 +1517,7 @@ class VitalSenseRepositoryImpl @Inject constructor(
             patientName = patientName,
             source = QueueEntrySource.WALK_IN,
             status = QueueEntryStatus.WAITING,
-            priorityFlag = false,
+            priorityFlag = isTriageHighRisk,
             checkedInAt = System.currentTimeMillis(),
             isPendingSync = true
         )
@@ -1672,4 +1840,71 @@ class VitalSenseRepositoryImpl @Inject constructor(
             )
         )
     }
+
+    override suspend fun resetToCleanSeedData() {
+        withContext(Dispatchers.IO) {
+            try {
+            database.clearAllTables()
+
+            // Re-seed Room DB with initial seed data
+            dao.insertVillages(SeedDataProvider.getVillageEntities())
+            dao.insertAshaWorkers(SeedDataProvider.getAshaEntities())
+            dao.insertDoctors(SeedDataProvider.getDoctorEntities())
+            dao.insertPatients(SeedDataProvider.getPatientEntities())
+            dao.insertConditionRecords(SeedDataProvider.getConditionEntities())
+            dao.insertPrescriptions(SeedDataProvider.getPrescriptionEntities())
+            dao.insertAppointments(SeedDataProvider.getAppointmentEntities())
+            dao.insertDispensaryItems(SeedDataProvider.getDispensaryEntities())
+            dao.insertNotices(SeedDataProvider.getNoticeEntities())
+            dao.insertSchemes(SeedDataProvider.getSchemeEntities())
+
+            SeedDataProvider.getImmunizationEntities().forEach { dao.insertImmunizationRecord(it) }
+            SeedDataProvider.getDailyRoundEntities().forEach { dao.insertDailyRound(it) }
+            SeedDataProvider.getAshaMedicineEntities().forEach { dao.insertAshaMedicine(it) }
+            SeedDataProvider.getDiseaseTrendRecordEntities().forEach { dao.insertDiseaseTrendRecord(it) }
+            SeedDataProvider.getLabReportEntities().forEach { dao.insertLabReport(it) }
+            SeedDataProvider.getOpdTokenEntities().forEach { dao.insertOpdToken(it) }
+            SeedDataProvider.getMedicalCertificateEntities().forEach { dao.insertMedicalCertificate(it) }
+            SeedDataProvider.getBloodStockEntities().forEach { dao.insertBloodStockItem(it) }
+            SeedDataProvider.getIpdBedEntities().forEach { dao.insertIpdBed(it) }
+            SeedDataProvider.getOtSurgeryBookingEntities().forEach { dao.insertOtSurgeryBooking(it) }
+            SeedDataProvider.getExternalReferralEntities().forEach { dao.insertExternalReferral(it) }
+            SeedDataProvider.getBioMedicalEquipmentEntities().forEach { dao.insertBioMedicalEquipment(it) }
+            SeedDataProvider.getReferralEntities().forEach { dao.insertReferral(it) }
+            dao.upsertQueueEntries(SeedDataProvider.getQueueEntryEntities())
+
+            // Reset in-memory reactive state caches
+            _villages.value = SeedDataProvider.initialVillages
+            _patients.value = SeedDataProvider.initialPatients
+            _ashaWorkers.value = SeedDataProvider.initialAshaWorkers
+            _doctors.value = SeedDataProvider.initialDoctors
+            _conditions.value = SeedDataProvider.initialConditionRecords
+            _prescriptions.value = SeedDataProvider.initialPrescriptions
+            _appointments.value = SeedDataProvider.initialAppointments
+            _notices.value = SeedDataProvider.initialNotices
+            _dispensary.value = SeedDataProvider.initialDispensaryItems
+            _schemes.value = SeedDataProvider.initialSchemes
+            _immunizations.value = SeedDataProvider.initialImmunizations
+            _dailyRounds.value = SeedDataProvider.initialDailyRounds
+            _ashaMedicines.value = SeedDataProvider.initialAshaMedicines
+            _diseaseTrends.value = SeedDataProvider.initialDiseaseTrendRecords
+            _labReports.value = SeedDataProvider.initialLabReports
+            _opdTokens.value = SeedDataProvider.initialOpdTokens
+            _medicalCertificates.value = SeedDataProvider.initialMedicalCertificates
+            _bloodStock.value = SeedDataProvider.initialBloodStock
+            _familyMembers.value = SeedDataProvider.initialFamilyMembers
+            _ipdBeds.value = SeedDataProvider.initialIpdBeds
+            _otSurgeryBookings.value = SeedDataProvider.initialOtSurgeryBookings
+            _externalReferrals.value = SeedDataProvider.initialExternalReferrals
+            _bioMedicalEquipment.value = SeedDataProvider.initialBioMedicalEquipment
+            _queueEntries.value = SeedDataProvider.initialQueueEntries
+            _doctorSlots.value = emptyList()
+
+            Log.i("VitalSenseRepo", "Successfully reset to clean seed data.")
+        } catch (e: Exception) {
+            Log.e("VitalSenseRepo", "Failed to reset to clean seed data: ${e.message}", e)
+            throw e
+        }
+    }
+}
 }

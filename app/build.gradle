@@ -116,6 +116,9 @@ dependencies {
     implementation 'com.google.android.gms:play-services-maps:18.2.0'
     implementation 'com.google.android.gms:play-services-location:21.1.0'
 
+    // Google Sign-In & Auth
+    implementation 'com.google.android.gms:play-services-auth:21.0.0'
+
     // CameraX for Live Camera Preview & Capture
     def camerax_version = "1.3.2"
     implementation "androidx.camera:camera-core:$camerax_version"

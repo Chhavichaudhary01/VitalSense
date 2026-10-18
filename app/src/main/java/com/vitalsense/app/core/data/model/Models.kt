@@ -587,6 +587,14 @@ object SpecialistDirectoryProvider {
             availabilityStatus = DoctorAvailabilityStatus.AVAILABLE
         ),
         SpecialistDoctor(
+            id = "doc_alok_neuro",
+            name = "Dr. Alok Sen",
+            specialty = DoctorSpecialty.NEUROLOGIST,
+            qualification = "MD, DM (Neurology, NIMHANS)",
+            hospitalAffiliation = "Apex Neurological Institute & District Hospital",
+            availabilityStatus = DoctorAvailabilityStatus.AVAILABLE
+        ),
+        SpecialistDoctor(
             id = "doc_rajesh_varma",
             name = "Dr. Rajesh Varma",
             specialty = DoctorSpecialty.GENERAL_PHYSICIAN,
@@ -611,7 +619,8 @@ object SpecialistDirectoryProvider {
             (normalized.startsWith("pedia") && it.specialty == DoctorSpecialty.PEDIATRICIAN) ||
             (normalized.startsWith("gyna") && it.specialty == DoctorSpecialty.GYNECOLOGIST) ||
             (normalized.startsWith("gyne") && it.specialty == DoctorSpecialty.GYNECOLOGIST) ||
-            (normalized.startsWith("psych") && it.specialty == DoctorSpecialty.PSYCHOLOGIST)
+            (normalized.startsWith("psych") && it.specialty == DoctorSpecialty.PSYCHOLOGIST) ||
+            (normalized.startsWith("neuro") && it.specialty == DoctorSpecialty.NEUROLOGIST)
         }
     }
 }

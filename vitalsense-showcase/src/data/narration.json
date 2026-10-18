@@ -1,0 +1,80 @@
+[
+  {
+    "id": "scene01",
+    "title": "Title Card & SIH Problem Statement",
+    "text": "This is VitalSense, an offline-first Android application that connects rural patients, ASHA workers, doctors, and health administrators in one ecosystem.",
+    "tts_text": "This is VitalSense, an offline-first Android application that connects rural patients, Aasha workers, doctors, and health administrators in one ecosystem."
+  },
+  {
+    "id": "scene02",
+    "title": "The Problem Context",
+    "text": "In many rural areas, weak connectivity and low digital literacy make timely healthcare hard to reach. VitalSense is built to work exactly where the internet doesn't.",
+    "tts_text": "In many rural areas, weak connectivity and low digital literacy make timely healthcare hard to reach. VitalSense is built to work exactly where the internet doesn't."
+  },
+  {
+    "id": "scene03",
+    "title": "The 4-in-1 Solution Architecture",
+    "text": "One app, four roles. Patients, ASHA workers, doctors, and health administrators each get their own permission-aware workflow, inside a single native Android codebase.",
+    "tts_text": "One app, four roles. Patients, Aasha workers, doctors, and health administrators each get their own permission-aware workflow, inside a single native Android codebase."
+  },
+  {
+    "id": "scene04",
+    "title": "Role Selection & Multilingual Accessibility",
+    "text": "At launch, users select their role with a single tap. The interface instantly adapts to English, Hindi, Tamil, or Marathi, making navigation natural for vernacular communities.",
+    "tts_text": "At launch, users select their role with a single tap. The interface instantly adapts to English, Hindi, Tamil, or Marathi, making navigation natural for vernacular communities."
+  },
+  {
+    "id": "scene05",
+    "title": "Patient Experience & IoT Vitals",
+    "text": "For patients like Ramesh, the dashboard presents a simple, icon-driven interface. Vitals like pulse rate and blood oxygen can be captured seamlessly from connected health sensors and saved directly to the offline health record.",
+    "tts_text": "For patients like Ramesh, the dashboard presents a simple, icon-driven interface. Vitals like pulse rate and blood oxygen can be captured seamlessly from connected health sensors and saved directly to the offline health record."
+  },
+  {
+    "id": "scene06",
+    "title": "ASHA Proxy Care & Care Journey",
+    "text": "Frontline ASHA workers act as digital proxies for non-literate citizens—conducting home visits, updating ABHA digital health cards, and tracking a unified longitudinal care journey across clinic visits and lab investigations.",
+    "tts_text": "Frontline Aasha workers act as digital proxies for non-literate citizens—conducting home visits, updating Aabhaa digital health cards, and tracking a unified longitudinal care journey across clinic visits and lab investigations."
+  },
+  {
+    "id": "scene07",
+    "title": "AI Prescription OCR & Jan Aushadhi Locator",
+    "text": "A photo of a paper prescription is processed on-device with ML Kit OCR, auto-cropped, and digitized into structured dosages. Patients can then locate prescribed medicines at nearby Jan Aushadhi stores with real-time stock indicators.",
+    "tts_text": "A photo of a paper prescription is processed on-device with M L Kit O C R, auto-cropped, and digitized into structured dosages. Patients can then locate prescribed medicines at nearby Jan Aushadhi stores with real-time stock indicators."
+  },
+  {
+    "id": "scene08",
+    "title": "Doctor Workflow & Specialist Referrals",
+    "text": "Doctors receive an organized OPD queue sorted by clinical severity. From their consultation desk, doctors review longitudinal history, issue digital prescriptions, manage IPD bed admissions, and directly refer high-risk cases to tertiary specialists.",
+    "tts_text": "Doctors receive an organized O P D queue sorted by clinical severity. From their consultation desk, doctors review longitudinal history, issue digital prescriptions, manage I P D bed admissions, and directly refer high-risk cases to tertiary specialists."
+  },
+  {
+    "id": "scene09",
+    "title": "District Admin & Disease Surveillance",
+    "text": "District health officers monitor real-time disease outbreak heat maps and longitudinal symptom curves. When an outbreak like malaria is detected, administrators broadcast instant health directives to frontline workers across affected villages.",
+    "tts_text": "District health officers monitor real-time disease outbreak heat maps and longitudinal symptom curves. When an outbreak like malaria is detected, administrators broadcast instant health directives to frontline workers across affected villages."
+  },
+  {
+    "id": "scene10",
+    "title": "Emergency SOS & Cellular SMS Fallback",
+    "text": "In a critical emergency, one tap triggers the SOS system. It transmits GPS coordinates to nearby doctors and ASHA workers, and automatically falls back to cellular SMS when mobile data is unavailable.",
+    "tts_text": "In a critical emergency, one tap triggers the S O S system. It transmits G P S coordinates to nearby doctors and Aasha workers, and automatically falls back to cellular S M S when mobile data is unavailable."
+  },
+  {
+    "id": "scene11",
+    "title": "Mental Wellness & Guided Box Breathing",
+    "text": "To address mental health in rural areas without stigma, VitalSense offers simple, icon-based emotional check-ins and guided box breathing exercises that guide users with visual cues.",
+    "tts_text": "To address mental health in rural areas without stigma, VitalSense offers simple, icon-based emotional check-ins and guided box breathing exercises that guide users with visual cues."
+  },
+  {
+    "id": "scene12",
+    "title": "Offline-First Engine Architecture",
+    "text": "Under the hood, an atomic Room database outbox and WorkManager background synchronization keep every action functional in zero-connectivity dead-zones, syncing seamlessly once network connectivity resumes.",
+    "tts_text": "Under the hood, an atomic Room D B outbox and Work Manager background synchronization keep every action functional in zero-connectivity dead-zones, syncing seamlessly once network connectivity resumes."
+  },
+  {
+    "id": "scene13",
+    "title": "Outro & Scan to Download Prototype",
+    "text": "VitalSense: healthcare that keeps working, even when the network doesn't. Scan the QR code to test the live prototype on GitHub.",
+    "tts_text": "VitalSense: healthcare that keeps working, even when the network doesn't. Scan the Q R code to test the live prototype on GitHub."
+  }
+]

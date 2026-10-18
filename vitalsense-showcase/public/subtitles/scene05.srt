@@ -1,0 +1,4 @@
+1
+00:00:00,400 --> 00:00:18,232
+For patients like Ramesh, the dashboard presents a simple, icon-driven interface. Vitals like pulse rate and blood oxygen can be captured seamlessly from connected health sensors and saved directly to the offline health record.
+

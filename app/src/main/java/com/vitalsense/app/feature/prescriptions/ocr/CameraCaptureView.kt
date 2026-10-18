@@ -14,6 +14,7 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +23,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntSize
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -96,6 +104,8 @@ fun CameraCaptureView(
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var isFlashOn by remember { mutableStateOf(false) }
     var isCapturing by remember { mutableStateOf(false) }
+    var rootSize by remember { mutableStateOf<IntSize?>(null) }
+    var frameBounds by remember { mutableStateOf<Rect?>(null) }
 
     val mainExecutor: Executor = remember(context) { ContextCompat.getMainExecutor(context) }
 
@@ -103,6 +113,7 @@ fun CameraCaptureView(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Black)
+            .onGloballyPositioned { rootSize = it.size }
     ) {
         // 1. CameraX PreviewView
         AndroidView(
@@ -150,8 +161,53 @@ fun CameraCaptureView(
             }
         )
 
-        // 2. Document Frame Overlay Guide
+        // 2. Viewfinder Mask: Darkens area outside the box border so only the box content stands out
+        val b = frameBounds
+        val s = rootSize
+        if (b != null && s != null) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val scrim = Color.Black.copy(alpha = 0.55f)
+                val w = s.width.toFloat()
+                val h = s.height.toFloat()
+
+                // Top scrim
+                if (b.top > 0) {
+                    drawRect(
+                        color = scrim,
+                        topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        size = androidx.compose.ui.geometry.Size(w, b.top)
+                    )
+                }
+                // Bottom scrim
+                if (b.bottom < h) {
+                    drawRect(
+                        color = scrim,
+                        topLeft = androidx.compose.ui.geometry.Offset(0f, b.bottom),
+                        size = androidx.compose.ui.geometry.Size(w, h - b.bottom)
+                    )
+                }
+                // Left scrim
+                if (b.left > 0) {
+                    drawRect(
+                        color = scrim,
+                        topLeft = androidx.compose.ui.geometry.Offset(0f, b.top),
+                        size = androidx.compose.ui.geometry.Size(b.left, b.height)
+                    )
+                }
+                // Right scrim
+                if (b.right < w) {
+                    drawRect(
+                        color = scrim,
+                        topLeft = androidx.compose.ui.geometry.Offset(b.right, b.top),
+                        size = androidx.compose.ui.geometry.Size(w - b.right, b.height)
+                    )
+                }
+            }
+        }
+
+        // 3. Document Frame Overlay Guide
         DocumentFrameOverlay(
+            onBoxPositioned = { frameBounds = it },
             modifier = Modifier.fillMaxSize()
         )
 
@@ -259,8 +315,35 @@ fun CameraCaptureView(
                                 mainExecutor,
                                 object : ImageCapture.OnImageSavedCallback {
                                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                                        isCapturing = false
-                                        onPhotoCaptured(photoFile)
+                                        val targetBounds = frameBounds
+                                        val targetSize = rootSize
+                                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                            if (targetBounds != null && targetSize != null) {
+                                                PrescriptionOcrHelper.cropImageToFrame(
+                                                    photoFile = photoFile,
+                                                    screenWidth = targetSize.width,
+                                                    screenHeight = targetSize.height,
+                                                    frameLeft = targetBounds.left,
+                                                    frameTop = targetBounds.top,
+                                                    frameRight = targetBounds.right,
+                                                    frameBottom = targetBounds.bottom
+                                                )
+                                            } else {
+                                                PrescriptionOcrHelper.cropImageToFrame(
+                                                    photoFile = photoFile,
+                                                    screenWidth = 1080,
+                                                    screenHeight = 1920,
+                                                    frameLeft = 0f,
+                                                    frameTop = 0f,
+                                                    frameRight = 0f,
+                                                    frameBottom = 0f
+                                                )
+                                            }
+                                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                                isCapturing = false
+                                                onPhotoCaptured(photoFile)
+                                            }
+                                        }
                                     }
 
                                     override fun onError(exception: ImageCaptureException) {
@@ -316,7 +399,10 @@ fun CameraCaptureView(
 }
 
 @Composable
-private fun DocumentFrameOverlay(modifier: Modifier = Modifier) {
+private fun DocumentFrameOverlay(
+    onBoxPositioned: (Rect) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier.padding(horizontal = 28.dp, vertical = 130.dp),
         contentAlignment = Alignment.Center
@@ -325,8 +411,11 @@ private fun DocumentFrameOverlay(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.78f)
+                .onGloballyPositioned { coordinates ->
+                    onBoxPositioned(coordinates.boundsInRoot())
+                }
                 .border(
-                    border = BorderStroke(2.dp, Color.White.copy(alpha = 0.7f)),
+                    border = BorderStroke(2.dp, Color.White.copy(alpha = 0.85f)),
                     shape = RoundedCornerShape(16.dp)
                 )
         ) {
@@ -345,6 +434,32 @@ private fun DocumentFrameOverlay(modifier: Modifier = Modifier) {
 
             Box(Modifier.size(accentLength, accentThickness).background(accentColor).align(Alignment.BottomEnd))
             Box(Modifier.size(accentThickness, accentLength).background(accentColor).align(Alignment.BottomEnd))
+
+            // Visual guide chip indicating only box is captured
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color.Black.copy(alpha = 0.65f),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text("📐", fontSize = 12.sp)
+                    Text(
+                        text = "CAPTURE ZONE · FIT IN BOX",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = Color.White
+                    )
+                }
+            }
         }
     }
 }

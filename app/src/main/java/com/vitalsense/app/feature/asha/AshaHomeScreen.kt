@@ -45,6 +45,8 @@ fun AshaHomeScreen(
     onMedicineRestockClick: () -> Unit = {},
     referrals: List<com.vitalsense.app.core.data.model.Referral> = emptyList(),
     onCompleteReferral: (com.vitalsense.app.core.data.model.Referral) -> Unit = {},
+    isOffline: Boolean = false,
+    pendingOutboxCount: Int = 0,
     scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
@@ -54,6 +56,12 @@ fun AshaHomeScreen(
     var showRegisterPatientDialog by remember { mutableStateOf(false) }
     var showSendNoticeDialog by remember { mutableStateOf(false) }
     var successMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(isOffline) {
+        if (!isOffline && successMessage?.contains("Queued", ignoreCase = true) == true) {
+            successMessage = "✓ Cloud Synced: Registered into cloud caseload!"
+        }
+    }
 
     // Per-patient Emergency SOS state management
     var sosConfirmationPatient by remember { mutableStateOf<Patient?>(null) }
@@ -230,13 +238,14 @@ fun AshaHomeScreen(
             }
         }
 
-        // Success banner
+        // Success / Queued banner
         if (successMessage != null) {
             item {
+                val isQueued = successMessage?.contains("Queued", ignoreCase = true) == true
                 Surface(
                     shape = PillShape,
-                    color = VS_SuccessContainer,
-                    border = BorderStroke(1.dp, VS_Success),
+                    color = if (isQueued) VS_WarningContainer else VS_SuccessContainer,
+                    border = BorderStroke(1.dp, if (isQueued) VS_Warning else VS_Success),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -244,14 +253,50 @@ fun AshaHomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text = successMessage ?: "",
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                            color = VS_Success
-                        )
-                        IconButton(onClick = { successMessage = null }, modifier = Modifier.size(24.dp)) {
-                            Text("✕", color = VS_Success, fontSize = 12.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = if (isQueued) "⚡" else "✓",
+                                color = if (isQueued) VS_Warning else VS_Success,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = successMessage ?: "",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = if (isQueued) VS_OnWarningContainer else VS_Success
+                            )
                         }
+                        IconButton(onClick = { successMessage = null }, modifier = Modifier.size(24.dp)) {
+                            Text("✕", color = if (isQueued) VS_OnWarningContainer else VS_Success, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Pending Outbox Chip (Audio 2 & 10)
+        if (isOffline && pendingOutboxCount > 0 && successMessage == null) {
+            item {
+                Surface(
+                    shape = PillShape,
+                    color = VS_WarningContainer.copy(alpha = 0.7f),
+                    border = BorderStroke(1.dp, VS_Warning.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Text("⚡", fontSize = 13.sp)
+                        Text(
+                            text = "$pendingOutboxCount record(s) queued offline in Room DB. Switch to Online to auto-sync.",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = VS_OnWarningContainer
+                        )
                     }
                 }
             }
@@ -978,11 +1023,16 @@ fun AshaHomeScreen(
     if (showRegisterPatientDialog) {
         RegisterPatientDialog(
             asha = asha,
+            isOffline = isOffline,
             onDismiss = { showRegisterPatientDialog = false },
             onRegister = { newPatient ->
                 onSavePatient(newPatient)
                 showRegisterPatientDialog = false
-                successMessage = "✓ Registered ${newPatient.name} into your caseload!"
+                successMessage = if (isOffline) {
+                    "⚡ Queued ${newPatient.name} in offline outbox (Room DB). Will auto-sync when online."
+                } else {
+                    "✓ Registered ${newPatient.name} into your caseload!"
+                }
             }
         )
     }

@@ -1,0 +1,52 @@
+1
+00:00:00,400 --> 00:00:12,910
+This is VitalSense, an offline-first Android application that connects rural patients, ASHA workers, doctors, and health administrators in one ecosystem.
+
+2
+00:00:13,710 --> 00:00:27,280
+In many rural areas, weak connectivity and low digital literacy make timely healthcare hard to reach. VitalSense is built to work exactly where the internet doesn't.
+
+3
+00:00:28,080 --> 00:00:42,630
+One app, four roles. Patients, ASHA workers, doctors, and health administrators each get their own permission-aware workflow, inside a single native Android codebase.
+
+4
+00:00:43,430 --> 00:00:58,750
+At launch, users select their role with a single tap. The interface instantly adapts to English, Hindi, Tamil, or Marathi, making navigation natural for vernacular communities.
+
+5
+00:00:59,550 --> 00:01:17,580
+For patients like Ramesh, the dashboard presents a simple, icon-driven interface. Vitals like pulse rate and blood oxygen can be captured seamlessly from connected health sensors and saved directly to the offline health record.
+
+6
+00:01:18,380 --> 00:01:36,050
+Frontline ASHA workers act as digital proxies for non-literate citizens—conducting home visits, updating ABHA digital health cards, and tracking a unified longitudinal care journey across clinic visits and lab investigations.
+
+7
+00:01:36,850 --> 00:01:55,840
+A photo of a paper prescription is processed on-device with ML Kit OCR, auto-cropped, and digitized into structured dosages. Patients can then locate prescribed medicines at nearby Jan Aushadhi stores with real-time stock indicators.
+
+8
+00:01:56,640 --> 00:02:16,110
+Doctors receive an organized OPD queue sorted by clinical severity. From their consultation desk, doctors review longitudinal history, issue digital prescriptions, manage IPD bed admissions, and directly refer high-risk cases to tertiary specialists.
+
+9
+00:02:16,910 --> 00:02:35,690
+District health officers monitor real-time disease outbreak heat maps and longitudinal symptom curves. When an outbreak like malaria is detected, administrators broadcast instant health directives to frontline workers across affected villages.
+
+10
+00:02:36,490 --> 00:02:54,190
+In a critical emergency, one tap triggers the SOS system. It transmits GPS coordinates to nearby doctors and ASHA workers, and automatically falls back to cellular SMS when mobile data is unavailable.
+
+11
+00:02:54,990 --> 00:03:09,660
+To address mental health in rural areas without stigma, VitalSense offers simple, icon-based emotional check-ins and guided box breathing exercises that guide users with visual cues.
+
+12
+00:03:10,460 --> 00:03:25,710
+Under the hood, an atomic Room database outbox and WorkManager background synchronization keep every action functional in zero-connectivity dead-zones, syncing seamlessly once network connectivity resumes.
+
+13
+00:03:26,510 --> 00:03:37,800
+VitalSense: healthcare that keeps working, even when the network doesn't. Scan the QR code to test the live prototype on GitHub.
+

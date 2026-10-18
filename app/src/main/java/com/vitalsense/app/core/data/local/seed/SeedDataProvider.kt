@@ -892,5 +892,97 @@ object SeedDataProvider {
     )
 
     fun getReferralEntities(): List<ReferralEntity> = initialReferrals.map { it.toEntity() }
+
+    val todayDateFormatted: String = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+
+    val initialQueueEntries = listOf(
+        QueueEntry(
+            id = "q_entry_ramesh",
+            doctorId = "doc_rajesh",
+            doctorName = "Dr. Rajesh Varma",
+            dateFormatted = todayDateFormatted,
+            tokenNumber = 1,
+            provisionalToken = false,
+            appointmentId = "apt_1",
+            patientId = "pat_ramesh",
+            patientName = "Ramesh Kumar",
+            source = QueueEntrySource.SCHEDULED,
+            status = QueueEntryStatus.WAITING,
+            priorityFlag = true,
+            checkedInAt = System.currentTimeMillis() - 1800000L,
+            isPendingSync = false
+        ),
+        QueueEntry(
+            id = "q_entry_anita",
+            doctorId = "doc_rajesh",
+            doctorName = "Dr. Rajesh Varma",
+            dateFormatted = todayDateFormatted,
+            tokenNumber = 2,
+            provisionalToken = false,
+            appointmentId = null,
+            patientId = "pat_anita",
+            patientName = "Anita Sharma",
+            source = QueueEntrySource.WALK_IN,
+            status = QueueEntryStatus.WAITING,
+            priorityFlag = true,
+            checkedInAt = System.currentTimeMillis() - 1200000L,
+            isPendingSync = false
+        ),
+        QueueEntry(
+            id = "q_entry_vikram",
+            doctorId = "doc_rajesh",
+            doctorName = "Dr. Rajesh Varma",
+            dateFormatted = todayDateFormatted,
+            tokenNumber = 3,
+            provisionalToken = false,
+            appointmentId = "apt_2",
+            patientId = "pat_vikram",
+            patientName = "Vikram Singh",
+            source = QueueEntrySource.SCHEDULED,
+            status = QueueEntryStatus.WAITING,
+            priorityFlag = false,
+            checkedInAt = System.currentTimeMillis() - 900000L,
+            isPendingSync = false
+        ),
+        QueueEntry(
+            id = "q_entry_meena",
+            doctorId = "doc_rajesh",
+            doctorName = "Dr. Rajesh Varma",
+            dateFormatted = todayDateFormatted,
+            tokenNumber = 4,
+            provisionalToken = false,
+            appointmentId = null,
+            patientId = "pat_meena",
+            patientName = "Meena Patel",
+            source = QueueEntrySource.WALK_IN,
+            status = QueueEntryStatus.WAITING,
+            priorityFlag = false,
+            checkedInAt = System.currentTimeMillis() - 300000L,
+            isPendingSync = false
+        )
+    )
+
+    fun getQueueEntryEntities(): List<QueueEntryEntity> = initialQueueEntries.map {
+        QueueEntryEntity(
+            id = it.id,
+            doctorId = it.doctorId,
+            doctorName = it.doctorName,
+            dateFormatted = it.dateFormatted,
+            tokenNumber = it.tokenNumber,
+            provisionalToken = it.provisionalToken,
+            appointmentId = it.appointmentId,
+            patientId = it.patientId,
+            patientName = it.patientName,
+            source = it.source,
+            status = it.status,
+            priorityFlag = it.priorityFlag,
+            checkedInAt = it.checkedInAt,
+            calledAt = it.calledAt,
+            consultationStartedAt = it.consultationStartedAt,
+            completedAt = it.completedAt,
+            outcomeNotes = it.outcomeNotes,
+            isPendingSync = it.isPendingSync
+        )
+    }
 }
 

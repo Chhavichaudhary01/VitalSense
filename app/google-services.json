@@ -12,7 +12,28 @@
           "package_name": "com.vitalsense.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1056788502080-n6vrcucpcohbk99knql6p5gldpnolo6j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vitalsense.app",
+            "certificate_hash": "811a24495f1d8bf7c4ca698b82e9ad5209735f68"
+          }
+        },
+        {
+          "client_id": "1056788502080-o6ogh2b0to781868jrs83dmi1bscvmui.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vitalsense.app",
+            "certificate_hash": "5c08a0a2c9f1ad1cd1c5d73d138dd6cbf6c153e3"
+          }
+        },
+        {
+          "client_id": "1056788502080-dni72en90iveg7m6lafapukdab1263fn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAbVbSP0MHaFCkQYQpIng2-QAZShCz-XO8"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1056788502080-dni72en90iveg7m6lafapukdab1263fn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

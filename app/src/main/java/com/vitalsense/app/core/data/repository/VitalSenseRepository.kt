@@ -151,6 +151,9 @@ interface VitalSenseRepository {
     fun getAllAuditLogs(): Flow<List<AuditLog>>
     fun getAuditLogsForPatient(patientId: String): Flow<List<AuditLog>>
     suspend fun logAuditAction(auditLog: AuditLog)
+
+    // --- Demo Data Reset ---
+    suspend fun resetToCleanSeedData()
 }
 
 

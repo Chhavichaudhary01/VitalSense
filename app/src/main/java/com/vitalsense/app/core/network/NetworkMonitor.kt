@@ -80,13 +80,21 @@ class NetworkMonitor @Inject constructor(
      * Toggles manual offline simulation mode for UI testing and hackathon demo verification.
      */
     fun toggleManualOffline() {
+        val wasOffline = !isOnline()
         _isManualOfflineForced.value = !_isManualOfflineForced.value
         recomputeState()
+        if (wasOffline && isOnline()) {
+            onNetworkRestoredCallback?.invoke()
+        }
     }
 
     fun setManualOffline(offline: Boolean) {
+        val wasOffline = !isOnline()
         _isManualOfflineForced.value = offline
         recomputeState()
+        if (wasOffline && isOnline()) {
+            onNetworkRestoredCallback?.invoke()
+        }
     }
 
     fun isOnline(): Boolean {

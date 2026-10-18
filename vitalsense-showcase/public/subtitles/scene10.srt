@@ -1,0 +1,4 @@
+1
+00:00:00,400 --> 00:00:17,896
+In a critical emergency, one tap triggers the SOS system. It transmits GPS coordinates to nearby doctors and ASHA workers, and automatically falls back to cellular SMS when mobile data is unavailable.
+

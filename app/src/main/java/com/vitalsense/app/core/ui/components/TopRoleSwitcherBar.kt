@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -275,6 +276,112 @@ fun TopRoleSwitcherBar(
             }
         }
     }
+
+        // Offline-First Room DB Banner (Audio 3)
+        val effectiveOffline = isOffline || connectivityState == ConnectivityState.OFFLINE
+        AnimatedVisibility(
+            visible = effectiveOffline,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            Surface(
+                color = Color(0xFFFFF7ED),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.sm, vertical = 2.dp),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, Color(0xFFFDBA74))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("⚡", fontSize = 13.sp)
+                        Column {
+                            Text(
+                                text = "OFFLINE-FIRST ENGINE ACTIVE",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFFC2410C)
+                                )
+                            )
+                            Text(
+                                text = "Local Room DB instant writes (0ms) · Auto-syncs to cloud when signal returns",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                                color = Color(0xFF9A3412)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = PillShape,
+                        color = Color(0xFFEA580C)
+                    ) {
+                        Text(
+                            text = if (pendingOutboxCount > 0) "$pendingOutboxCount queued" else "Zero signal",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            ),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Auto-Syncing In Progress Banner (Audio 3)
+        AnimatedVisibility(
+            visible = !effectiveOffline && (isSyncing || pendingOutboxCount > 0),
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            Surface(
+                color = VS_SuccessContainer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.sm, vertical = 2.dp),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, VS_Success.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 2.dp,
+                            color = VS_Success
+                        )
+                        Text(
+                            text = if (isSyncing) "Syncing queued records to cloud via WorkManager..." else "Signal restored: $pendingOutboxCount records syncing automatically",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = VS_OnSuccessContainer
+                            )
+                        )
+                    }
+                    Text("✓ Cloud Synced", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, color = VS_Success))
+                }
+            }
+        }
 
         // ASHA Proxy Indicator Banner
         AnimatedVisibility(

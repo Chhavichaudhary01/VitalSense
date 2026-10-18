@@ -45,9 +45,9 @@ fun PrescriptionOcrDialog(
         isProcessing = true
         coroutineScope.launch {
             val sampleText = when (sampleType) {
-                "Fever" -> "Rx:\nTab Paracetamol 650mg 1-0-1 (BD)\nTab Cetirizine 10mg 0-0-1 (HS)\nSyp Cough Relief 10ml TDS"
-                "Maternal" -> "Rx:\nTab Iron Folic Acid 100mg 1-0-0\nTab Calcium 500mg 0-1-0\nMultivitamin Daily"
-                else -> "Rx:\nTab Amoxicillin 500mg 1-1-1\nTab Paracetamol 500mg 1-0-1\nORS solution daily"
+                "Fever" -> "Rx:\nTab Paracetamol 650mg 1-0-1 (BD) PO\nTab Cetirizine 10mg 0-0-1 (HS) PO\nSyp Cough Relief 10ml TDS PO\nTab Combiflam SOS PO"
+                "Maternal" -> "Rx:\nTab Iron Folic Acid 100mg OD (AC) PO\nTab Calcium 500mg BD (PC) PO\nMultivitamin 1 tab OD PO"
+                else -> "Rx:\nTab Amoxicillin 500mg TDS PO\nTab Paracetamol 500mg BD (PC) PO\nORS sachet 1 pack in 1L water TDS"
             }
 
             // Create bitmap representation to execute on-device ML Kit OCR
@@ -129,6 +129,49 @@ fun PrescriptionOcrDialog(
                             style = MaterialTheme.typography.bodySmall,
                             color = VS_OnBackground
                         )
+                    }
+                }
+
+                // Medical Shorthand Auto-Expansion Reference
+                Surface(
+                    color = VS_SurfaceVariant,
+                    shape = CardShape,
+                    border = BorderStroke(1.dp, VS_Outline),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Spacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
+                    ) {
+                        Text(
+                            text = "⚡ Medical Shorthand Auto-Expanded:",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = VS_Primary
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            listOf(
+                                "BD" to "Twice Daily",
+                                "TDS" to "3x Daily",
+                                "SOS" to "As Needed",
+                                "PO" to "Orally"
+                            ).forEach { (short, full) ->
+                                Surface(
+                                    shape = PillShape,
+                                    color = VS_Surface,
+                                    border = BorderStroke(0.5.dp, VS_Outline)
+                                ) {
+                                    Text(
+                                        text = "$short → $full",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold),
+                                        color = VS_OnSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -220,12 +263,27 @@ fun PrescriptionOcrDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
-                                    Text(
-                                        text = med.name,
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = VS_OnBackground
-                                    )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                                    ) {
+                                        Text(
+                                            text = med.name,
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = VS_OnBackground
+                                        )
+                                        Surface(
+                                            shape = PillShape,
+                                            color = VS_SuccessContainer
+                                        ) {
+                                            Text(
+                                                text = "Auto-Expanded",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = VS_OnSuccessContainer, fontWeight = FontWeight.Bold),
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                            )
+                                        }
+                                    }
                                     Text(
                                         text = "Dosage: ${med.dosage} · ${med.frequency}",
                                         style = MaterialTheme.typography.bodySmall,

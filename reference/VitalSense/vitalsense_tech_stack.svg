@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap');
+    </style>
+
+    <!-- ══════════════ FILTERS ══════════════ -->
+    <filter id="arrowGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+
+    <filter id="badgeGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="titleGlow" x="-10%" y="-30%" width="120%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- ══════════════ GRADIENTS ══════════════ -->
+    <linearGradient id="arrowGradV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7C5CFC"/>
+      <stop offset="100%" stop-color="#2DD4BF"/>
+    </linearGradient>
+
+    <linearGradient id="purpleGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8B6FFC"/>
+      <stop offset="100%" stop-color="#6B4CEC"/>
+    </linearGradient>
+
+    <linearGradient id="cardFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E1E2A"/>
+      <stop offset="100%" stop-color="#181822"/>
+    </linearGradient>
+
+    <linearGradient id="tierFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141420"/>
+      <stop offset="100%" stop-color="#11111B"/>
+    </linearGradient>
+
+    <radialGradient id="titleRadialGlow" cx="50%" cy="0%" r="45%">
+      <stop offset="0%" stop-color="#7C5CFC" stop-opacity="0.07"/>
+      <stop offset="50%" stop-color="#7C5CFC" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#7C5CFC" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="titleLine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7C5CFC" stop-opacity="0"/>
+      <stop offset="25%" stop-color="#7C5CFC" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#2DD4BF" stop-opacity="0.7"/>
+      <stop offset="75%" stop-color="#7C5CFC" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7C5CFC" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="flowRailGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7C5CFC" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#2DD4BF" stop-opacity="0.4"/>
+    </linearGradient>
+
+    <!-- ══════════════ CLIP PATHS ══════════════ -->
+    <clipPath id="tc1"><rect x="80" y="115" width="1760" height="120" rx="16"/></clipPath>
+    <clipPath id="tc2"><rect x="80" y="280" width="1760" height="120" rx="16"/></clipPath>
+    <clipPath id="tc3"><rect x="80" y="445" width="1760" height="120" rx="16"/></clipPath>
+    <clipPath id="tc4"><rect x="80" y="610" width="1760" height="120" rx="16"/></clipPath>
+    <clipPath id="tc5"><rect x="80" y="775" width="1760" height="120" rx="16"/></clipPath>
+  </defs>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--                  BACKGROUND                    -->
+  <!-- ══════════════════════════════════════════════ -->
+  <rect width="1920" height="1080" fill="#0D0D12"/>
+  <rect width="1920" height="600" fill="url(#titleRadialGlow)"/>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--                DATA FLOW RAIL                  -->
+  <!-- ══════════════════════════════════════════════ -->
+  <line x1="48" y1="140" x2="48" y2="880" stroke="url(#flowRailGrad)" stroke-width="1" stroke-dasharray="5 4"/>
+  <circle cx="48" cy="135" r="3" fill="#7C5CFC" opacity="0.7"/>
+  <circle cx="48" cy="885" r="3" fill="#2DD4BF" opacity="0.7"/>
+  <text x="48" y="122" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="8" font-weight="600" fill="#4E4E68" letter-spacing="2">USER</text>
+  <text x="48" y="905" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="8" font-weight="600" fill="#4E4E68" letter-spacing="2">CLOUD</text>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--                    TITLE                       -->
+  <!-- ══════════════════════════════════════════════ -->
+  <text x="960" y="50" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="42" font-weight="800" fill="#FFFFFF" letter-spacing="12" filter="url(#titleGlow)">VITALSENSE</text>
+  <text x="960" y="80" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="15" font-weight="400" fill="#6E6E88" letter-spacing="5">TECH STACK ARCHITECTURE</text>
+  <line x1="810" y1="98" x2="1110" y2="98" stroke="url(#titleLine)" stroke-width="1.5"/>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--   TIER 1 — PRESENTATION & UI LAYER  (y=115, h=120)       -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g>
+    <rect x="80" y="115" width="1760" height="120" rx="16" fill="url(#tierFill)" stroke="#2A2A3A" stroke-width="1"/>
+    <rect x="80" y="115" width="4" height="120" fill="#7C5CFC" opacity="0.5" clip-path="url(#tc1)"/>
+
+    <!-- Separator -->
+    <line x1="105" y1="155" x2="1820" y2="155" stroke="#2A2A3A" stroke-width="0.5" opacity="0.25"/>
+
+    <!-- Badge + Label -->
+    <circle cx="118" cy="140" r="13" fill="url(#purpleGrad)" filter="url(#badgeGlow)"/>
+    <text x="118" y="145" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">1</text>
+    <text x="142" y="145" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#9898B0" letter-spacing="2">PRESENTATION &amp; UI LAYER</text>
+
+    <!-- Cards: 4 × w250, gap20 → total 1060, startX 430 -->
+    <!-- Jetpack Compose -->
+    <g filter="url(#cardShadow)">
+      <rect x="430" y="163" width="250" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="555" y="187" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Jetpack Compose</text>
+      <text x="555" y="205" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Declarative UI</text>
+    </g>
+    <!-- Material 3 -->
+    <g filter="url(#cardShadow)">
+      <rect x="700" y="163" width="250" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="825" y="187" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Material 3</text>
+      <text x="825" y="205" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Design System</text>
+    </g>
+    <!-- Glume Dark Tokens -->
+    <g filter="url(#cardShadow)">
+      <rect x="970" y="163" width="250" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="1095" y="187" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Glume Dark Tokens</text>
+      <text x="1095" y="205" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Theme Engine</text>
+    </g>
+    <!-- Bilingual i18n -->
+    <g filter="url(#cardShadow)">
+      <rect x="1240" y="163" width="250" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="1365" y="187" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Bilingual i18n</text>
+      <text x="1365" y="205" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">EN / HI Support</text>
+    </g>
+  </g>
+
+
+  <!-- ═══════════════ ARROW 1 → 2 ═══════════════ -->
+  <g filter="url(#arrowGlow)" opacity="0.85">
+    <line x1="935" y1="240" x2="935" y2="272" stroke="#7C5CFC" stroke-width="1" stroke-dasharray="3 2" opacity="0.35"/>
+    <line x1="960" y1="238" x2="960" y2="275" stroke="url(#arrowGradV)" stroke-width="2"/>
+    <line x1="985" y1="240" x2="985" y2="272" stroke="#2DD4BF" stroke-width="1" stroke-dasharray="3 2" opacity="0.35"/>
+    <polygon points="953,270 960,280 967,270" fill="#7C5CFC" opacity="0.9"/>
+  </g>
+  <text x="1008" y="263" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="9" fill="#4E4E68" font-weight="500" letter-spacing="1">EVENTS &amp; STATE</text>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--   TIER 2 — STATE & CORE LOGIC LAYER  (y=280, h=120)      -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g>
+    <rect x="80" y="280" width="1760" height="120" rx="16" fill="url(#tierFill)" stroke="#2A2A3A" stroke-width="1"/>
+    <rect x="80" y="280" width="4" height="120" fill="#2DD4BF" opacity="0.45" clip-path="url(#tc2)"/>
+
+    <line x1="105" y1="320" x2="1820" y2="320" stroke="#2A2A3A" stroke-width="0.5" opacity="0.25"/>
+
+    <circle cx="118" cy="305" r="13" fill="url(#purpleGrad)" filter="url(#badgeGlow)"/>
+    <text x="118" y="310" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">2</text>
+    <text x="142" y="310" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#9898B0" letter-spacing="2">STATE &amp; CORE LOGIC LAYER</text>
+
+    <!-- Cards: 5 × w220, gap16 → total 1164, startX 378 -->
+    <!-- Kotlin -->
+    <g filter="url(#cardShadow)">
+      <rect x="378" y="328" width="220" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="488" y="352" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Kotlin</text>
+      <text x="488" y="370" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Language</text>
+    </g>
+    <!-- MVVM -->
+    <g filter="url(#cardShadow)">
+      <rect x="614" y="328" width="220" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="724" y="352" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">MVVM</text>
+      <text x="724" y="370" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Architecture Pattern</text>
+    </g>
+    <!-- Dagger Hilt DI -->
+    <g filter="url(#cardShadow)">
+      <rect x="850" y="328" width="220" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="960" y="352" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Dagger Hilt DI</text>
+      <text x="960" y="370" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Dependency Injection</text>
+    </g>
+    <!-- Coroutines -->
+    <g filter="url(#cardShadow)">
+      <rect x="1086" y="328" width="220" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="1196" y="352" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Coroutines</text>
+      <text x="1196" y="370" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Async Runtime</text>
+    </g>
+    <!-- StateFlow -->
+    <g filter="url(#cardShadow)">
+      <rect x="1322" y="328" width="220" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="1432" y="352" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">StateFlow</text>
+      <text x="1432" y="370" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Reactive State</text>
+    </g>
+  </g>
+
+
+  <!-- ═══════════════ ARROW 2 → 3 ═══════════════ -->
+  <g filter="url(#arrowGlow)" opacity="0.85">
+    <line x1="935" y1="405" x2="935" y2="437" stroke="#7C5CFC" stroke-width="1" stroke-dasharray="3 2" opacity="0.35"/>
+    <line x1="960" y1="403" x2="960" y2="440" stroke="url(#arrowGradV)" stroke-width="2"/>
+    <line x1="985" y1="405" x2="985" y2="437" stroke="#2DD4BF" stroke-width="1" stroke-dasharray="3 2" opacity="0.35"/>
+    <polygon points="953,435 960,445 967,435" fill="#7C5CFC" opacity="0.9"/>
+  </g>
+  <text x="1008" y="428" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="9" fill="#4E4E68" font-weight="500" letter-spacing="1">SERVICE CALLS</text>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--   TIER 3 — ON-DEVICE AI & HARDWARE  (y=445, h=120)       -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g>
+    <rect x="80" y="445" width="1760" height="120" rx="16" fill="url(#tierFill)" stroke="#2A2A3A" stroke-width="1"/>
+    <rect x="80" y="445" width="4" height="120" fill="#7C5CFC" opacity="0.5" clip-path="url(#tc3)"/>
+
+    <line x1="105" y1="485" x2="1820" y2="485" stroke="#2A2A3A" stroke-width="0.5" opacity="0.25"/>
+
+    <circle cx="118" cy="470" r="13" fill="url(#purpleGrad)" filter="url(#badgeGlow)"/>
+    <text x="118" y="475" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">3</text>
+    <text x="142" y="475" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#9898B0" letter-spacing="2">ON-DEVICE AI &amp; HARDWARE SERVICES</text>
+
+    <!-- Cards: 3 × w300, gap20 → total 940, startX 490 -->
+    <!-- Google ML Kit OCR -->
+    <g filter="url(#cardShadow)">
+      <rect x="490" y="493" width="300" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="640" y="517" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Google ML Kit OCR</text>
+      <text x="640" y="535" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Text Recognition</text>
+    </g>
+    <!-- Cellular SMS Fallbacks -->
+    <g filter="url(#cardShadow)">
+      <rect x="810" y="493" width="300" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="960" y="517" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Cellular SMS Fallbacks</text>
+      <text x="960" y="535" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Offline Messaging</text>
+    </g>
+    <!-- Maps Compose -->
+    <g filter="url(#cardShadow)">
+      <rect x="1130" y="493" width="300" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="1280" y="517" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Maps Compose</text>
+      <text x="1280" y="535" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Location Services</text>
+    </g>
+  </g>
+
+
+  <!-- ═══════════════ ARROW 3 → 4 ═══════════════ -->
+  <g filter="url(#arrowGlow)" opacity="0.85">
+    <line x1="935" y1="570" x2="935" y2="602" stroke="#7C5CFC" stroke-width="1" stroke-dasharray="3 2" opacity="0.35"/>
+    <line x1="960" y1="568" x2="960" y2="605" stroke="url(#arrowGradV)" stroke-width="2"/>
+    <line x1="985" y1="570" x2="985" y2="602" stroke="#2DD4BF" stroke-width="1" stroke-dasharray="3 2" opacity="0.35"/>
+    <polygon points="953,600 960,610 967,600" fill="#7C5CFC" opacity="0.9"/>
+  </g>
+  <text x="1008" y="593" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="9" fill="#4E4E68" font-weight="500" letter-spacing="1">READ / WRITE OPS</text>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--   TIER 4 — OFFLINE-FIRST DATA ENGINE  (y=610, h=120)      -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g>
+    <rect x="80" y="610" width="1760" height="120" rx="16" fill="url(#tierFill)" stroke="#2A2A3A" stroke-width="1"/>
+    <rect x="80" y="610" width="4" height="120" fill="#2DD4BF" opacity="0.45" clip-path="url(#tc4)"/>
+
+    <line x1="105" y1="650" x2="1820" y2="650" stroke="#2A2A3A" stroke-width="0.5" opacity="0.25"/>
+
+    <circle cx="118" cy="635" r="13" fill="url(#purpleGrad)" filter="url(#badgeGlow)"/>
+    <text x="118" y="640" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">4</text>
+    <text x="142" y="640" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#9898B0" letter-spacing="2">OFFLINE-FIRST DATA ENGINE</text>
+
+    <!-- Cards: 2 × w400, gap24 → total 824, startX 548 -->
+    <!-- Room SQLite 10-Table Cache -->
+    <g filter="url(#cardShadow)">
+      <rect x="548" y="658" width="400" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="748" y="682" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Room SQLite 10-Table Cache</text>
+      <text x="748" y="700" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Persistent Storage</text>
+    </g>
+    <!-- WorkManager Outbox Background Sync -->
+    <g filter="url(#cardShadow)">
+      <rect x="972" y="658" width="400" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="1172" y="682" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">WorkManager Outbox Background Sync</text>
+      <text x="1172" y="700" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Queue Processing</text>
+    </g>
+  </g>
+
+
+  <!-- ═══════════════ ARROW 4 → 5 ═══════════════ -->
+  <g filter="url(#arrowGlow)" opacity="0.85">
+    <line x1="935" y1="735" x2="935" y2="767" stroke="#7C5CFC" stroke-width="1" stroke-dasharray="3 2" opacity="0.35"/>
+    <line x1="960" y1="733" x2="960" y2="770" stroke="url(#arrowGradV)" stroke-width="2"/>
+    <line x1="985" y1="735" x2="985" y2="767" stroke="#2DD4BF" stroke-width="1" stroke-dasharray="3 2" opacity="0.35"/>
+    <polygon points="953,765 960,775 967,765" fill="#7C5CFC" opacity="0.9"/>
+  </g>
+  <text x="1008" y="758" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="9" fill="#4E4E68" font-weight="500" letter-spacing="1">BACKGROUND SYNC</text>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--   TIER 5 — CLOUD INFRASTRUCTURE  (y=775, h=120)           -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g>
+    <rect x="80" y="775" width="1760" height="120" rx="16" fill="url(#tierFill)" stroke="#2A2A3A" stroke-width="1"/>
+    <rect x="80" y="775" width="4" height="120" fill="#7C5CFC" opacity="0.5" clip-path="url(#tc5)"/>
+
+    <line x1="105" y1="815" x2="1820" y2="815" stroke="#2A2A3A" stroke-width="0.5" opacity="0.25"/>
+
+    <circle cx="118" cy="800" r="13" fill="url(#purpleGrad)" filter="url(#badgeGlow)"/>
+    <text x="118" y="805" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">5</text>
+    <text x="142" y="805" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#9898B0" letter-spacing="2">CLOUD INFRASTRUCTURE</text>
+
+    <!-- Cards: 3 × w290, gap20 → total 910, startX 505 -->
+    <!-- Firebase Cloud Firestore -->
+    <g filter="url(#cardShadow)">
+      <rect x="505" y="823" width="290" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="650" y="847" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Firebase Cloud Firestore</text>
+      <text x="650" y="865" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">NoSQL Database</text>
+    </g>
+    <!-- Firebase Auth -->
+    <g filter="url(#cardShadow)">
+      <rect x="815" y="823" width="290" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="960" y="847" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Firebase Auth</text>
+      <text x="960" y="865" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">Identity Provider</text>
+    </g>
+    <!-- Cloud Storage -->
+    <g filter="url(#cardShadow)">
+      <rect x="1125" y="823" width="290" height="56" rx="12" fill="url(#cardFill)" stroke="#2A2A3A" stroke-width="1"/>
+      <text x="1270" y="847" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="14" font-weight="500" fill="#E8E8F0">Cloud Storage</text>
+      <text x="1270" y="865" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#6E6E8A">File Storage</text>
+    </g>
+  </g>
+
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--                   FOOTER                       -->
+  <!-- ══════════════════════════════════════════════ -->
+  <text x="944" y="950" text-anchor="end" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="16" font-weight="700" fill="#7C5CFC" opacity="0.3">V</text>
+  <text x="948" y="950" text-anchor="start" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="16" font-weight="700" fill="#2DD4BF" opacity="0.3">S</text>
+  <text x="960" y="972" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#3A3A50" letter-spacing="3">VITALSENSE · SEHATSETU · 2026</text>
+
+  <!-- Right-side technology count badge -->
+  <rect x="1770" y="935" width="90" height="30" rx="8" fill="#181822" stroke="#2A2A3A" stroke-width="1"/>
+  <text x="1815" y="955" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#7C5CFC">17</text>
+  <text x="1815" y="968" text-anchor="middle" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="7" font-weight="400" fill="#6E6E8A" letter-spacing="1">MODULES</text>
+
+</svg>

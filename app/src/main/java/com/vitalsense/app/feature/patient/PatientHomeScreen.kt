@@ -321,6 +321,14 @@ fun PatientHomeScreen(
             }
         }
 
+        // 2.5 Bharat Healthcare Impact Metrics (Audio 10)
+        item {
+            ImpactMetricsCard(
+                collapsible = true,
+                initiallyExpanded = true
+            )
+        }
+
         // 3. Section Title: Health Categories (Icon-First & High Contrast)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {

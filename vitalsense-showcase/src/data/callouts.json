@@ -1,0 +1,162 @@
+[
+  {
+    "scene": "scene04",
+    "startSec": 1.5,
+    "endSec": 8.0,
+    "targetX": 0.73,
+    "targetY": 0.125,
+    "label": "Instant 4-Language Switch",
+    "sublabel": "English, हिंदी, தமிழ், मराठी",
+    "side": "left"
+  },
+  {
+    "scene": "scene04",
+    "startSec": 8.5,
+    "endSec": 15.0,
+    "targetX": 0.50,
+    "targetY": 0.38,
+    "label": "One-Tap Role Selection",
+    "sublabel": "Patient, ASHA, Doctor, Admin",
+    "side": "right"
+  },
+  {
+    "scene": "scene05",
+    "startSec": 1.5,
+    "endSec": 9.5,
+    "targetX": 0.50,
+    "targetY": 0.50,
+    "label": "Real-Time Vitals HUD",
+    "sublabel": "76 BPM Heart Rate • 98% SpO2",
+    "side": "left"
+  },
+  {
+    "scene": "scene05",
+    "startSec": 10.0,
+    "endSec": 18.0,
+    "targetX": 0.65,
+    "targetY": 0.63,
+    "label": "Bluetooth Pulse Oximeter",
+    "sublabel": "Direct Sensor Ingestion",
+    "side": "right"
+  },
+  {
+    "scene": "scene06",
+    "startSec": 1.5,
+    "endSec": 9.5,
+    "targetX": 0.50,
+    "targetY": 0.40,
+    "label": "Offline ABHA QR Card",
+    "sublabel": "Zero-Data Scannable ID",
+    "side": "left"
+  },
+  {
+    "scene": "scene06",
+    "startSec": 10.0,
+    "endSec": 17.5,
+    "targetX": 0.50,
+    "targetY": 0.48,
+    "label": "Longitudinal Care Journey",
+    "sublabel": "Home Visits & Clinical History",
+    "side": "right"
+  },
+  {
+    "scene": "scene07",
+    "startSec": 1.5,
+    "endSec": 9.5,
+    "targetX": 0.50,
+    "targetY": 0.52,
+    "label": "On-Device ML Kit Scanner",
+    "sublabel": "Auto-Crop & Perspective Fix",
+    "side": "left"
+  },
+  {
+    "scene": "scene07",
+    "startSec": 10.0,
+    "endSec": 19.0,
+    "targetX": 0.50,
+    "targetY": 0.40,
+    "label": "Nearby Jan Aushadhi Stock",
+    "sublabel": "Real-Time Medicine Inventory",
+    "side": "right"
+  },
+  {
+    "scene": "scene08",
+    "startSec": 1.5,
+    "endSec": 9.5,
+    "targetX": 0.50,
+    "targetY": 0.36,
+    "label": "Clinical Severity Triage",
+    "sublabel": "Urgent Cases Prioritized First",
+    "side": "left"
+  },
+  {
+    "scene": "scene08",
+    "startSec": 10.0,
+    "endSec": 19.5,
+    "targetX": 0.50,
+    "targetY": 0.64,
+    "label": "Specialist Referrals Queue",
+    "sublabel": "Closed-Loop Referral Network",
+    "side": "right"
+  },
+  {
+    "scene": "scene09",
+    "startSec": 1.5,
+    "endSec": 9.5,
+    "targetX": 0.50,
+    "targetY": 0.35,
+    "label": "Village Outbreak Heatmap",
+    "sublabel": "Spatial Symptom Cluster Tracking",
+    "side": "left"
+  },
+  {
+    "scene": "scene09",
+    "startSec": 10.0,
+    "endSec": 18.5,
+    "targetX": 0.50,
+    "targetY": 0.48,
+    "label": "Broadcast Health Directive",
+    "sublabel": "Instant Push to Frontline Workers",
+    "side": "right"
+  },
+  {
+    "scene": "scene10",
+    "startSec": 1.5,
+    "endSec": 9.5,
+    "targetX": 0.50,
+    "targetY": 0.48,
+    "label": "3-Second SOS Trigger",
+    "sublabel": "Instant Multi-Target Alert",
+    "side": "left"
+  },
+  {
+    "scene": "scene10",
+    "startSec": 10.0,
+    "endSec": 17.5,
+    "targetX": 0.50,
+    "targetY": 0.78,
+    "label": "Cellular SMS Fallback",
+    "sublabel": "Zero-Data Offline Transmission",
+    "side": "right"
+  },
+  {
+    "scene": "scene11",
+    "startSec": 1.5,
+    "endSec": 7.5,
+    "targetX": 0.50,
+    "targetY": 0.34,
+    "label": "Non-Stigmatized Check-In",
+    "sublabel": "Icon-Driven Emotional Assessment",
+    "side": "left"
+  },
+  {
+    "scene": "scene11",
+    "startSec": 8.0,
+    "endSec": 14.5,
+    "targetX": 0.50,
+    "targetY": 0.62,
+    "label": "Guided Box Breathing",
+    "sublabel": "4-4-4 Visual Pacing Circle",
+    "side": "right"
+  }
+]

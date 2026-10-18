@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 220" width="100%" height="100%">
+  <defs>
+    <!-- Background Outer Glow Filter -->
+    <filter id="logoGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#1E40AF" flood-opacity="0.3" />
+    </filter>
+    <filter id="ecgGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#10B981" flood-opacity="0.5" />
+    </filter>
+
+    <!-- Gradients -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="60%" stop-color="#1E40AF" />
+      <stop offset="100%" stop-color="#1E3A8A" />
+    </linearGradient>
+
+    <linearGradient id="haloGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.08" />
+    </linearGradient>
+
+    <linearGradient id="vGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+  </defs>
+
+  <!-- ICON MARK (Left Side: Center cx=110, cy=105) -->
+  <g id="icon-mark">
+    <!-- Outer Halo -->
+    <circle cx="110" cy="105" r="92" fill="url(#haloGrad)" stroke="#38BDF8" stroke-opacity="0.25" stroke-width="2" />
+
+    <!-- Core Shield -->
+    <circle cx="110" cy="105" r="74" fill="url(#shieldGrad)" stroke="#60A5FA" stroke-width="2.5" filter="url(#logoGlow)" />
+
+    <!-- Inner Subtle Ring -->
+    <circle cx="110" cy="105" r="69" fill="none" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="1" />
+
+    <!-- "V" Chevron -->
+    <path d="M78 63 L110 144 L142 63 L125 63 L110 102 L95 63 Z" fill="url(#vGrad)" />
+
+    <!-- ECG Heartbeat Waveform across bottom of emblem -->
+    <path d="M 20 188 
+             L 76 188 
+             L 90 174 
+             L 100 206 
+             L 112 158 
+             L 124 212 
+             L 134 180 
+             L 144 188 
+             L 200 188" 
+          fill="none" 
+          stroke="#10B981" 
+          stroke-width="5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          filter="url(#ecgGlow)" />
+  </g>
+
+  <!-- TYPOGRAPHY LOCKUP (Right Side) -->
+  <g id="typography">
+    <!-- Brand Title -->
+    <text x="230" y="112" 
+          font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Inter', sans-serif" 
+          font-size="64" 
+          font-weight="900" 
+          letter-spacing="-1.5px" 
+          fill="#0F172A">
+      Vital<tspan fill="#1E40AF">Sense</tspan>
+    </text>
+
+    <!-- Subtitle / Tagline Pill -->
+    <g transform="translate(232, 134)">
+      <!-- Pill Container -->
+      <rect x="0" y="0" width="168" height="32" rx="16" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.2" />
+      <text x="84" y="21" 
+            text-anchor="middle" 
+            font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" 
+            font-size="14" 
+            font-weight="800" 
+            letter-spacing="1.2px" 
+            fill="#15803D">
+        SEHAT SETU
+      </text>
+
+      <!-- Subtitle text next to pill -->
+      <text x="182" y="21" 
+            font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" 
+            font-size="14" 
+            font-weight="600" 
+            letter-spacing="0.5px" 
+            fill="#64748B">
+        Rural Healthcare Ecosystem • Team AarogyaX
+      </text>
+    </g>
+  </g>
+</svg>

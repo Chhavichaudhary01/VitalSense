@@ -1,0 +1,4 @@
+1
+00:00:00,400 --> 00:00:14,872
+To address mental health in rural areas without stigma, VitalSense offers simple, icon-based emotional check-ins and guided box breathing exercises that guide users with visual cues.
+

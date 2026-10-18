@@ -252,7 +252,7 @@ interface VitalSenseDao {
     suspend fun insertBioMedicalEquipment(equipment: BioMedicalEquipmentEntity)
 
     // --- Live Clinic Queue & Day Slots ---
-    @Query("SELECT * FROM queue_entries WHERE doctorId = :doctorId AND dateFormatted = :date ORDER BY checkedInAt ASC")
+    @Query("SELECT * FROM queue_entries WHERE doctorId = :doctorId AND dateFormatted = :date ORDER BY priorityFlag DESC, checkedInAt ASC")
     fun observeDoctorQueue(doctorId: String, date: String): Flow<List<QueueEntryEntity>>
 
     @Query("SELECT * FROM queue_entries WHERE patientId = :patientId AND dateFormatted = :date LIMIT 1")

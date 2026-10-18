@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.QueueEntry
 import com.vitalsense.app.core.data.model.QueueEntrySource
 import com.vitalsense.app.core.data.model.QueueEntryStatus
+import com.vitalsense.app.core.data.model.Patient
+import com.vitalsense.app.core.data.model.SeverityLevel
+import com.vitalsense.app.core.ui.components.SeverityBadge
 import com.vitalsense.app.core.ui.components.TabularStatusChip
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.core.ui.util.touchSpring
@@ -32,12 +35,18 @@ fun QueueEntryListItem(
     entry: QueueEntry,
     modifier: Modifier = Modifier,
     isDoctorMode: Boolean = true,
+    patient: Patient? = null,
+    clinicalSeverity: SeverityLevel? = null,
+    clinicalCondition: String? = null,
     onPrioritize: (() -> Unit)? = null,
     onSkip: (() -> Unit)? = null,
     onMarkNoShow: (() -> Unit)? = null,
     onStartConsultation: (() -> Unit)? = null
 ) {
     val timeFormatted = rememberTime(entry.checkedInAt)
+    val effectiveSeverity = clinicalSeverity ?: patient?.currentRiskLevel
+    val effectiveCondition = clinicalCondition ?: patient?.lastCondition
+    val isTriagePriority = entry.priorityFlag || effectiveSeverity == SeverityLevel.SEVERE || effectiveSeverity == SeverityLevel.HIGH
 
     Card(
         modifier = modifier
@@ -45,13 +54,13 @@ fun QueueEntryListItem(
             .touchSpring(),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (entry.priorityFlag) VS_SurfaceVariant else VS_Surface
+            containerColor = if (isTriagePriority) Color(0xFFFFF8F7) else VS_Surface
         ),
         border = BorderStroke(
-            1.dp,
-            if (entry.priorityFlag) VS_Error.copy(alpha = 0.5f) else VS_Outline
+            if (isTriagePriority) 1.5.dp else 1.dp,
+            if (isTriagePriority) VS_Error.copy(alpha = 0.6f) else VS_Outline
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isTriagePriority) 2.dp else 1.dp)
     ) {
         Column(
             modifier = Modifier
@@ -73,10 +82,10 @@ fun QueueEntryListItem(
                     // Token Pill
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = if (entry.provisionalToken) VS_WarningContainer else VS_Primary.copy(alpha = 0.12f),
+                        color = if (entry.provisionalToken) VS_WarningContainer else if (isTriagePriority) VS_ErrorContainer else VS_Primary.copy(alpha = 0.12f),
                         border = BorderStroke(
                             1.dp,
-                            if (entry.provisionalToken) VS_Error else VS_Primary.copy(alpha = 0.3f)
+                            if (entry.provisionalToken) VS_Error else if (isTriagePriority) VS_Error else VS_Primary.copy(alpha = 0.3f)
                         )
                     ) {
                         Text(
@@ -85,15 +94,15 @@ fun QueueEntryListItem(
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 13.sp
                             ),
-                            color = if (entry.provisionalToken) VS_Error else VS_Primary,
+                            color = if (entry.provisionalToken) VS_Error else if (isTriagePriority) VS_Error else VS_Primary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
                                 text = entry.patientName,
@@ -102,20 +111,60 @@ fun QueueEntryListItem(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            if (entry.priorityFlag) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Star,
-                                    contentDescription = "Prioritized",
-                                    tint = VS_Error,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                            if (isTriagePriority) {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = VS_ErrorContainer,
+                                    border = BorderStroke(1.dp, VS_Error.copy(alpha = 0.5f))
+                                ) {
+                                    Text(
+                                        text = "🚨 TRIAGE PRIORITY",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = VS_Error
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            if (effectiveSeverity != null) {
+                                SeverityBadge(severity = effectiveSeverity)
                             }
                         }
+
                         Text(
                             text = "Checked in: $timeFormatted",
                             style = MaterialTheme.typography.labelSmall,
                             color = VS_OnSurfaceVariant
                         )
+
+                        if (!effectiveCondition.isNullOrBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (isTriagePriority) VS_ErrorContainer.copy(alpha = 0.35f) else VS_SurfaceVariant.copy(alpha = 0.7f),
+                                border = BorderStroke(0.5.dp, if (isTriagePriority) VS_Error.copy(alpha = 0.3f) else VS_Outline.copy(alpha = 0.5f)),
+                                modifier = Modifier.fillMaxWidth().padding(top = 3.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(text = if (isTriagePriority) "⚠️" else "📋", fontSize = 10.sp)
+                                    Text(
+                                        text = effectiveCondition,
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontSize = 11.sp,
+                                            fontWeight = if (isTriagePriority) FontWeight.SemiBold else FontWeight.Normal
+                                        ),
+                                        color = if (isTriagePriority) VS_OnErrorContainer else VS_OnSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -182,7 +231,7 @@ fun QueueEntryListItem(
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
                         ) {
                             Text(
-                                text = if (entry.priorityFlag) "Deprioritize" else "Prioritize",
+                                text = if (entry.priorityFlag) "Deprioritize" else "⚡ Prioritize",
                                 fontSize = 11.sp,
                                 color = if (entry.priorityFlag) VS_Error else VS_OnBackground
                             )

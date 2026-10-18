@@ -1,0 +1,970 @@
+[
+  {
+    "sno": "233",
+    "ps_id": "26233",
+    "ps_number": "SIH26233",
+    "title": "Inline Microbial Contamination Detection Using Hyperspectral\nEdge Sensors",
+    "organization": "Ministry of Food Processing Industries (MoFPI)",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "16/500",
+    "count_val": 16,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "74",
+    "ps_id": "26074",
+    "ps_number": "SIH26074",
+    "title": "Downscaling of weather forecast from Block level to Panchayat level: Inferring high-resolution plots/ data/ information from low-resolution plot /data /information /variables for agro-meteorological advisory services.",
+    "organization": "Ministry of Earth Sciences (MoES)",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "19/500",
+    "count_val": 19,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "86",
+    "ps_id": "26086",
+    "ps_number": "SIH26086",
+    "title": "Hyperlocal Monsoon Onset &amp; Break Prediction System (Block/Village Scale)",
+    "organization": "Ministry of Earth Sciences (MoES)",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "20/500",
+    "count_val": 20,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "232",
+    "ps_id": "26232",
+    "ps_number": "SIH26232",
+    "title": "Low-Cost loT Block chain Nodes for Farm-to-Fork Traceability",
+    "organization": "Ministry of Food Processing Industries (MoFPI)",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "25/500",
+    "count_val": 25,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "235",
+    "ps_id": "26235",
+    "ps_number": "SIH26235",
+    "title": "Development of a Portable Nano engineered Rapid Food Testing Kit for On-Site Detection of Food Adulterants and Contaminants",
+    "organization": "Ministry of Food Processing Industries (MoFPI)",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "26/500",
+    "count_val": 26,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "48",
+    "ps_id": "26048",
+    "ps_number": "SIH26048",
+    "title": "iKwath - a pod-based smart Kwatha (Kadha) maker that prepares a fresh, AFI/API-standardized decoction from coarse powder (yavaku?a c?r?a) on demand, in the shortest practical time without altering the decoctions quality or yield",
+    "organization": "Ministry of Ayush",
+    "category": "Hardware",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "29/500",
+    "count_val": 29,
+    "description": "",
+    "matched_keywords": [
+      "health"
+    ]
+  },
+  {
+    "sno": "13",
+    "ps_id": "26013",
+    "ps_number": "SIH26013",
+    "title": "Automated lntegration and lntelligent Harmonization of Multi-source Geospatial Data for urban Land Record Management.",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Smart Automation",
+    "submitted_count": "31/500",
+    "count_val": 31,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "88",
+    "ps_id": "26088",
+    "ps_number": "SIH26088",
+    "title": "Multilingual Cooperative Governance &amp; Legal Assistance Chatbot",
+    "organization": "Ministry of Cooperation",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "32/500",
+    "count_val": 32,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "97",
+    "ps_id": "26097",
+    "ps_number": "SIH26097",
+    "title": "AI-Driven voice Assistant for livelihood Mapping and NSQF-Aligned Skilling Recommendations for SC Communities under GIA component of PM-AJAY",
+    "organization": "Ministry of Social Justice and Empowerment (MoSJE)",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "33/500",
+    "count_val": 33,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "15",
+    "ps_id": "26015",
+    "ps_number": "SIH26015",
+    "title": "Application of Geospatial Techniques for visualization and analysis to interpret Geo-Coded lmages to enhance watershed Development Outcomes.",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "34/500",
+    "count_val": 34,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "20",
+    "ps_id": "26020",
+    "ps_number": "SIH26020",
+    "title": "Design and Development of Innovative Hand-Spinning Equipment for Enhancing Khadi Artisan Productivity and Income",
+    "organization": "Ministry of MSME",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "34/500",
+    "count_val": 34,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "10",
+    "ps_id": "26010",
+    "ps_number": "SIH26010",
+    "title": "Survey/Resurvey of Rural Agricultural Land in lndia",
+    "organization": "Ministry of Rural Development",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "36/500",
+    "count_val": 36,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "111",
+    "ps_id": "26111",
+    "ps_number": "SIH26111",
+    "title": "Smart Al-Enabled Rapid Feed and Silage Quality Testing System for Dairy Farmers",
+    "organization": "Ministry of Fisheries, Animal Husbandry & Dairying",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "36/500",
+    "count_val": 36,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "170",
+    "ps_id": "26170",
+    "ps_number": "SIH26170",
+    "title": "AI-Driven Anomaly Detection in Component Burn-In &amp; Screening",
+    "organization": "Indian Space Research Organisation(ISRO)",
+    "category": "Software",
+    "theme": "Smart Automation",
+    "submitted_count": "36/500",
+    "count_val": 36,
+    "description": "",
+    "matched_keywords": [
+      "screening"
+    ]
+  },
+  {
+    "sno": "201",
+    "ps_id": "26201",
+    "ps_number": "SIH26201",
+    "title": "Student Innovation-There is a need to design drones and robots that can solve some of the pressing challenges of India such as handling medical emergencies, search and rescue operations, etc.",
+    "organization": "AICTE",
+    "category": "Software",
+    "theme": "Robotics and Drones",
+    "submitted_count": "41/500",
+    "count_val": 41,
+    "description": "",
+    "matched_keywords": [
+      "medical"
+    ]
+  },
+  {
+    "sno": "216",
+    "ps_id": "26216",
+    "ps_number": "SIH26216",
+    "title": "Student Innovation-Technology ideas in tertiary sectors like Hospitality, Financial Services, Entertainment and Retail.",
+    "organization": "AICTE",
+    "category": "Hardware",
+    "theme": "Miscellaneous",
+    "submitted_count": "42/500",
+    "count_val": 42,
+    "description": "",
+    "matched_keywords": [
+      "hospital"
+    ]
+  },
+  {
+    "sno": "19",
+    "ps_id": "26019",
+    "ps_number": "SIH26019",
+    "title": "National Digital Platform for Research, Policy Innovation, and Evidence-Based Land Governance",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Smart Automation",
+    "submitted_count": "46/500",
+    "count_val": 46,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "240",
+    "ps_id": "26240",
+    "ps_number": "SIH26240",
+    "title": "AI-Based Spring Revival and Recharge Planning for Tribal Areas",
+    "organization": "Ministry of Tribal Affairs",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "47/500",
+    "count_val": 47,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "12",
+    "ps_id": "26012",
+    "ps_number": "SIH26012",
+    "title": "AI-Based Automated Urban Parcel Mapping and Cadastral Feature Extraction System using Drone lmagery",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Smart Automation",
+    "submitted_count": "51/500",
+    "count_val": 51,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "46",
+    "ps_id": "26046",
+    "ps_number": "SIH26046",
+    "title": "AIIA Clinical Trials Dashboard - a real-time, cloud-based, GCP-compliant Clinical Trial Management System (CTMS) for Ayurveda research, with CDISC/FHIR-interoperable data, role-based KPIs, and integrated ethics, regulatory (CTRI / NDCT Rules 2019) and pharma covigilance tracking.",
+    "organization": "Ministry of Ayush",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "51/500",
+    "count_val": 51,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "clinical",
+      "pharma",
+      "ayur"
+    ]
+  },
+  {
+    "sno": "231",
+    "ps_id": "26231",
+    "ps_number": "SIH26231",
+    "title": "Digital Companion for Field Drug Testing",
+    "organization": "Ministry of Home Affairs",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "54/500",
+    "count_val": 54,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "drug"
+    ]
+  },
+  {
+    "sno": "236",
+    "ps_id": "26236",
+    "ps_number": "SIH26236",
+    "title": "Al-Based Intelligent Food Packaging Material Recommendation System for Food Commodities",
+    "organization": "Ministry of Food Processing Industries (MoFPI)",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "58/500",
+    "count_val": 58,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "109",
+    "ps_id": "26109",
+    "ps_number": "SIH26109",
+    "title": "Al-Based Predictive Modelling for Early Forecasting of Bovine Mastitis in lndian Dairy Farms",
+    "organization": "Ministry of Fisheries, Animal Husbandry & Dairying",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "60/500",
+    "count_val": 60,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "234",
+    "ps_id": "26234",
+    "ps_number": "SIH26234",
+    "title": "Al-Powered Smart Food Waste Reduction and Sustainable Redistribution Ecosystem for Institutional Kitchens and Food Processing Units",
+    "organization": "Ministry of Food Processing Industries (MoFPI)",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "63/500",
+    "count_val": 63,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "230",
+    "ps_id": "26230",
+    "ps_number": "SIH26230",
+    "title": "Breath-Based Detection Device for Drug Consumption",
+    "organization": "Ministry of Home Affairs",
+    "category": "Hardware",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "64/500",
+    "count_val": 64,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "drug"
+    ]
+  },
+  {
+    "sno": "93",
+    "ps_id": "26093",
+    "ps_number": "SIH26093",
+    "title": "AI-Based Real-Time Stress and Trauma Assessment Module for Victims/Complainants Accessing NHAA (14566) and Integrated Portal",
+    "organization": "Ministry of Social Justice and Empowerment (MoSJE)",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "69/500",
+    "count_val": 69,
+    "description": "",
+    "matched_keywords": [
+      "health"
+    ]
+  },
+  {
+    "sno": "115",
+    "ps_id": "26115",
+    "ps_number": "SIH26115",
+    "title": "Design and Develop a Smart Mobile Medical-Waste Collection and Segregation System",
+    "organization": "Autodesk",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "71/500",
+    "count_val": 71,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "medical"
+    ]
+  },
+  {
+    "sno": "14",
+    "ps_id": "26014",
+    "ps_number": "SIH26014",
+    "title": "An lntegrated GIS-based Digital Public lnfrastructure for Land Governance",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "74/500",
+    "count_val": 74,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "113",
+    "ps_id": "26113",
+    "ps_number": "SIH26113",
+    "title": "Human augmentation technologies are transforming healthcare,rehabilitation, industrial ergonomics, assistive living, sports, and personal mobility by improving human capabilities and enhancing quality of life.",
+    "organization": "Autodesk",
+    "category": "Hardware",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "77/500",
+    "count_val": 77,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "care"
+    ]
+  },
+  {
+    "sno": "186",
+    "ps_id": "26186",
+    "ps_number": "SIH26186",
+    "title": "AI-Based Predictive Personnel Stress and Welfare Monitoring System for Uniformed Forces",
+    "organization": "Ministry of Home Affairs",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "77/500",
+    "count_val": 77,
+    "description": "",
+    "matched_keywords": [
+      "health"
+    ]
+  },
+  {
+    "sno": "11",
+    "ps_id": "26011",
+    "ps_number": "SIH26011",
+    "title": "3D ULPIN Generation and vertical Property Mapping SYstem",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Smart Automation",
+    "submitted_count": "81/500",
+    "count_val": 81,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "139",
+    "ps_id": "26139",
+    "ps_number": "SIH26139",
+    "title": "Hybrid Quantum Machine Learning Platform for Early Disease Detection",
+    "organization": "Egreen Quanta",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "82/500",
+    "count_val": 82,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "disease"
+    ]
+  },
+  {
+    "sno": "16",
+    "ps_id": "26016",
+    "ps_number": "SIH26016",
+    "title": "Real-Time National Land Acquisition &amp; Management System for End-to-End Digital Monitoring and Decision Support",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Smart Automation",
+    "submitted_count": "83/500",
+    "count_val": 83,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "128",
+    "ps_id": "26128",
+    "ps_number": "SIH26128",
+    "title": "Efficient systems for early detection,prevention,and management of livestock diseases and animal health issues",
+    "organization": "Government Of Maharashtra",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "86/500",
+    "count_val": 86,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "disease"
+    ]
+  },
+  {
+    "sno": "21",
+    "ps_id": "26021",
+    "ps_number": "SIH26021",
+    "title": "Honey Chain: A block chain-based system for honey traceability and smart beekeeping management.",
+    "organization": "Ministry of MSME",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "87/500",
+    "count_val": 87,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "17",
+    "ps_id": "26017",
+    "ps_number": "SIH26017",
+    "title": "Predictive Analytics System for Early Detection of Land Acquisition Delays",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Smart Automation",
+    "submitted_count": "88/500",
+    "count_val": 88,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "4",
+    "ps_id": "26004",
+    "ps_number": "SIH26004",
+    "title": "Al-Assisted Early Detection System for Osteoarthritis (OA) Risk Markers in North Eastern Region (NER)",
+    "organization": "Ministry of Development of North Eastern Region (MDoNER)",
+    "category": "Hardware",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "89/500",
+    "count_val": 89,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "osteoarthritis"
+    ]
+  },
+  {
+    "sno": "218",
+    "ps_id": "26218",
+    "ps_number": "SIH26218",
+    "title": "Student Innovation-There is a need to design drones and robots that can solve some of the pressing challenges of India such as handling medical emergencies, search and rescue operations, etc.",
+    "organization": "AICTE",
+    "category": "Hardware",
+    "theme": "Robotics and Drones",
+    "submitted_count": "91/500",
+    "count_val": 91,
+    "description": "",
+    "matched_keywords": [
+      "medical"
+    ]
+  },
+  {
+    "sno": "94",
+    "ps_id": "26094",
+    "ps_number": "SIH26094",
+    "title": "AI-Powered Dynamic Mental Health Monitoring and Distress Prediction System for Victims of Atrocities",
+    "organization": "Ministry of Social Justice and Empowerment (MoSJE)",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "104/500",
+    "count_val": 104,
+    "description": "",
+    "matched_keywords": [
+      "health"
+    ]
+  },
+  {
+    "sno": "45",
+    "ps_id": "26045",
+    "ps_number": "SIH26045",
+    "title": "IP-SAKTI Sahayak a multilingual, RAG-based (source-cited) AI assistant for Intellectual Property and regulatory guidance in Ayurveda, across national and international regimes.",
+    "organization": "Ministry of Ayush",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "105/500",
+    "count_val": 105,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "ayur"
+    ]
+  },
+  {
+    "sno": "54",
+    "ps_id": "26054",
+    "ps_number": "SIH26054",
+    "title": "AI-Enabled Real-Time Digital Twin System for Health Monitoring, Fault Prediction and Mission Reliability Enhancement of Aero Piston Engines used in MALE UAVs.",
+    "organization": "DRDO",
+    "category": "Software",
+    "theme": "Robotics and Drones",
+    "submitted_count": "112/500",
+    "count_val": 112,
+    "description": "",
+    "matched_keywords": [
+      "health"
+    ]
+  },
+  {
+    "sno": "22",
+    "ps_id": "26022",
+    "ps_number": "SIH26022",
+    "title": "Design and develop a smart, solar-powered drying and compact packaging system to support home-based agarbatti manufacturing by rural women artisans.",
+    "organization": "Ministry of MSME",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "132/500",
+    "count_val": 132,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "181",
+    "ps_id": "26181",
+    "ps_number": "SIH26181",
+    "title": "A secure, AI-powered Personal Health Companion that delivers real-time, privacy-preserving health monitoring and early warning capabilities, helping individuals recognize health risks before they become emergencies. The solution should improve resilience during heat waves, floods, pollution events, and other disasters common in India while enabling continuous health support through on-device intelligence.",
+    "organization": "Qualcomm Inc",
+    "category": "Hardware",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "139/500",
+    "count_val": 139,
+    "description": "",
+    "matched_keywords": [
+      "health"
+    ]
+  },
+  {
+    "sno": "199",
+    "ps_id": "26199",
+    "ps_number": "SIH26199",
+    "title": "Student Innovation-Technology ideas in tertiary sectors like Hospitality, Financial Services, Entertainment and Retail.",
+    "organization": "AICTE",
+    "category": "Software",
+    "theme": "Miscellaneous",
+    "submitted_count": "155/500",
+    "count_val": 155,
+    "description": "",
+    "matched_keywords": [
+      "hospital"
+    ]
+  },
+  {
+    "sno": "91",
+    "ps_id": "26091",
+    "ps_number": "SIH26091",
+    "title": "AI-Driven Hyper-Local Business Advisory and Financial Structuring Assistant for Rural Micro-Entrepreneurs",
+    "organization": "Ministry of Social Justice and Empowerment (MoSJE)",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "164/500",
+    "count_val": 164,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "18",
+    "ps_id": "26018",
+    "ps_number": "SIH26018",
+    "title": "Intelligent Land Record Digitization and Validation System",
+    "organization": "Ministry of Rural Development",
+    "category": "Software",
+    "theme": "Smart Automation",
+    "submitted_count": "166/500",
+    "count_val": 166,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "110",
+    "ps_id": "26110",
+    "ps_number": "SIH26110",
+    "title": "Development of a Low-Cost Light-weight Milk Chilling Can for Small-Scale Dairy Farmers",
+    "organization": "Ministry of Fisheries, Animal Husbandry & Dairying",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "171/500",
+    "count_val": 171,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "210",
+    "ps_id": "26210",
+    "ps_number": "SIH26210",
+    "title": "Student Innovation-Developing solutions, keeping in mind the need to enhance the primary sector of India - Agriculture and to manage and process our agriculture produce.",
+    "organization": "AICTE",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "176/500",
+    "count_val": 176,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "180",
+    "ps_id": "26180",
+    "ps_number": "SIH26180",
+    "title": "A field-deployable AI-powered Smart Farming Assistant that helps farmers detect crop diseases, pests, nutrient deficiencies, and irrigation needs at an early stage, while improving resilience against droughts, floods, heat waves, and other agricultural risks common in India. The solution should enable higher yields, lower input costs, more efficient water usage, and faster response to emerging threats through real-time on-device intelligence.",
+    "organization": "Qualcomm Inc",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "206/500",
+    "count_val": 206,
+    "description": "",
+    "matched_keywords": [
+      "disease",
+      "rural"
+    ]
+  },
+  {
+    "sno": "215",
+    "ps_id": "26215",
+    "ps_number": "SIH26215",
+    "title": "Student Innovation-Cutting-edge technology in these sectors continues to be in demand. Recent shifts in healthcare trends, growing populations also present an array of opportunities for innovation.",
+    "organization": "AICTE",
+    "category": "Hardware",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "239/500",
+    "count_val": 239,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "care"
+    ]
+  },
+  {
+    "sno": "193",
+    "ps_id": "26193",
+    "ps_number": "SIH26193",
+    "title": "Student Innovation-Developing solutions, keeping in mind the need to enhance the primary sector of India - Agriculture and to manage and process our agriculture produce.",
+    "organization": "AICTE",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "261/500",
+    "count_val": 261,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "40",
+    "ps_id": "26040",
+    "ps_number": "SIH26040",
+    "title": "Smart Water Purification and Quality Monitoring System for Rural and Mining-Affected Areas.",
+    "organization": "Government of Jharkhand",
+    "category": "Hardware",
+    "theme": "Clean &amp; Green Technology",
+    "submitted_count": "275/500",
+    "count_val": 275,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "5",
+    "ps_id": "26005",
+    "ps_number": "SIH26005",
+    "title": "Solar-Powered Smart Mini Cold Storage System for Fresh Vegetables in North Eastern Region (NER)",
+    "organization": "Ministry of Development of North Eastern Region (MDoNER)",
+    "category": "Hardware",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "305/500",
+    "count_val": 305,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "38",
+    "ps_id": "26038",
+    "ps_number": "SIH26038",
+    "title": "Explainable AI for Diabetic Retinopathy Screening in Rural India",
+    "organization": "MathWorks",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "315/500",
+    "count_val": 315,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "screening",
+      "retinopathy",
+      "rural"
+    ]
+  },
+  {
+    "sno": "89",
+    "ps_id": "26089",
+    "ps_number": "SIH26089",
+    "title": "Cooperative Gig Services Platform for Household &amp; Community Services",
+    "organization": "Ministry of Cooperation",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "335/500",
+    "count_val": 335,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "188",
+    "ps_id": "26188",
+    "ps_number": "SIH26188",
+    "title": "Al-Based Fake Identity &amp; Document Screening System",
+    "organization": "Ministry of Home Affairs",
+    "category": "Software",
+    "theme": "Blockchain &amp; Cybersecurity",
+    "submitted_count": "372/500",
+    "count_val": 372,
+    "description": "",
+    "matched_keywords": [
+      "screening"
+    ]
+  },
+  {
+    "sno": "198",
+    "ps_id": "26198",
+    "ps_number": "SIH26198",
+    "title": "Student Innovation-Cutting-edge technology in these sectors continues to be in demand. Recent shifts in healthcare trends, growing populations also present an array of opportunities for innovation.",
+    "organization": "AICTE",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "463/500",
+    "count_val": 463,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "care"
+    ]
+  },
+  {
+    "sno": "3",
+    "ps_id": "26003",
+    "ps_number": "SIH26003",
+    "title": "AI-Based Cognitive Gaming and Memory Assistance Platform for Elderly Dementia Patients in North Eastern Region (NER)",
+    "organization": "Ministry of Development of North Eastern Region (MDoNER)",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "500/500",
+    "count_val": 500,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "patient",
+      "dementia"
+    ]
+  },
+  {
+    "sno": "33",
+    "ps_id": "26033",
+    "ps_number": "SIH26033",
+    "title": "Multiple intermediaries reduce farmers earnings and increase consumer prices.",
+    "organization": "Ministry of Consumer Affairs, Food & Public Distribution",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "500/500",
+    "count_val": 500,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "47",
+    "ps_id": "26047",
+    "ps_number": "SIH26047",
+    "title": "Patient Case-Taking Software",
+    "organization": "Ministry of Ayush",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "500/500",
+    "count_val": 500,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "patient"
+    ]
+  },
+  {
+    "sno": "131",
+    "ps_id": "26131",
+    "ps_number": "SIH26131",
+    "title": "Early detection and management of crop diseases and pest infestations",
+    "organization": "Government Of Maharashtra",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "500/500",
+    "count_val": 500,
+    "description": "",
+    "matched_keywords": [
+      "disease",
+      "rural"
+    ]
+  },
+  {
+    "sno": "132",
+    "ps_id": "26132",
+    "ps_number": "SIH26132",
+    "title": "Strengthening market linkages and price discovery for farmers",
+    "organization": "Government Of Maharashtra",
+    "category": "Software",
+    "theme": "Agriculture, FoodTech &amp; Rural Development",
+    "submitted_count": "500/500",
+    "count_val": 500,
+    "description": "",
+    "matched_keywords": [
+      "rural"
+    ]
+  },
+  {
+    "sno": "133",
+    "ps_id": "26133",
+    "ps_number": "SIH26133",
+    "title": "Accessibility and quality of public healthcare services,particularly in rural and underserved areas",
+    "organization": "Government Of Maharashtra",
+    "category": "Software",
+    "theme": "MedTech / BioTech / HealthTech",
+    "submitted_count": "500/500",
+    "count_val": 500,
+    "description": "",
+    "matched_keywords": [
+      "health",
+      "care",
+      "rural"
+    ]
+  }
+]

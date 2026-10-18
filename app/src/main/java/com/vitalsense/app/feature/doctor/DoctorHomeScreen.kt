@@ -198,6 +198,14 @@ fun DoctorHomeScreen(
             }
         }
 
+        // 1.05 Bharat Healthcare Impact Metrics (Audio 10)
+        item {
+            ImpactMetricsCard(
+                collapsible = true,
+                initiallyExpanded = true
+            )
+        }
+
         // Success banner for restock reminder
         if (restockToastMessage != null) {
             item {
@@ -484,7 +492,26 @@ fun DoctorHomeScreen(
                                     color = VS_OnBackground
                                 )
                                 val waitingCount = todaysQueue.count { it.status == QueueEntryStatus.WAITING }
-                                if (waitingCount > 0) {
+                                val triagePriorityCount = todaysQueue.count { entry ->
+                                    val isWaiting = entry.status == QueueEntryStatus.WAITING
+                                    val p = patients.find { it.id == entry.patientId || it.name.equals(entry.patientName, ignoreCase = true) }
+                                    val isSevere = p?.currentRiskLevel == SeverityLevel.SEVERE || p?.currentRiskLevel == SeverityLevel.HIGH
+                                    isWaiting && (entry.priorityFlag || isSevere)
+                                }
+                                if (triagePriorityCount > 0) {
+                                    Surface(
+                                        shape = PillShape,
+                                        color = Color(0xFFFEF2F2),
+                                        border = BorderStroke(1.dp, Color(0xFFEF4444))
+                                    ) {
+                                        Text(
+                                            text = "🚨 $triagePriorityCount Triage Priority",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = Color(0xFFDC2626),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                } else if (waitingCount > 0) {
                                     Surface(
                                         shape = PillShape,
                                         color = NagarSevaStatusProgressBg,
@@ -800,8 +827,13 @@ fun DoctorHomeScreen(
                 } else {
                     appointments.forEach { appointment ->
                         val isPending = appointment.status.contains("Pending", ignoreCase = true)
+                        val pat = patients.find { it.id == appointment.patientId || it.name.equals(appointment.patientName, ignoreCase = true) }
+                        val effectiveSeverity = pat?.currentRiskLevel
+                        val isTriagePriority = effectiveSeverity == SeverityLevel.SEVERE || effectiveSeverity == SeverityLevel.HIGH
+
                         VitalSenseCard(
-                            backgroundColor = if (isPending) VS_WarningContainer else VS_Surface
+                            backgroundColor = if (isPending) VS_WarningContainer else if (isTriagePriority) Color(0xFFFEF2F2) else VS_Surface,
+                            border = if (isTriagePriority) BorderStroke(1.5.dp, Color(0xFFEF4444).copy(alpha = 0.6f)) else BorderStroke(1.dp, VS_Outline)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                                 Row(
@@ -820,6 +852,31 @@ fun DoctorHomeScreen(
                                             style = MaterialTheme.typography.bodySmall,
                                             color = VS_OnSurfaceVariant
                                         )
+                                        if (effectiveSeverity != null) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                                modifier = Modifier.padding(top = 4.dp)
+                                            ) {
+                                                SeverityBadge(severity = effectiveSeverity)
+                                                if (isTriagePriority) {
+                                                    Surface(
+                                                        shape = RoundedCornerShape(4.dp),
+                                                        color = Color(0xFFDC2626)
+                                                    ) {
+                                                        Text(
+                                                            text = "🚨 TRIAGE PRIORITY",
+                                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                                fontSize = 9.sp,
+                                                                fontWeight = FontWeight.ExtraBold
+                                                            ),
+                                                            color = Color.White,
+                                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,

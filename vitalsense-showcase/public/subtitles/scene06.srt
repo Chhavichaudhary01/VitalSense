@@ -1,0 +1,4 @@
+1
+00:00:00,400 --> 00:00:17,872
+Frontline ASHA workers act as digital proxies for non-literate citizens—conducting home visits, updating ABHA digital health cards, and tracking a unified longitudinal care journey across clinic visits and lab investigations.
+

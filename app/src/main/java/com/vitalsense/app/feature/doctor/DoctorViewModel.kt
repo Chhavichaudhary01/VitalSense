@@ -444,6 +444,28 @@ class DoctorViewModel @Inject constructor(
                 )
             )
             repository.updateReferral(updated)
+
+            // Closed-Loop: Append specialist findings directly to patient's longitudinal record (Audio 6)
+            val dateStr = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
+            val historyEntry = MedicalHistoryEntry(
+                id = "hist_spec_${System.currentTimeMillis()}",
+                patientId = ref.patientId,
+                type = MedicalHistoryType.CONDITION,
+                title = "Specialist Review: ${ref.targetSpecialty}",
+                details = "Findings: $findings\nRecommendations: $recommendations",
+                severity = when (ref.urgency) {
+                    ReferralUrgency.EMERGENCY -> SeverityLevel.SEVERE
+                    ReferralUrgency.URGENT -> SeverityLevel.HIGH
+                    ReferralUrgency.ROUTINE -> SeverityLevel.MODERATE
+                },
+                doctorId = doctor.id,
+                doctorName = "Dr. ${doctor.name} (${doctor.specialty.displayName})",
+                caseId = ref.id,
+                prescriptionId = null,
+                timestamp = System.currentTimeMillis(),
+                dateFormatted = dateStr
+            )
+            repository.addMedicalHistoryEntry(historyEntry)
         }
     }
 }

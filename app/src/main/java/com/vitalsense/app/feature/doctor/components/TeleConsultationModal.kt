@@ -560,68 +560,139 @@ fun TeleConsultationModal(
                 // 3. Live Tele-Vitals HUD Card (Left Side Overlay) & Full Vitals Toggle
                 var showVitalsSidePanel by remember { mutableStateOf(false) }
 
+                // 3. Live Tele-Vitals HUD Overlay (Prominent on-screen telemetry - Audio 5)
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xCC181824),
-                    border = BorderStroke(1.dp, VS_Outline),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xDD0D1B2A),
+                    border = BorderStroke(1.5.dp, Color(0x8800E5FF)),
+                    shadowElevation = 8.dp,
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = Spacing.md)
-                        .width(140.dp)
-                        .clickable { showVitalsSidePanel = !showVitalsSidePanel }
+                        .align(Alignment.TopStart)
+                        .padding(start = Spacing.md, top = 64.dp)
+                        .widthIn(min = 180.dp, max = 220.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
+                        // Live stream indicator
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF00E676))
+                            )
+                            Text(
+                                text = "LIVE VITALS STREAM",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.sp,
+                                    letterSpacing = 1.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF00E5FF)
+                                )
+                            )
+                        }
+
+                        HorizontalDivider(color = Color(0x44FFFFFF), thickness = 0.5.dp)
+
+                        // SpO2
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = stringResource(R.string.liveTeleVitals),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = VS_OnSurfaceVariant
+                                text = "SpO2",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFFB0BEC5)
                                 )
                             )
-                            Text(if (showVitalsSidePanel) "◀" else "▶", fontSize = 10.sp, color = VS_Primary)
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.pulseLabel), style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = VS_OnSurfaceVariant))
-                            Text("74 bpm", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = VS_Success))
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.bpLabel), style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = VS_OnSurfaceVariant))
-                            Text("118/78", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = VS_OnBackground))
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.spo2VitalsLabel), style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = VS_OnSurfaceVariant))
-                            Text("98%", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = VS_Success))
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.tempLabel), style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = VS_OnSurfaceVariant))
-                            Text("98.4°F", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = VS_OnBackground))
+                            Text(
+                                text = "98%",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF00E676)
+                                )
+                            )
                         }
 
-                        Text(
-                            text = stringResource(R.string.tapToExpand),
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, color = VS_Primary)
-                        )
+                        // Pulse / Heart Rate
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text("❤️", fontSize = 12.sp)
+                                Text(
+                                    text = "Pulse",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFFB0BEC5)
+                                    )
+                                )
+                            }
+                            Text(
+                                text = "74 bpm",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFFFF5252)
+                                )
+                            )
+                        }
+
+                        // Blood Pressure
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "BP",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFFB0BEC5)
+                                )
+                            )
+                            Text(
+                                text = "118/78",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White
+                                )
+                            )
+                        }
+
+                        // Temperature
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Temp",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF90A4AE)
+                                )
+                            )
+                            Text(
+                                text = "98.4°F",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFD54F)
+                                )
+                            )
+                        }
                     }
                 }
 

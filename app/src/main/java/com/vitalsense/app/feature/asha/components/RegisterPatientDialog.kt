@@ -5,8 +5,10 @@ import com.vitalsense.app.R
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +26,7 @@ import java.util.UUID
 @Composable
 fun RegisterPatientDialog(
     asha: AshaWorker,
+    isOffline: Boolean = false,
     onDismiss: () -> Unit,
     onRegister: (Patient) -> Unit
 ) {
@@ -36,7 +39,29 @@ fun RegisterPatientDialog(
     var initialCondition by remember { mutableStateOf("Routine Checkup / General Health") }
     var selectedRiskLevel by remember { mutableStateOf(SeverityLevel.LOW) }
 
+    // Real-Time Clinical Triage Vitals Inputs (Audio 4)
+    var systolicBp by remember { mutableStateOf("") }
+    var diastolicBp by remember { mutableStateOf("") }
+    var spO2Text by remember { mutableStateOf("") }
+    var heartRateText by remember { mutableStateOf("") }
+    var isMaternalHighRisk by remember { mutableStateOf(false) }
+
     var errorMessage by remember { mutableStateOf("") }
+
+    // Dynamic Clinical Triage Evaluation
+    val sysBp = systolicBp.toIntOrNull() ?: 120
+    val diaBp = diastolicBp.toIntOrNull() ?: 80
+    val spo2 = spO2Text.toIntOrNull() ?: 98
+    val hr = heartRateText.toIntOrNull() ?: 76
+
+    val isClinicalEmergency = (spO2Text.isNotBlank() && spo2 < 90) || sysBp > 165 || diaBp > 110
+    val isMaternalAlert = isMaternalHighRisk || (gender == "Female" && sysBp >= 140 && diaBp >= 90)
+    val autoTriageSeverity = when {
+        isClinicalEmergency -> SeverityLevel.SEVERE
+        isMaternalAlert || (spO2Text.isNotBlank() && spo2 < 94) || sysBp >= 140 -> SeverityLevel.HIGH
+        sysBp in 130..139 || (spO2Text.isNotBlank() && spo2 in 94..95) -> SeverityLevel.MODERATE
+        else -> selectedRiskLevel
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -46,12 +71,14 @@ fun RegisterPatientDialog(
             shadowElevation = 12.dp,
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight(0.92f)
                 .padding(vertical = Spacing.sm)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Spacing.md),
+                    .fillMaxSize()
+                    .padding(Spacing.md)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 // Header
@@ -89,6 +116,58 @@ fun RegisterPatientDialog(
 
                     IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
                         Text("✕", color = VS_OnSurfaceVariant, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                if (isOffline) {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = VS_WarningContainer,
+                        border = BorderStroke(1.dp, VS_Warning),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            Text("⚡", fontSize = 14.sp)
+                            Column {
+                                Text(
+                                    text = "Offline Mode Active (Zero Internet)",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = VS_OnWarningContainer
+                                )
+                                Text(
+                                    text = "Patient will be stored in Room SQLite & queued for auto-sync when online.",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                    color = VS_OnWarningContainer
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Proxy Registration Badge (Audio 4)
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = VS_PrimaryContainer.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, VS_Primary.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("🤝", fontSize = 13.sp)
+                        Text(
+                            text = "ASHA Proxy Mode: Registering on behalf of patient",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = VS_Primary
+                            )
+                        )
                     }
                 }
 
@@ -222,50 +301,143 @@ fun RegisterPatientDialog(
                 VitalSenseTextField(
                     value = initialCondition,
                     onValueChange = { initialCondition = it },
-                    label = "Initial Health Condition / Reason",
-                    placeholder = "e.g. Prenatal checkup, Hypertension"
+                    label = "Initial Health Condition / Symptoms",
+                    placeholder = "e.g. Prenatal ANC checkup, Fever, Hypertension"
                 )
 
-                // Risk Level
+                // Clinical Vitals Entry (Audio 4: "checks them against clinical risk thresholds")
                 Text(
-                    text = stringResource(R.string.initialRiskLevelLabel),
+                    text = "Clinical Vitals Check (Triage Input)",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.5.sp
                     ),
                     color = VS_OnSurfaceVariant
                 )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    SeverityLevel.values().forEach { sev ->
-                        val isSelected = sev == selectedRiskLevel
-                        val sevColor = when (sev) {
-                            SeverityLevel.LOW -> VS_Success
-                            SeverityLevel.MODERATE -> VS_Warning
-                            SeverityLevel.HIGH -> VS_Error.copy(alpha = 0.8f)
-                            SeverityLevel.SEVERE -> VS_Error
-                        }
-                        Surface(
-                            shape = PillShape,
-                            color = if (isSelected) sevColor.copy(alpha = 0.25f) else VS_SurfaceVariant,
-                            border = BorderStroke(1.dp, if (isSelected) sevColor else VS_Outline),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { selectedRiskLevel = sev }
+                    Box(modifier = Modifier.weight(1f)) {
+                        VitalSenseTextField(
+                            value = systolicBp,
+                            onValueChange = { systolicBp = it.filter { ch -> ch.isDigit() } },
+                            label = "Sys BP",
+                            placeholder = "120"
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        VitalSenseTextField(
+                            value = diastolicBp,
+                            onValueChange = { diastolicBp = it.filter { ch -> ch.isDigit() } },
+                            label = "Dia BP",
+                            placeholder = "80"
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        VitalSenseTextField(
+                            value = spO2Text,
+                            onValueChange = { spO2Text = it.filter { ch -> ch.isDigit() } },
+                            label = "SpO2 %",
+                            placeholder = "98"
+                        )
+                    }
+                }
+
+                // Maternal Care / High-Risk Pregnancy Toggle
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isMaternalHighRisk) VS_ErrorContainer.copy(alpha = 0.6f) else VS_SurfaceVariant,
+                    border = BorderStroke(1.dp, if (isMaternalHighRisk) VS_Error else VS_Outline),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isMaternalHighRisk = !isMaternalHighRisk }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 6.dp)) {
+                            Text("🤰", fontSize = 16.sp)
+                            Column {
                                 Text(
-                                    text = sev.displayName.split(" ").first(),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 10.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) sevColor else VS_OnSurfaceVariant
-                                    )
+                                    text = "High-Risk Maternal / Antenatal Case",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = if (isMaternalHighRisk) VS_OnErrorContainer else VS_OnBackground
+                                )
+                                Text(
+                                    text = "Auto-flags pregnant mother for urgent doctor queue priority",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                                    color = VS_OnSurfaceVariant
                                 )
                             }
                         }
+                        Switch(
+                            checked = isMaternalHighRisk,
+                            onCheckedChange = { isMaternalHighRisk = it }
+                        )
+                    }
+                }
+
+                // Built-in Clinical Triage Engine Assessment Card (Audio 4)
+                val isElevated = autoTriageSeverity != SeverityLevel.LOW
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isElevated) VS_ErrorContainer else VS_SuccessContainer,
+                    border = BorderStroke(1.dp, if (isElevated) VS_Error else VS_Success.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(if (isElevated) "🚨" else "✅", fontSize = 14.sp)
+                                Text(
+                                    text = "Built-in Triage Engine",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = if (isElevated) VS_OnErrorContainer else VS_OnSuccessContainer
+                                )
+                            }
+                            Surface(
+                                shape = PillShape,
+                                color = if (isElevated) VS_Error else VS_Success
+                            ) {
+                                Text(
+                                    text = autoTriageSeverity.displayName,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = when {
+                                isClinicalEmergency -> "Emergency vitals threshold crossed! Immediate priority assigned in doctor OPD queue."
+                                isMaternalAlert -> "Maternal High-Risk Flagged (BP: $sysBp/$diaBp mmHg). Flagged for urgent doctor attention."
+                                autoTriageSeverity == SeverityLevel.HIGH -> "Vitals outside safe clinical thresholds. Priority queue placement."
+                                else -> "Vitals stable and within safe clinical thresholds. Standard OPD queue."
+                            },
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = if (isElevated) VS_OnErrorContainer else VS_OnSuccessContainer
+                        )
                     }
                 }
 
@@ -292,8 +464,8 @@ fun RegisterPatientDialog(
                             villageName = village,
                             ashaWorkerId = asha.id,
                             ashaWorkerName = asha.name,
-                            currentRiskLevel = selectedRiskLevel,
-                            lastCondition = initialCondition.trim().ifEmpty { "Routine Health Checkup" },
+                            currentRiskLevel = autoTriageSeverity,
+                            lastCondition = if (isMaternalAlert) "Maternal ANC Checkup (High Risk)" else initialCondition.trim().ifEmpty { "Routine Health Checkup" },
                             lastVisitDate = "Today",
                             nextAppointmentDate = "Scheduled via ASHA",
                             emergencyContact = finalEmergency
@@ -311,7 +483,7 @@ fun RegisterPatientDialog(
                         .height(44.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.registerVillagerCaseload),
+                        text = if (isOffline) "⚡ Queue Patient in Room DB" else stringResource(R.string.registerVillagerCaseload),
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 }

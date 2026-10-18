@@ -35,6 +35,15 @@ import com.vitalsense.app.core.util.DismissedNoticeHelper
 import com.vitalsense.app.core.ui.util.touchSpring
 import com.vitalsense.app.R
 import androidx.compose.ui.res.stringResource
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 
 
 @Composable
@@ -88,6 +97,83 @@ fun LoginScreen(
     val samplePatients = remember { SeedDataProvider.initialPatients }
     val sampleAshas = remember { SeedDataProvider.initialAshaWorkers }
     val sampleDoctors = remember { SeedDataProvider.initialDoctors }
+
+    val auth = remember { FirebaseAuth.getInstance() }
+    val googleSignInClient = remember(context) {
+        val serverClientId = try {
+            context.getString(R.string.default_web_client_id)
+        } catch (e: Exception) {
+            ""
+        }
+        val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+        if (serverClientId.isNotBlank() && !serverClientId.contains("samplewebclientid")) {
+            builder.requestIdToken(serverClientId)
+        }
+        GoogleSignIn.getClient(context, builder.build())
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            if (idToken != null) {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener { authTask ->
+                        if (authTask.isSuccessful) {
+                            val firebaseUser = auth.currentUser
+                            val displayName = firebaseUser?.displayName ?: account.displayName ?: "Google User"
+                            val matchedPatient = samplePatients.find { it.name.equals(displayName, ignoreCase = true) }
+                                ?: samplePatients.first().copy(
+                                    id = "PAT_G_${firebaseUser?.uid?.take(8) ?: System.currentTimeMillis().toString().takeLast(6)}",
+                                    name = displayName,
+                                    phone = firebaseUser?.phoneNumber?.ifBlank { "9810012345" } ?: "9810012345",
+                                    profilePhotoUrl = firebaseUser?.photoUrl?.toString()
+                                )
+                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                            DismissedNoticeHelper.clearDismissedAdvisories(context)
+                            onPatientLogin(matchedPatient)
+                        } else {
+                            Log.e("LoginScreen", "FirebaseAuth Google Sign In failed", authTask.exception)
+                            Toast.makeText(context, "Google Auth failed: ${authTask.exception?.localizedMessage ?: "Using demo patient"}", Toast.LENGTH_SHORT).show()
+                            onPatientLogin(samplePatients.first())
+                        }
+                    }
+            } else {
+                val displayName = account?.displayName ?: "Google User"
+                val matchedPatient = samplePatients.find { it.name.equals(displayName, ignoreCase = true) }
+                    ?: samplePatients.first().copy(
+                        id = "PAT_G_${System.currentTimeMillis().toString().takeLast(6)}",
+                        name = displayName,
+                        profilePhotoUrl = account?.photoUrl?.toString()
+                    )
+                AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                DismissedNoticeHelper.clearDismissedAdvisories(context)
+                onPatientLogin(matchedPatient)
+            }
+        } catch (e: ApiException) {
+            Log.e("LoginScreen", "Google Sign In ApiException code: ${e.statusCode}", e)
+            val msg = when (e.statusCode) {
+                10 -> "Developer configuration (SHA-1) pending in Firebase console. Logging in as demo patient."
+                12500 -> "Google Play Services error. Logging in as demo patient."
+                else -> "Google Sign In code ${e.statusCode}. Using demo patient."
+            }
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+            DismissedNoticeHelper.clearDismissedAdvisories(context)
+            onPatientLogin(samplePatients.first())
+        } catch (e: Exception) {
+            Log.e("LoginScreen", "Google Sign In unexpected exception: ${e.message}", e)
+            Toast.makeText(context, "Sign in failed: ${e.localizedMessage}. Using demo patient.", Toast.LENGTH_SHORT).show()
+            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+            DismissedNoticeHelper.clearDismissedAdvisories(context)
+            onPatientLogin(samplePatients.first())
+        }
+    }
 
     if (showAshaQrClaimDialog) {
         com.vitalsense.app.feature.auth.components.AshaQrClaimDialog(
@@ -509,9 +595,15 @@ fun LoginScreen(
                                                         onPatientLogin(samplePatients.first())
                                                     },
                                                     onGoogleSignIn = {
-                                                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
-                                                        DismissedNoticeHelper.clearDismissedAdvisories(context)
-                                                        onPatientLogin(samplePatients.first())
+                                                        try {
+                                                            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                                                        } catch (e: Exception) {
+                                                            Log.e("LoginScreen", "Failed to launch Google Sign In Intent", e)
+                                                            Toast.makeText(context, "Could not open Google Sign In: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                                                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                                            DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                                            onPatientLogin(samplePatients.first())
+                                                        }
                                                     },
                                                     onDemoSignIn = {
                                                         AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)

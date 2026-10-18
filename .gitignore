@@ -34,3 +34,9 @@ render.experimental.xml
 
 # Archived / legacy documentation
 oldMD/
+
+# Media and large binary assets
+video/
+node_modules/
+**/node_modules/
+scratch/

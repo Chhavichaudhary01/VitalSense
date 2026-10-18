@@ -141,6 +141,83 @@ fun PrescriptionOcrResultScreen(
             }
         }
 
+        // On-Device AI Privacy & Offline Guarantee
+        Surface(
+            color = VS_PrimaryContainer.copy(alpha = 0.5f),
+            shape = CardShape,
+            border = BorderStroke(1.dp, VS_Primary.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(Spacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                Text("🔒", fontSize = 24.sp)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "100% On-Device AI · Zero Cloud Upload",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = VS_Primary
+                    )
+                    Text(
+                        text = "Processed strictly locally via Google ML Kit. No patient data or image leaves this phone.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = VS_OnSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // Medical Shorthand Auto-Expansion Reference
+        Surface(
+            color = VS_Surface,
+            shape = CardShape,
+            border = BorderStroke(1.dp, VS_Outline),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    Text("⚡", fontSize = 16.sp)
+                    Text(
+                        text = "Medical Shorthand Auto-Expanded:",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = VS_OnBackground
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    listOf(
+                        "BD" to "Twice Daily",
+                        "TDS" to "3x Daily",
+                        "SOS" to "As Needed",
+                        "PO" to "Orally"
+                    ).forEach { (short, full) ->
+                        Surface(
+                            shape = PillShape,
+                            color = VS_SurfaceVariant,
+                            border = BorderStroke(0.5.dp, VS_Outline)
+                        ) {
+                            Text(
+                                text = "$short → $full",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
+                                color = VS_OnSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // 1. Raw Extracted Text (User Editable)
         VitalSenseCard {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
@@ -225,11 +302,26 @@ fun PrescriptionOcrResultScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "💊 ${med.name} (${med.dosage})",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = VS_OnBackground
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                                ) {
+                                    Text(
+                                        text = "💊 ${med.name} (${med.dosage})",
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = VS_OnBackground
+                                    )
+                                    Surface(
+                                        shape = PillShape,
+                                        color = VS_SuccessContainer
+                                    ) {
+                                        Text(
+                                            text = "Auto-Expanded",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = VS_OnSuccessContainer, fontWeight = FontWeight.Bold),
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
                                 Text(
                                     text = "${med.frequency} · Duration: ${med.duration}",
                                     style = MaterialTheme.typography.bodySmall,

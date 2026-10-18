@@ -309,27 +309,47 @@ fun SpecialistReferralsScreen(
                                 }
                             }
 
-                            // State: COMPLETED - Closed Loop Summary
-                            if (ref.status == ReferralStatus.COMPLETED) {
+                            // State: COMPLETED / CONSULTATION_COMPLETED - Closed Loop Summary (Audio 6)
+                            if (ref.status in listOf(ReferralStatus.COMPLETED, ReferralStatus.CONSULTATION_COMPLETED, ReferralStatus.FOLLOW_UP)) {
                                 Surface(
                                     shape = CardShape,
-                                    color = VS_SuccessContainer.copy(alpha = 0.3f),
+                                    color = VS_SuccessContainer.copy(alpha = 0.4f),
                                     border = BorderStroke(1.dp, VS_Success.copy(alpha = 0.6f)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Column(modifier = Modifier.padding(Spacing.xs), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Column(modifier = Modifier.padding(Spacing.xs), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text("✅", fontSize = 14.sp)
-                                            Text(
-                                                text = stringResource(R.string.closedLoopFindingsRecorded),
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = VS_Success
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Text("✅", fontSize = 14.sp)
+                                                Text(
+                                                    text = "Closed-Loop Specialist Findings",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = VS_Success
+                                                    )
                                                 )
-                                            )
+                                            }
+                                            Surface(
+                                                shape = PillShape,
+                                                color = VS_Success
+                                            ) {
+                                                Text(
+                                                    text = "Synced to Patient Record",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White
+                                                    ),
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
                                         }
                                         ref.specialistFindings?.let { f ->
                                             Text(text = "Findings: $f", style = MaterialTheme.typography.bodySmall, color = VS_OnBackground)
