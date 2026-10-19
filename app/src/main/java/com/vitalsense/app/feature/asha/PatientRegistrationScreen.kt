@@ -42,6 +42,9 @@ fun PatientRegistrationScreen(
     var diastolicBp by remember { mutableStateOf("") }
     var spO2Text by remember { mutableStateOf("") }
     var isMaternalHighRisk by remember { mutableStateOf(false) }
+    var showEmergencySosDialog by remember { mutableStateOf(false) }
+    var emergencySosTriggered by remember { mutableStateOf(false) }
+    var userBypassedEmergencyPrompt by remember { mutableStateOf(false) }
 
     val sysBp = systolicBp.toIntOrNull() ?: 120
     val diaBp = diastolicBp.toIntOrNull() ?: 80
@@ -275,11 +278,61 @@ fun PatientRegistrationScreen(
             }
         }
 
+        if (isClinicalEmergency) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFFEF2F2),
+                border = BorderStroke(1.5.dp, Color(0xFFEF4444)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("🚨", fontSize = 20.sp)
+                        Column {
+                            Text(
+                                text = "CRITICAL VITALS DETECTED",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFFDC2626)
+                            )
+                            Text(
+                                text = when {
+                                    spO2Text.isNotBlank() && spo2 < 90 -> "Severe Hypoxia (SpO₂: $spo2%). High mortality risk."
+                                    sysBp > 165 || diaBp > 110 -> "Hypertensive Emergency ($sysBp/$diaBp mmHg). Imminent stroke risk."
+                                    else -> "Critical vital signs threshold exceeded."
+                                },
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = Color(0xFF7F1D1D)
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = { showEmergencySosDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🚨 Trigger 1-Tap Emergency Referral / 108 Ambulance", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
 
         VitalSenseButton(
             text = "Register with Triage Priority",
             onClick = {
+                if (isClinicalEmergency && !userBypassedEmergencyPrompt && !emergencySosTriggered) {
+                    showEmergencySosDialog = true
+                    return@VitalSenseButton
+                }
                 val ageInt = ageText.toIntOrNull() ?: 30
                 onSave(
                     Patient(
@@ -299,6 +352,95 @@ fun PatientRegistrationScreen(
                         emergencyContact = "112"
                     )
                 )
+            }
+        )
+    }
+
+    if (showEmergencySosDialog) {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        AlertDialog(
+            onDismissRequest = { showEmergencySosDialog = false },
+            icon = { Text("🚨", fontSize = 32.sp) },
+            title = {
+                Text(
+                    text = "Critical Vitals Detected!",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color(0xFFDC2626)
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Patient displays life-threatening vitals:\n• SpO₂: $spo2%\n• Blood Pressure: $sysBp/$diaBp mmHg",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                        color = VS_OnBackground
+                    )
+                    Text(
+                        text = "Trigger 1-Tap Emergency Referral / 108 Ambulance now to automatically alert the PHC Medical Officer and dispatch the nearest emergency medical ambulance?",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = VS_OnSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showEmergencySosDialog = false
+                        emergencySosTriggered = true
+                        val patName = name.ifBlank { "Critical Emergency Patient" }
+                        val ageInt = ageText.toIntOrNull() ?: 30
+                        val newPatient = Patient(
+                            id = "pat_${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(4)}",
+                            name = patName,
+                            age = ageInt,
+                            gender = gender,
+                            phone = phone.ifBlank { "+91 98765 43210" },
+                            villageId = "v1",
+                            villageName = village,
+                            ashaWorkerId = ashaId,
+                            ashaWorkerName = ashaName,
+                            currentRiskLevel = SeverityLevel.SEVERE,
+                            lastCondition = "EMERGENCY: SpO2 $spo2%, BP $sysBp/$diaBp mmHg (108 SOS Dispatched)",
+                            lastVisitDate = "Today",
+                            nextAppointmentDate = "Immediate Emergency Referral",
+                            emergencyContact = "108"
+                        )
+                        onSave(newPatient)
+                        com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(context, "108")
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) {
+                    Text("🚑 Trigger 1-Tap 108 SOS & Referral", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showEmergencySosDialog = false
+                        userBypassedEmergencyPrompt = true
+                        val ageInt = ageText.toIntOrNull() ?: 30
+                        onSave(
+                            Patient(
+                                id = "pat_${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(4)}",
+                                name = name.ifBlank { "Registered Villager" },
+                                age = ageInt,
+                                gender = gender,
+                                phone = phone.ifBlank { "+91 98765 43210" },
+                                villageId = "v1",
+                                villageName = village,
+                                ashaWorkerId = ashaId,
+                                ashaWorkerName = ashaName,
+                                currentRiskLevel = autoTriageSeverity,
+                                lastCondition = if (isMaternalAlert) "Maternal ANC Checkup (High Risk)" else initialCondition.trim(),
+                                lastVisitDate = "Today",
+                                nextAppointmentDate = "Scheduled via ASHA",
+                                emergencyContact = "112"
+                            )
+                        )
+                    }
+                ) {
+                    Text("Continue Standard Registration", color = VS_OnSurfaceVariant)
+                }
             }
         )
     }

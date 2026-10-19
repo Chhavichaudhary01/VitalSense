@@ -888,6 +888,28 @@ object SeedDataProvider {
             createdAt = System.currentTimeMillis() - 3600000 * 48,
             respondedAt = System.currentTimeMillis() - 3600000 * 40,
             completedAt = System.currentTimeMillis() - 3600000 * 24
+        ),
+        Referral(
+            id = "ref_104",
+            patientId = "pat_ramesh",
+            patientName = "Ramesh Kumar",
+            referringUserId = "doc_rajesh",
+            referringUserName = "Dr. Rajesh Varma",
+            referringUserSpecialty = "General Physician",
+            targetDoctorId = "doc_anita_cardio",
+            targetDoctorName = "Dr. Anita Mehta",
+            targetSpecialty = "Cardiology",
+            reason = "Persistent severe exertional angina, dyspnea NYHA Class III, ECG shows ST depressions in V4-V6.",
+            clinicalQuestion = "Confirm ischemia severity on 2D Echo; advice on dual antiplatelet therapy and coronary angiography.",
+            urgency = ReferralUrgency.URGENT,
+            attachedRecordIds = listOf("cond_1"),
+            status = ReferralStatus.CONSULTATION_COMPLETED,
+            specialistFindings = "2D-ECHO reveals anteroseptal hypokinesia with LVEF 48%. Troponin-I borderline elevated. ECG confirmed dynamic ST-T changes indicative of coronary insufficiency.",
+            specialistRecommendations = "Prescribed Tab Aspirin 75mg + Clopidogrel 75mg OD, Tab Rosuvastatin 20mg HS, Tab Metoprolol Succinate 25mg OD. Advised urgent coronary angiography at Apex Tertiary Centre.",
+            specialistFollowUpNeeded = true,
+            createdAt = System.currentTimeMillis() - 3600000 * 36,
+            respondedAt = System.currentTimeMillis() - 3600000 * 20,
+            completedAt = System.currentTimeMillis() - 3600000 * 2
         )
     )
 

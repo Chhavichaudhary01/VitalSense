@@ -223,26 +223,55 @@ fun DoctorQueueScreen(
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 Button(
-                                    onClick = onCallNext,
-                                    enabled = waitingEntries.isNotEmpty() && activeConsultation == null,
+                                    onClick = {
+                                        when {
+                                            activeConsultation != null -> {
+                                                onCompleteConsultation(activeConsultation.id, "Consultation completed")
+                                                onCallNext()
+                                            }
+                                            calledEntry != null -> {
+                                                onStartConsultation(calledEntry.id)
+                                            }
+                                            else -> {
+                                                onCallNext()
+                                            }
+                                        }
+                                    },
+                                    enabled = when {
+                                        activeConsultation != null -> true
+                                        calledEntry != null -> true
+                                        else -> waitingEntries.isNotEmpty()
+                                    },
                                     modifier = Modifier
                                         .weight(1.5f)
                                         .height(52.dp)
                                         .touchSpring(),
                                     shape = RoundedCornerShape(14.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = VS_Primary,
+                                        containerColor = when {
+                                            activeConsultation != null -> VS_Success
+                                            calledEntry != null -> Color(0xFF7C5CFF)
+                                            else -> VS_Primary
+                                        },
                                         disabledContainerColor = VS_Primary.copy(alpha = 0.4f)
                                     )
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Outlined.Campaign,
+                                        imageVector = when {
+                                            activeConsultation != null -> Icons.Outlined.CheckCircle
+                                            calledEntry != null -> Icons.Outlined.PlayArrow
+                                            else -> Icons.Outlined.Campaign
+                                        },
                                         contentDescription = null,
                                         tint = Color.White
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Call Next (${waitingEntries.size})",
+                                        text = when {
+                                            activeConsultation != null -> "Complete & Call Next"
+                                            calledEntry != null -> "Start Consultation (#${calledEntry.tokenNumber})"
+                                            else -> "Call Next (${waitingEntries.size})"
+                                        },
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp,
                                         color = Color.White

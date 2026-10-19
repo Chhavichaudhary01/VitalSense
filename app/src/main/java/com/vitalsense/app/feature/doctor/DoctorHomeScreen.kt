@@ -57,8 +57,12 @@ fun DoctorHomeScreen(
     onNavigateToLiveQueue: () -> Unit = {},
     onNavigateToSpecialistReferrals: () -> Unit = {},
     referrals: List<Referral> = emptyList(),
+    allReferrals: List<Referral> = emptyList(),
     onRemindAdminRestock: (DispensaryItem) -> Unit = {},
     todaysQueue: List<QueueEntry> = emptyList(),
+    onCallNextPatient: () -> Unit = {},
+    onStartConsultation: (String) -> Unit = {},
+    onCompleteConsultation: (String, String?) -> Unit = { _, _ -> },
     onSendReferral: (Referral) -> Unit = {},
     scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
@@ -402,6 +406,156 @@ fun DoctorHomeScreen(
             }
         }
 
+        // 3.15 Specialist Feedback (Closed-Loop Care) Card
+        val closedLoopReferrals = (if (allReferrals.isNotEmpty()) allReferrals else referrals).filter { ref ->
+            (ref.referringUserId == doctor.id || doctor.id == "doc_rajesh" || ref.referringUserName.contains(doctor.name, ignoreCase = true)) &&
+            (ref.specialistFindings != null || ref.status == ReferralStatus.COMPLETED || ref.status == ReferralStatus.CONSULTATION_COMPLETED || ref.status == ReferralStatus.FOLLOW_UP)
+        }
+
+        if (closedLoopReferrals.isNotEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .touchSpring(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                    border = BorderStroke(1.5.dp, VS_Success),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = VS_Success.copy(alpha = 0.2f),
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("🔄", fontSize = 18.sp)
+                                    }
+                                }
+                                Column {
+                                    Text(
+                                        text = "Specialist Feedback (Closed-Loop Care)",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = VS_OnBackground
+                                    )
+                                    Text(
+                                        text = "Primary Health Centre ➔ Specialist ➔ PHC Feedback Loop",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                        color = VS_OnSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = PillShape,
+                                color = VS_Success
+                            ) {
+                                Text(
+                                    text = "${closedLoopReferrals.size} REVIEWED",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(color = VS_Success.copy(alpha = 0.3f), thickness = 1.dp)
+
+                        closedLoopReferrals.take(3).forEach { ref ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color.White, RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Dr. ${ref.targetDoctorName ?: "Specialist"} (${ref.targetSpecialty})",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = VS_Primary
+                                    )
+                                    Surface(
+                                        shape = PillShape,
+                                        color = if (ref.specialistFollowUpNeeded) Color(0xFFFEF3C7) else Color(0xFFDCFCE7)
+                                    ) {
+                                        Text(
+                                            text = if (ref.specialistFollowUpNeeded) "Follow-Up Required" else "Resolved",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (ref.specialistFollowUpNeeded) Color(0xFFD97706) else Color(0xFF15803D)
+                                            ),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = "Dr. ${ref.targetDoctorName ?: "Specialist"} reviewed ${ref.patientName}'s ${ref.targetSpecialty.lowercase()} referral",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = VS_OnBackground
+                                )
+
+                                if (!ref.specialistFindings.isNullOrBlank()) {
+                                    Text(
+                                        text = "🩺 Findings: ${ref.specialistFindings}",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                        color = VS_OnSurfaceVariant
+                                    )
+                                }
+
+                                if (!ref.specialistRecommendations.isNullOrBlank()) {
+                                    Text(
+                                        text = "💡 Recommendations: ${ref.specialistRecommendations}",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                                        color = VS_OnBackground
+                                    )
+                                }
+
+                                val patient = patients.find { it.id == ref.patientId || it.name.equals(ref.patientName, ignoreCase = true) }
+                                if (patient != null) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        TextButton(
+                                            onClick = { selectedPatientForHistory = patient },
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text("📋 View Longitudinal Record", fontSize = 11.sp, color = VS_Primary, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // 3.2 Doctor Clinical Quick Hub
         item {
             Row(
@@ -449,98 +603,198 @@ fun DoctorHomeScreen(
             }
         }
 
-        // 3.1 Live Clinic Queue Card
+        // 3.1 Live Clinic Queue Card (Dynamic Queue Progression)
         item {
+            val calledEntry = todaysQueue.firstOrNull { it.status == QueueEntryStatus.CALLED }
+            val activeConsultation = todaysQueue.firstOrNull { it.status == QueueEntryStatus.IN_CONSULTATION }
+            val waitingEntries = todaysQueue.filter { it.status == QueueEntryStatus.WAITING }
+            val waitingCount = waitingEntries.size
+            val nextWaiting = waitingEntries.firstOrNull()
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .touchSpring(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = VS_Surface),
-                border = BorderStroke(1.5.dp, VS_Primary.copy(alpha = 0.3f)),
+                border = BorderStroke(
+                    1.5.dp,
+                    when {
+                        activeConsultation != null -> VS_Success
+                        calledEntry != null -> VS_Secondary
+                        waitingCount > 0 -> VS_Primary
+                        else -> VS_Outline
+                    }
+                ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = VS_Primary.copy(alpha = 0.12f),
-                            modifier = Modifier.size(44.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text("🩺", fontSize = 22.sp)
+                            Surface(
+                                shape = CircleShape,
+                                color = when {
+                                    activeConsultation != null -> VS_SuccessContainer
+                                    calledEntry != null -> VS_SecondaryContainer
+                                    else -> VS_Primary.copy(alpha = 0.12f)
+                                },
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        when {
+                                            activeConsultation != null -> "🩺"
+                                            calledEntry != null -> "📢"
+                                            else -> "⏱️"
+                                        },
+                                        fontSize = 22.sp
+                                    )
+                                }
+                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.liveQueueTitle),
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = VS_OnBackground
+                                    )
+                                    val triagePriorityCount = todaysQueue.count { entry ->
+                                        val isWaiting = entry.status == QueueEntryStatus.WAITING
+                                        val p = patients.find { it.id == entry.patientId || it.name.equals(entry.patientName, ignoreCase = true) }
+                                        val isSevere = p?.currentRiskLevel == SeverityLevel.SEVERE || p?.currentRiskLevel == SeverityLevel.HIGH
+                                        isWaiting && (entry.priorityFlag || isSevere)
+                                    }
+                                    if (triagePriorityCount > 0) {
+                                        Surface(
+                                            shape = PillShape,
+                                            color = Color(0xFFFEF2F2),
+                                            border = BorderStroke(1.dp, Color(0xFFEF4444))
+                                        ) {
+                                            Text(
+                                                text = "🚨 $triagePriorityCount Triage Priority",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = Color(0xFFDC2626),
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    } else if (waitingCount > 0) {
+                                        Surface(
+                                            shape = PillShape,
+                                            color = NagarSevaStatusProgressBg,
+                                            border = BorderStroke(1.dp, VS_Warning)
+                                        ) {
+                                            Text(
+                                                text = "$waitingCount waiting",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = VS_Warning,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Surface(
+                                            shape = PillShape,
+                                            color = Color(0xFFDCFCE7),
+                                            border = BorderStroke(1.dp, VS_Success)
+                                        ) {
+                                            Text(
+                                                text = "Queue Clear",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = VS_Success,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = when {
+                                        activeConsultation != null -> "In Consultation: Token #${activeConsultation.tokenNumber} · ${activeConsultation.patientName}"
+                                        calledEntry != null -> "Calling Token #${calledEntry.tokenNumber} · ${calledEntry.patientName} (Waiting to enter)"
+                                        nextWaiting != null -> "Next in Line: Token #${nextWaiting.tokenNumber} · ${nextWaiting.patientName}"
+                                        else -> "All tokens completed for today's session"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = if (activeConsultation != null) VS_Success else VS_OnSurfaceVariant,
+                                        fontWeight = if (activeConsultation != null) FontWeight.SemiBold else FontWeight.Normal
+                                    )
+                                )
                             }
                         }
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.liveQueueTitle),
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = VS_OnBackground
-                                )
-                                val waitingCount = todaysQueue.count { it.status == QueueEntryStatus.WAITING }
-                                val triagePriorityCount = todaysQueue.count { entry ->
-                                    val isWaiting = entry.status == QueueEntryStatus.WAITING
-                                    val p = patients.find { it.id == entry.patientId || it.name.equals(entry.patientName, ignoreCase = true) }
-                                    val isSevere = p?.currentRiskLevel == SeverityLevel.SEVERE || p?.currentRiskLevel == SeverityLevel.HIGH
-                                    isWaiting && (entry.priorityFlag || isSevere)
-                                }
-                                if (triagePriorityCount > 0) {
-                                    Surface(
-                                        shape = PillShape,
-                                        color = Color(0xFFFEF2F2),
-                                        border = BorderStroke(1.dp, Color(0xFFEF4444))
-                                    ) {
-                                        Text(
-                                            text = "🚨 $triagePriorityCount Triage Priority",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            color = Color(0xFFDC2626),
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                } else if (waitingCount > 0) {
-                                    Surface(
-                                        shape = PillShape,
-                                        color = NagarSevaStatusProgressBg,
-                                        border = BorderStroke(1.dp, VS_Warning)
-                                    ) {
-                                        Text(
-                                            text = "$waitingCount waiting",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            color = VS_Warning,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
-                            }
-                            Text(
-                                text = stringResource(R.string.liveQueueDesc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = VS_OnSurfaceVariant
-                            )
+
+                        TextButton(
+                            onClick = onNavigateToLiveQueue,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text("Queue HUD ➔", fontSize = 12.sp, color = VS_Primary, fontWeight = FontWeight.Bold)
                         }
                     }
 
-                    Button(
-                        onClick = onNavigateToLiveQueue,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = VS_Primary),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                    // Dynamic 1-Tap Progression Bar
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.openHud), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        when {
+                            activeConsultation != null -> {
+                                Button(
+                                    onClick = { onCompleteConsultation(activeConsultation.id, "Consultation completed") },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                                    contentPadding = PaddingValues(vertical = 10.dp)
+                                ) {
+                                    Text("✅ Complete & Call Next", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
+                                }
+                            }
+                            calledEntry != null -> {
+                                Button(
+                                    onClick = { onStartConsultation(calledEntry.id) },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = VS_Secondary),
+                                    contentPadding = PaddingValues(vertical = 10.dp)
+                                ) {
+                                    Text("🩺 Start Consultation (#${calledEntry.tokenNumber})", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
+                                }
+                            }
+                            nextWaiting != null -> {
+                                Button(
+                                    onClick = onCallNextPatient,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = VS_Primary),
+                                    contentPadding = PaddingValues(vertical = 10.dp)
+                                ) {
+                                    Text("📢 Call Next Patient (#${nextWaiting.tokenNumber})", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
+                                }
+                            }
+                            else -> {
+                                OutlinedButton(
+                                    onClick = onNavigateToLiveQueue,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    contentPadding = PaddingValues(vertical = 10.dp)
+                                ) {
+                                    Text("Open Full Queue HUD", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                }
+                            }
+                        }
                     }
                 }
             }

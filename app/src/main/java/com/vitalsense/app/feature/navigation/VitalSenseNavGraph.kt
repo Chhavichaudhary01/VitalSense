@@ -696,6 +696,10 @@ fun VitalSenseNavGraph(
                                                                 onNavigateToLiveQueue = { currentDoctorScreen = "live_queue" },
                                                                 onNavigateToSpecialistReferrals = { currentDoctorScreen = "specialist_referrals" },
                                                                 referrals = doctorReferrals,
+                                                                allReferrals = allReferrals,
+                                                                onCallNextPatient = { doctorViewModel.callNext() },
+                                                                onStartConsultation = { doctorViewModel.startConsultation(it) },
+                                                                onCompleteConsultation = { id, notes -> doctorViewModel.completeAndCallNext(id, notes) },
                                                                 onRemindAdminRestock = { item ->
                                                                     doctorViewModel.sendNotice(
                                                                         BroadcastNotice(

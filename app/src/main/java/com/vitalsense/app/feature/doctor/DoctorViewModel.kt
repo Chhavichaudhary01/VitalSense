@@ -306,6 +306,14 @@ class DoctorViewModel @Inject constructor(
         }
     }
 
+    fun completeAndCallNext(entryId: String, outcomeNotes: String? = "Consultation completed") {
+        val doctor = activeDoctor.value
+        viewModelScope.launch {
+            repository.completeConsultation(entryId, outcomeNotes)
+            repository.callNext(doctor.id, todayFormatted)
+        }
+    }
+
     fun markNoShow(entryId: String) {
         viewModelScope.launch {
             repository.markNoShow(entryId)

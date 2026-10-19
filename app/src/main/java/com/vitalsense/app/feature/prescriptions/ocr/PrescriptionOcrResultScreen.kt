@@ -5,6 +5,7 @@ import com.vitalsense.app.R
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +35,7 @@ import java.util.*
  * Screen displaying the recognized OCR text, editable field,
  * parsed medicine items, and direct save action.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrescriptionOcrResultScreen(
     patient: Patient,
@@ -49,6 +51,9 @@ fun PrescriptionOcrResultScreen(
     var doctorName by remember { mutableStateOf("PHC Attending (Digitized)") }
     var instructions by remember { mutableStateOf("Take medicines as directed with clean drinking water.") }
     val medicinesList = remember { mutableStateListOf<PrescribedMedicine>() }
+    var editingMedicineIndex by remember { mutableStateOf<Int?>(null) }
+    var showReviewSheet by remember { mutableStateOf(false) }
+    var legalAttestationChecked by remember { mutableStateOf(false) }
 
     // Run on-device ML Kit text recognition on the confirmed photo
     LaunchedEffect(photoFile) {
@@ -287,9 +292,16 @@ fun PrescriptionOcrResultScreen(
                     )
                 }
             } else {
+                Text(
+                    text = "Tap any medicine to adjust dose, frequency, or duration:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = VS_OnSurfaceVariant
+                )
                 medicinesList.forEachIndexed { index, med ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { editingMedicineIndex = index },
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = VS_Surface),
                         border = BorderStroke(1.dp, VS_Outline)
@@ -322,11 +334,26 @@ fun PrescriptionOcrResultScreen(
                                         )
                                     }
                                 }
-                                Text(
-                                    text = "${med.frequency} · Duration: ${med.duration}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = VS_OnSurfaceVariant
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        text = "${med.frequency} · ${med.duration}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = VS_OnSurfaceVariant
+                                    )
+                                    Surface(
+                                        shape = PillShape,
+                                        color = VS_PrimaryContainer.copy(alpha = 0.5f)
+                                    ) {
+                                        Text(
+                                            text = "✏️ Edit Dose",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = VS_Primary, fontWeight = FontWeight.Bold),
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
                             }
                             IconButton(
                                 onClick = { medicinesList.removeAt(index) },
@@ -376,41 +403,9 @@ fun PrescriptionOcrResultScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             VitalSenseButton(
-                text = stringResource(R.string.saveDigitizedPrescription),
+                text = "Review & Legal Clinical Sign-Off →",
                 style = ButtonStyle.PRIMARY,
-                onClick = {
-                    val finalMedicines = if (medicinesList.isNotEmpty()) {
-                        medicinesList.toList()
-                    } else {
-                        listOf(
-                            PrescribedMedicine(
-                                name = "Digitized Prescription Note",
-                                dosage = "As indicated",
-                                frequency = "See notes",
-                                duration = "7 Days",
-                                quantity = 1
-                            )
-                        )
-                    }
-
-                    val dateStr = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
-
-                    val prescription = Prescription(
-                        id = "rx_ocr_${System.currentTimeMillis()}",
-                        patientId = patient.id,
-                        patientName = patient.name,
-                        doctorId = "doc_ocr_scan",
-                        doctorName = doctorName.ifBlank { "PHC Attending (Digitized)" },
-                        doctorSpecialty = "General Medicine",
-                        timestamp = System.currentTimeMillis(),
-                        dateFormatted = dateStr,
-                        medicines = finalMedicines,
-                        instructions = if (instructions.isNotBlank()) instructions else rawOcrText,
-                        isOcrExtracted = true
-                    )
-
-                    onSavePrescription(prescription)
-                }
+                onClick = { showReviewSheet = true }
             )
 
             OutlinedButton(
@@ -420,6 +415,205 @@ fun PrescriptionOcrResultScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.retakePhotoBtn), color = VS_OnBackground)
+            }
+        }
+    }
+
+    // Medicine Dose Adjustment Dialog
+    editingMedicineIndex?.let { idx ->
+        if (idx in medicinesList.indices) {
+            EditMedicineDialog(
+                medicine = medicinesList[idx],
+                onDismiss = { editingMedicineIndex = null },
+                onSave = { updated ->
+                    medicinesList[idx] = updated
+                    editingMedicineIndex = null
+                }
+            )
+        }
+    }
+
+    // Review & Legal Clinical Sign-Off Bottom Sheet
+    if (showReviewSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showReviewSheet = false },
+            containerColor = VS_Surface,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("⚖️", fontSize = 24.sp)
+                    Column {
+                        Text(
+                            text = "Legal Clinical Review & Sign-Off",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = VS_OnBackground
+                        )
+                        Text(
+                            text = "National Telemedicine Guidelines (2020) & Pharmacy Act Sign-Off",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = VS_OnSurfaceVariant
+                        )
+                    }
+                }
+
+                Surface(
+                    color = VS_PrimaryContainer.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, VS_Primary.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Spacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Patient: ${patient.name} (ABHA Verified)",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            color = VS_Primary
+                        )
+                        Text(
+                            text = "Attending Clinician: ${doctorName.ifBlank { "Medical Officer In-Charge" }}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = VS_OnSurfaceVariant
+                        )
+                    }
+                }
+
+                // Verified Medicines Summary
+                Text(
+                    text = "Verified Medications (${medicinesList.size}):",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = VS_OnBackground
+                )
+
+                medicinesList.forEach { med ->
+                    Surface(
+                        color = VS_SurfaceVariant,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "💊 ${med.name}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = VS_OnBackground
+                                )
+                                Text(
+                                    text = "${med.frequency} · Duration: ${med.duration}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = VS_OnSurfaceVariant
+                                )
+                            }
+                            Surface(
+                                shape = PillShape,
+                                color = VS_SuccessContainer
+                            ) {
+                                Text(
+                                    text = med.dosage,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = VS_OnSuccessContainer),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Legal Certification Toggle
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (legalAttestationChecked) VS_SuccessContainer.copy(alpha = 0.5f) else VS_WarningContainer.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, if (legalAttestationChecked) VS_Success else VS_Warning),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { legalAttestationChecked = !legalAttestationChecked }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(Spacing.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Checkbox(
+                            checked = legalAttestationChecked,
+                            onCheckedChange = { legalAttestationChecked = it }
+                        )
+                        Text(
+                            text = "I hereby certify that I have verified each digitized medication, dosage, and frequency against the physical prescription and approve legal entry into the Patient Health Record.",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = VS_OnBackground
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        val finalMedicines = if (medicinesList.isNotEmpty()) {
+                            medicinesList.toList()
+                        } else {
+                            listOf(
+                                PrescribedMedicine(
+                                    name = "Digitized Prescription Note",
+                                    dosage = "As indicated",
+                                    frequency = "See notes",
+                                    duration = "7 Days",
+                                    quantity = 1
+                                )
+                            )
+                        }
+
+                        val dateStr = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
+
+                        val prescription = Prescription(
+                            id = "rx_ocr_${System.currentTimeMillis()}",
+                            patientId = patient.id,
+                            patientName = patient.name,
+                            doctorId = "doc_ocr_scan",
+                            doctorName = doctorName.ifBlank { "PHC Attending (Digitized)" },
+                            doctorSpecialty = "General Medicine",
+                            timestamp = System.currentTimeMillis(),
+                            dateFormatted = dateStr,
+                            medicines = finalMedicines,
+                            instructions = if (instructions.isNotBlank()) instructions else rawOcrText,
+                            isOcrExtracted = true
+                        )
+
+                        showReviewSheet = false
+                        onSavePrescription(prescription)
+                    },
+                    enabled = legalAttestationChecked,
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = VS_Success,
+                        disabledContainerColor = VS_Outline.copy(alpha = 0.4f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Text(
+                        text = "Legal Sign-Off & Commit Prescription",
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.md))
             }
         }
     }
@@ -489,3 +683,164 @@ private fun NoTextDetectedView(
         }
     }
 }
+
+@Composable
+private fun EditMedicineDialog(
+    medicine: PrescribedMedicine,
+    onDismiss: () -> Unit,
+    onSave: (PrescribedMedicine) -> Unit
+) {
+    var name by remember { mutableStateOf(medicine.name) }
+    var dosage by remember { mutableStateOf(medicine.dosage) }
+    var frequency by remember { mutableStateOf(medicine.frequency) }
+    var duration by remember { mutableStateOf(medicine.duration) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("✏️", fontSize = 20.sp)
+                Text("Adjust Medication & Dosage", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Medicine Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Dosage with quick chips
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OutlinedTextField(
+                        value = dosage,
+                        onValueChange = { dosage = it },
+                        label = { Text("Dosage") },
+                        placeholder = { Text("e.g. 500mg") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        listOf("50mg", "100mg", "250mg", "500mg", "650mg").forEach { chip ->
+                            val isSel = dosage.contains(chip, ignoreCase = true)
+                            Surface(
+                                shape = PillShape,
+                                color = if (isSel) VS_PrimaryContainer else VS_SurfaceVariant,
+                                border = BorderStroke(1.dp, if (isSel) VS_Primary else VS_Outline),
+                                modifier = Modifier.clickable { dosage = chip }
+                            ) {
+                                Text(
+                                    text = chip,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                                    color = if (isSel) VS_PrimaryContainer else VS_OnSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Frequency with quick chips
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OutlinedTextField(
+                        value = frequency,
+                        onValueChange = { frequency = it },
+                        label = { Text("Frequency") },
+                        placeholder = { Text("e.g. Twice Daily (BD)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        listOf("OD (1x)" to "Once Daily (OD)", "BD (2x)" to "Twice Daily (BD)", "TDS (3x)" to "Thrice Daily (TDS)", "SOS" to "As Needed (SOS)").forEach { (label, full) ->
+                            val isSel = frequency.contains(label.take(2), ignoreCase = true)
+                            Surface(
+                                shape = PillShape,
+                                color = if (isSel) VS_PrimaryContainer else VS_SurfaceVariant,
+                                border = BorderStroke(1.dp, if (isSel) VS_Primary else VS_Outline),
+                                modifier = Modifier.clickable { frequency = full }
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                                    color = if (isSel) VS_PrimaryContainer else VS_OnSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Duration
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OutlinedTextField(
+                        value = duration,
+                        onValueChange = { duration = it },
+                        label = { Text("Duration") },
+                        placeholder = { Text("e.g. 5 Days") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        listOf("3 Days", "5 Days", "7 Days", "14 Days", "30 Days").forEach { dur ->
+                            val isSel = duration.equals(dur, ignoreCase = true)
+                            Surface(
+                                shape = PillShape,
+                                color = if (isSel) VS_PrimaryContainer else VS_SurfaceVariant,
+                                border = BorderStroke(1.dp, if (isSel) VS_Primary else VS_Outline),
+                                modifier = Modifier.clickable { duration = dur }
+                            ) {
+                                Text(
+                                    text = dur,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                                    color = if (isSel) VS_PrimaryContainer else VS_OnSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(
+                        medicine.copy(
+                            name = name.ifBlank { medicine.name },
+                            dosage = dosage.ifBlank { medicine.dosage },
+                            frequency = frequency.ifBlank { medicine.frequency },
+                            duration = duration.ifBlank { medicine.duration }
+                        )
+                    )
+                },
+                shape = PillShape,
+                colors = ButtonDefaults.buttonColors(containerColor = VS_Primary)
+            ) {
+                Text("Apply Adjustment", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = VS_OnSurfaceVariant)
+            }
+        }
+    )
+}
+
