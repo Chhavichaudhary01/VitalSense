@@ -66,7 +66,7 @@ fun VitalSenseButton(
             disabledContentColor = VS_OnSurfaceVariant
         ),
         border = border,
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -79,7 +79,11 @@ fun VitalSenseButton(
             }
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelLarge
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 2,
+                softWrap = true,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }

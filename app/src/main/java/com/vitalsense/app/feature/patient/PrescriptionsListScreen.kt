@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.data.model.*
 import com.vitalsense.app.core.ui.components.VitalSenseCard
 import com.vitalsense.app.core.ui.theme.*
@@ -22,6 +23,7 @@ fun PrescriptionsListScreen(
     patient: Patient? = null
 ) {
     var selectedMedicineForNearby by remember { mutableStateOf<PrescribedMedicine?>(null) }
+    var sharingPrescription by remember { mutableStateOf<Prescription?>(null) }
 
     val fallbackPatient = patient ?: Patient(
         id = "default_pat",
@@ -155,6 +157,42 @@ fun PrescriptionsListScreen(
                                 color = VS_OnSurfaceVariant
                             )
                         }
+
+                        HorizontalDivider(color = VS_Outline, modifier = Modifier.padding(vertical = 4.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "💬 Rural SMS / WhatsApp",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = VS_OnSurfaceVariant
+                            )
+
+                            Button(
+                                onClick = { sharingPrescription = rx },
+                                shape = PillShape,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = VS_PrimaryContainer,
+                                    contentColor = VS_Primary
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text("📲", fontSize = 12.sp)
+                                    Text(
+                                        text = "Share via SMS / WhatsApp",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -166,6 +204,14 @@ fun PrescriptionsListScreen(
             patient = fallbackPatient,
             medicine = med,
             onDismiss = { selectedMedicineForNearby = null }
+        )
+    }
+
+    sharingPrescription?.let { rx ->
+        com.vitalsense.app.feature.prescriptions.SharePrescriptionDialog(
+            prescription = rx,
+            patientPhoneDefault = fallbackPatient.phone,
+            onDismiss = { sharingPrescription = null }
         )
     }
 }

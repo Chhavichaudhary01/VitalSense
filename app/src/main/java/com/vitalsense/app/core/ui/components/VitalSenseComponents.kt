@@ -54,7 +54,13 @@ fun VSStatusPill(
         icon?.let {
             Icon(imageVector = it, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
         }
-        Text(text = label, style = MaterialTheme.typography.labelLarge, color = fg)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = fg,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
     }
 }
 

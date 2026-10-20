@@ -101,6 +101,7 @@ fun PrescriptionComposerDialog(
 
     var availabilityState by remember { mutableStateOf<AvailabilityCheckState>(AvailabilityCheckState.Idle) }
     var showAlternativeSuggestions by remember { mutableStateOf(false) }
+    var showDirectShareDialog by remember { mutableStateOf(false) }
 
     // Check availability live as the doctor types
     LaunchedEffect(newMedName) {
@@ -557,28 +558,84 @@ fun PrescriptionComposerDialog(
 
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
-                // Issue Button
-                Button(
-                    onClick = {
-                        onIssuePrescription(medicinesList.toList(), instructions)
-                        onDismiss()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = PillShape,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VS_Primary,
-                        contentColor = VS_OnBackground
-                    ),
-                    enabled = medicinesList.isNotEmpty()
+                // Issue & Share Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Text(
-                        text = "${stringResource(R.string.savePrescriptionRecord)} ✓",
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    Button(
+                        onClick = {
+                            onIssuePrescription(medicinesList.toList(), instructions)
+                            showDirectShareDialog = true
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = PillShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF25D366),
+                            contentColor = Color.White
+                        ),
+                        enabled = medicinesList.isNotEmpty()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text("📲", fontSize = 14.sp)
+                            Text(
+                                text = "Save & Share e-Rx",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            onIssuePrescription(medicinesList.toList(), instructions)
+                            onDismiss()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = PillShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = VS_Primary,
+                            contentColor = Color.White
+                        ),
+                        enabled = medicinesList.isNotEmpty()
+                    ) {
+                        Text(
+                            text = "${stringResource(R.string.savePrescriptionRecord)} ✓",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
                 }
             }
         }
+    }
+
+    if (showDirectShareDialog) {
+        val tempPrescription = Prescription(
+            id = "rx_${System.currentTimeMillis()}",
+            patientId = patient?.id ?: "unknown",
+            patientName = patient?.name ?: patientNameFallback,
+            doctorId = "doc_active",
+            doctorName = "Doctor",
+            doctorSpecialty = "General Medicine",
+            timestamp = System.currentTimeMillis(),
+            dateFormatted = "Today",
+            medicines = medicinesList.toList(),
+            instructions = instructions,
+            isOcrExtracted = false
+        )
+        com.vitalsense.app.feature.prescriptions.SharePrescriptionDialog(
+            prescription = tempPrescription,
+            patientPhoneDefault = patient?.phone ?: "+91 9876543210",
+            onDismiss = {
+                showDirectShareDialog = false
+                onDismiss()
+            }
+        )
     }
 }

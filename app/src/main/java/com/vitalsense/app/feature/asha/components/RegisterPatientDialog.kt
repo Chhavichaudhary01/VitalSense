@@ -27,6 +27,7 @@ import java.util.UUID
 fun RegisterPatientDialog(
     asha: AshaWorker,
     isOffline: Boolean = false,
+    isSunlightMode: Boolean = false,
     onDismiss: () -> Unit,
     onRegister: (Patient) -> Unit
 ) {
@@ -66,11 +67,16 @@ fun RegisterPatientDialog(
         else -> selectedRiskLevel
     }
 
+    val regBgColor = if (isSunlightMode) Color.White else VS_Surface
+    val regBorder = if (isSunlightMode) BorderStroke(2.dp, Color.Black) else BorderStroke(1.dp, VS_Primary.copy(alpha = 0.6f))
+    val regTextPrimary = if (isSunlightMode) Color.Black else VS_OnBackground
+    val regTextSecondary = if (isSunlightMode) Color(0xFF1E293B) else VS_OnSurfaceVariant
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(20.dp),
-            color = VS_Surface,
-            border = BorderStroke(1.dp, VS_Primary.copy(alpha = 0.6f)),
+            color = regBgColor,
+            border = regBorder,
             shadowElevation = 12.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -597,6 +603,8 @@ fun RegisterPatientDialog(
                             emergencyContact = finalEmergency
                         )
                         onRegister(newPatient)
+                        com.vitalsense.app.core.util.AudioGuidanceHelper.provideEmergencySosHaptic(context)
+                        com.vitalsense.app.core.util.AudioGuidanceHelper.speakEmergencyAlert(context)
                         com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(context, "108")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))

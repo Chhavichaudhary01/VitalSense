@@ -81,7 +81,7 @@ fun SmartEmergencyDialog(
             isCountdownActive = false
             onSosDispatched()
             AudioGuidanceHelper.speak(context = context, text = alertDispatchedSpoken, language = language)
-            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+            AudioGuidanceHelper.provideEmergencySosHaptic(context)
         }
     }
 

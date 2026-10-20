@@ -28,10 +28,17 @@ import com.vitalsense.app.feature.asha.components.LogDailyRoundDialog
 fun DailyRoundsScreen(
     rounds: List<DailyRound>,
     onBackClick: () -> Unit,
-    onSaveRound: (DailyRound) -> Unit = {}
+    onSaveRound: (DailyRound) -> Unit = {},
+    isSunlightMode: Boolean = false
 ) {
     var showLogRoundDialog by remember { mutableStateOf(false) }
     var successMessage by remember { mutableStateOf<String?>(null) }
+
+    val screenBg = if (isSunlightMode) Color.White else VS_Background
+    val cardBg = if (isSunlightMode) Color.White else VS_Surface
+    val cardBorder = if (isSunlightMode) BorderStroke(2.dp, Color.Black) else BorderStroke(1.dp, VS_Outline)
+    val textPrimary = if (isSunlightMode) Color.Black else VS_OnBackground
+    val textSecondary = if (isSunlightMode) Color(0xFF1E293B) else VS_OnSurfaceVariant
 
     Scaffold(
         topBar = {
@@ -43,16 +50,16 @@ fun DailyRoundsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VS_SurfaceVariant,
-                    titleContentColor = VS_OnBackground,
-                    navigationIconContentColor = VS_OnBackground
+                    containerColor = if (isSunlightMode) Color.White else VS_SurfaceVariant,
+                    titleContentColor = textPrimary,
+                    navigationIconContentColor = textPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showLogRoundDialog = true },
-                containerColor = VS_Primary,
+                containerColor = if (isSunlightMode) Color.Black else VS_Primary,
                 contentColor = Color.White
             ) {
                 Row(
@@ -65,7 +72,7 @@ fun DailyRoundsScreen(
                 }
             }
         },
-        containerColor = VS_Background
+        containerColor = screenBg
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -126,8 +133,8 @@ fun DailyRoundsScreen(
             } else {
                 items(rounds) { round ->
                     VitalSenseCard(
-                        backgroundColor = VS_Surface,
-                        border = BorderStroke(1.dp, VS_Outline)
+                        backgroundColor = cardBg,
+                        border = cardBorder
                     ) {
                         Column(
                             modifier = Modifier

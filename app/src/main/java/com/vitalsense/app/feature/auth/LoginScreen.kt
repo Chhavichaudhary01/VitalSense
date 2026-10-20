@@ -408,6 +408,118 @@ fun LoginScreen(
                             )
                         }
 
+                        // Stage Demo Safety-Net (1-Tap Direct Presentation Login)
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = VS_Surface,
+                            border = BorderStroke(1.5.dp, VS_Warning.copy(alpha = 0.7f)),
+                            shadowElevation = 3.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text("⚡", fontSize = 16.sp)
+                                        Text(
+                                            text = if (currentLanguage == AppLanguage.HINDI) "स्टेज सेफ्टी-नेट (1-टैप क्विक डेमो)" else "Stage Safety-Net (1-Tap Quick Demo)",
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
+                                            color = VS_Warning
+                                        )
+                                    }
+                                    Surface(
+                                        shape = PillShape,
+                                        color = VS_Warning.copy(alpha = 0.15f)
+                                    ) {
+                                        Text(
+                                            text = "Offline Bypass",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 9.sp),
+                                            color = VS_Warning,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = if (currentLanguage == AppLanguage.HINDI)
+                                        "कमजोर वाई-फाई या नेटवर्क ड्रॉप होने पर सीधे 1-टैप से किसी भी भूमिका में लॉगिन करें:"
+                                    else
+                                        "Auditorium fallback: instantly enter any portal without typing passwords or waiting for Google Auth:",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                    color = VS_OnSurfaceVariant
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    StageQuickLoginChip(
+                                        emoji = "🧑",
+                                        name = "Ramesh (Patient)",
+                                        color = VS_Primary,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                            DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                            Toast.makeText(context, "⚡ Quick Demo: Logged in as Ramesh Kumar", Toast.LENGTH_SHORT).show()
+                                            onPatientLogin(samplePatients.first())
+                                        }
+                                    )
+                                    StageQuickLoginChip(
+                                        emoji = "👨‍⚕️",
+                                        name = "Dr. Rajesh (Doctor)",
+                                        color = VS_Primary,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                            DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                            Toast.makeText(context, "⚡ Quick Demo: Logged in as Dr. Rajesh Varma", Toast.LENGTH_SHORT).show()
+                                            onDoctorLogin(sampleDoctors.first())
+                                        }
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    StageQuickLoginChip(
+                                        emoji = "🩺",
+                                        name = "Priya Devi (ASHA)",
+                                        color = VS_Warning,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                            DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                            Toast.makeText(context, "⚡ Quick Demo: Logged in as Priya Devi (ASHA)", Toast.LENGTH_SHORT).show()
+                                            onAshaLogin(sampleAshas.first())
+                                        }
+                                    )
+                                    StageQuickLoginChip(
+                                        emoji = "🛡️",
+                                        name = "District Admin",
+                                        color = VS_Error,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                                            DismissedNoticeHelper.clearDismissedAdvisories(context)
+                                            Toast.makeText(context, "⚡ Quick Demo: Logged in as District Admin", Toast.LENGTH_SHORT).show()
+                                            onAdminLogin()
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                         // Bottom Help & Zero-Internet Indicator
                         Row(
                             modifier = Modifier
@@ -1297,6 +1409,41 @@ private fun AdminSignInOptions(
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 color = VS_Error,
                 modifier = Modifier.clickable(onClick = onToggleSignUp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StageQuickLoginChip(
+    emoji: String,
+    name: String,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(10.dp),
+        color = VS_SurfaceVariant,
+        border = BorderStroke(1.dp, color.copy(alpha = 0.4f)),
+        modifier = modifier.defaultMinSize(minHeight = 36.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(text = emoji, fontSize = 13.sp)
+            Text(
+                text = name,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp
+                ),
+                color = VS_OnBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

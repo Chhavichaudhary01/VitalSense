@@ -60,6 +60,9 @@ class AppStateHolder @Inject constructor(
     private val _isPresentationLightMode = MutableStateFlow(true)
     val isPresentationLightMode: StateFlow<Boolean> = _isPresentationLightMode.asStateFlow()
 
+    private val _isSunlightHighContrast = MutableStateFlow(false)
+    val isSunlightHighContrast: StateFlow<Boolean> = _isSunlightHighContrast.asStateFlow()
+
     private val _activePatient = MutableStateFlow(SeedDataProvider.initialPatients.first())
     val activePatient: StateFlow<Patient> = _activePatient.asStateFlow()
 
@@ -139,6 +142,14 @@ class AppStateHolder @Inject constructor(
 
     fun togglePresentationTheme() {
         _isPresentationLightMode.value = !_isPresentationLightMode.value
+    }
+
+    fun toggleSunlightHighContrast() {
+        _isSunlightHighContrast.value = !_isSunlightHighContrast.value
+    }
+
+    fun setSunlightHighContrast(enabled: Boolean) {
+        _isSunlightHighContrast.value = enabled
     }
 
     fun selectPatient(patient: Patient) {

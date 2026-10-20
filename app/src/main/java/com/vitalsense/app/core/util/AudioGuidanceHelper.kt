@@ -71,6 +71,57 @@ object AudioGuidanceHelper {
         }
     }
 
+    /**
+     * Distinct tactile Morse code SOS waveform (... --- ...) for high-urgency alerts
+     */
+    fun provideEmergencySosHaptic(context: Context) {
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vibratorManager?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+
+            // Morse code S-O-S: 3 short, 3 long, 3 short
+            val timings = longArrayOf(
+                0,
+                120, 80, 120, 80, 120, 180,       // S (...)
+                350, 100, 350, 100, 350, 180,     // O (---)
+                120, 80, 120, 80, 120             // S (...)
+            )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val amplitudes = intArrayOf(
+                    0,
+                    VibrationEffect.DEFAULT_AMPLITUDE, 0, VibrationEffect.DEFAULT_AMPLITUDE, 0, VibrationEffect.DEFAULT_AMPLITUDE, 0,
+                    VibrationEffect.DEFAULT_AMPLITUDE, 0, VibrationEffect.DEFAULT_AMPLITUDE, 0, VibrationEffect.DEFAULT_AMPLITUDE, 0,
+                    VibrationEffect.DEFAULT_AMPLITUDE, 0, VibrationEffect.DEFAULT_AMPLITUDE, 0, VibrationEffect.DEFAULT_AMPLITUDE
+                )
+                vibrator?.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(timings, -1)
+            }
+        } catch (e: Exception) {
+            // Ignore if vibration unavailable
+        }
+    }
+
+    /**
+     * Multi-lingual voice announcement when Emergency SOS or code red triage triggers
+     */
+    fun speakEmergencyAlert(context: Context, language: AppLanguage = AppLanguage.ENGLISH) {
+        val alertText = when (language) {
+            AppLanguage.HINDI -> "आपातकालीन एसओएस अलर्ट भेजा गया। 108 एम्बुलेंस और आशा कार्यकर्ता को सूचित कर दिया गया है।"
+            AppLanguage.TAMIL -> "அவசர எஸ்ஓஎஸ் எச்சரிக்கை அனுப்பப்பட்டது. 108 ஆம்புலன்ஸ் மற்றும் ஆஷா பணியாளருக்கு தகவல் தெரிவிக்கப்பட்டது."
+            AppLanguage.MARATHI -> "आपत्कालीन एसओएस अलर्ट पाठविला गेला आहे. 108 रुग्णवाहिका आणि आशा सेविकेला सूचित केले आहे."
+            AppLanguage.ENGLISH -> "Emergency SOS broadcasted. 108 Ambulance and community health workers notified."
+        }
+        speak(context = context, text = alertText, language = language)
+    }
+
     fun getSpokenHealthSummary(
         patientName: String,
         severity: SeverityLevel,

@@ -65,6 +65,7 @@ fun CaseDetailScreen(
     var showMedicalCertDialog by remember { mutableStateOf(false) }
     var showOrderLabDialog by remember { mutableStateOf(false) }
     var showScanPrescriptionDialog by remember { mutableStateOf(false) }
+    var sharingPrescription by remember { mutableStateOf<Prescription?>(null) }
     var isMedicalHistoryExpanded by remember { mutableStateOf(false) }
 
     val isMentalHealthCase = record.category == ConditionCategory.MENTAL_HEALTH ||
@@ -603,6 +604,42 @@ fun CaseDetailScreen(
                                 color = VS_OnSurfaceVariant
                             )
                         }
+
+                        HorizontalDivider(color = VS_Outline, modifier = Modifier.padding(vertical = 4.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "💬 Dispatch e-Rx to Patient",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = VS_OnSurfaceVariant
+                            )
+
+                            Button(
+                                onClick = { sharingPrescription = rx },
+                                shape = PillShape,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = VS_PrimaryContainer,
+                                    contentColor = VS_Primary
+                                ),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text("📲", fontSize = 11.sp)
+                                    Text(
+                                        text = "Share via SMS / WhatsApp",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -821,6 +858,14 @@ fun CaseDetailScreen(
                 onIssuePrescription(rx.medicines, rx.instructions)
                 showScanPrescriptionDialog = false
             }
+        )
+    }
+
+    sharingPrescription?.let { rx ->
+        com.vitalsense.app.feature.prescriptions.SharePrescriptionDialog(
+            prescription = rx,
+            patientPhoneDefault = patient?.phone ?: "9876543210",
+            onDismiss = { sharingPrescription = null }
         )
     }
 }

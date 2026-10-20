@@ -83,6 +83,7 @@ fun VitalSenseNavGraph(
     val connectivityState by appStateHolder.connectivityState.collectAsStateWithLifecycle()
     val isSyncing by appStateHolder.isSyncing.collectAsStateWithLifecycle()
     val pendingOutboxCount by appStateHolder.pendingOutboxCount.collectAsStateWithLifecycle(initialValue = 0)
+    val isSunlightMode by appStateHolder.isSunlightHighContrast.collectAsStateWithLifecycle()
 
     // Doctor specific scoped streams
     val doctorCases by doctorViewModel.scopedCases.collectAsStateWithLifecycle()
@@ -405,7 +406,8 @@ fun VitalSenseNavGraph(
                                                         BackHandler { currentAshaScreen = "home" }
                                                         com.vitalsense.app.feature.asha.ImmunizationTrackerScreen(
                                                             records = immunizations,
-                                                            onBackClick = { currentAshaScreen = "home" }
+                                                            onBackClick = { currentAshaScreen = "home" },
+                                                            isSunlightMode = isSunlightMode
                                                         )
                                                     }
                                                     "daily_rounds" -> {
@@ -417,7 +419,8 @@ fun VitalSenseNavGraph(
                                                                 coroutineScope.launch {
                                                                     repository.saveDailyRound(round)
                                                                 }
-                                                            }
+                                                            },
+                                                            isSunlightMode = isSunlightMode
                                                         )
                                                     }
                                                     "medicine_restock" -> {
@@ -429,7 +432,8 @@ fun VitalSenseNavGraph(
                                                                 coroutineScope.launch {
                                                                     repository.saveAshaMedicine(updatedMedicine)
                                                                 }
-                                                            }
+                                                            },
+                                                            isSunlightMode = isSunlightMode
                                                         )
                                                     }
                                                     else -> {
@@ -444,6 +448,8 @@ fun VitalSenseNavGraph(
                                                             notices = notices,
                                                             isOffline = isOffline,
                                                             pendingOutboxCount = pendingOutboxCount,
+                                                            isSunlightMode = isSunlightMode,
+                                                            onToggleSunlightMode = { appStateHolder.toggleSunlightHighContrast() },
                                                             onSelectProxyPatient = { selectedPatient ->
                                                                 appStateHolder.setProxyPatient(selectedPatient)
                                                                 appStateHolder.switchRole(UserRole.PATIENT)

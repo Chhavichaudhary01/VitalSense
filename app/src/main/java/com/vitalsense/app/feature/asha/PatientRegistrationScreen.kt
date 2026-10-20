@@ -406,6 +406,8 @@ fun PatientRegistrationScreen(
                             emergencyContact = "108"
                         )
                         onSave(newPatient)
+                        com.vitalsense.app.core.util.AudioGuidanceHelper.provideEmergencySosHaptic(context)
+                        com.vitalsense.app.core.util.AudioGuidanceHelper.speakEmergencyAlert(context)
                         com.vitalsense.app.core.util.EmergencySosHelper.dialEmergencyCall(context, "108")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))

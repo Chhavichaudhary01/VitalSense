@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitalSense - District Health Surveillance & CMO Command Centre</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: #121826;
+            --surface-card: #1a2234;
+            --border-color: #2a364f;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.6);
+            --warning: #f59e0b;
+            --success: #10b981;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Top CMO Navigation Bar */
+        header {
+            background: rgba(18, 24, 38, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .emblem-badge {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .header-titles h1 {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+
+        .header-titles p {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .status-indicators {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse-dot 2s infinite;
+        }
+
+        .audio-btn, .test-btn {
+            background: var(--surface-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .audio-btn:hover, .test-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .test-btn {
+            background: #7f1d1d;
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .test-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Full Screen Flashing SOS Banner */
+        #sos-banner {
+            display: none;
+            position: fixed;
+            top: 65px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #b91c1c, #dc2626, #991b1b);
+            color: white;
+            padding: 16px 24px;
+            z-index: 999;
+            box-shadow: 0 10px 30px var(--danger-glow);
+            animation: sos-flash 0.8s infinite alternate;
+        }
+
+        .sos-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sos-text h2 {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sos-text p {
+            font-size: 13px;
+            margin-top: 4px;
+            color: #fee2e2;
+        }
+
+        .sos-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-dispatch {
+            background: white;
+            color: #b91c1c;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn-dismiss {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Main Dashboard Grid */
+        main {
+            padding: 20px 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Metric KPI Row */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .kpi-info h3 {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .kpi-info .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 4px;
+        }
+
+        .kpi-info .kpi-sub {
+            font-size: 11px;
+            color: var(--success);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-icon {
+            font-size: 32px;
+            opacity: 0.8;
+        }
+
+        /* Two Column Content: Map & Real-time Live Feed */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface-color);
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #map-container {
+            height: 520px;
+            width: 100%;
+            background: #182234;
+        }
+
+        /* Feed List */
+        .feed-container {
+            padding: 12px;
+            overflow-y: auto;
+            max-height: 520px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .feed-item {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .feed-item.urgent {
+            border-left: 4px solid var(--danger);
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .feed-item.case {
+            border-left: 4px solid var(--warning);
+        }
+
+        .feed-item.sync {
+            border-left: 4px solid var(--primary);
+        }
+
+        .feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feed-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+
+        .badge-urgent {
+            background: #ef4444;
+            color: white;
+        }
+
+        .badge-case {
+            background: #f59e0b;
+            color: black;
+        }
+
+        .badge-patient {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .feed-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .feed-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .feed-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        @keyframes pulse-dot {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes sos-flash {
+            0% { background: #b91c1c; }
+            100% { background: #dc2626; box-shadow: 0 0 40px #ef4444; }
+        }
+
+        .pulsing-marker {
+            width: 24px;
+            height: 24px;
+            background: #ef4444;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ef4444;
+            animation: pulse-marker 1s infinite alternate;
+        }
+
+        @keyframes pulse-marker {
+            0% { transform: scale(0.9); }
+            100% { transform: scale(1.4); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-brand">
+            <div class="emblem-badge">🏛️</div>
+            <div class="header-titles">
+                <h1>VitalSense · District CMO Command Centre</h1>
+                <p>National Health Mission · Tele-Triage & Outbreak Surveillance Grid</p>
+            </div>
+        </div>
+
+        <div class="status-indicators">
+            <div class="status-pill">
+                <div class="status-dot"></div>
+                <span id="connection-status">Connecting to Firestore...</span>
+            </div>
+            <button class="audio-btn" id="audio-toggle" onclick="toggleAudio()">
+                🔊 Sound: <span id="audio-label">Active</span>
+            </button>
+            <button class="test-btn" onclick="simulateSosAlert()">
+                🚨 Simulate SOS Test
+            </button>
+        </div>
+    </header>
+
+    <!-- Full-width SOS Emergency Alert Banner -->
+    <div id="sos-banner">
+        <div class="sos-content">
+            <div class="sos-text">
+                <h2>🚨 CRITICAL EMERGENCY SOS SIGNAL RECEIVED</h2>
+                <p id="sos-details">Patient Ramesh Kumar (Sundarpura) flagged severe acute hypoxia (SpO2: 84%). 108 Ambulance Requisitioned.</p>
+            </div>
+            <div class="sos-actions">
+                <button class="btn-dispatch" onclick="acknowledgeSos()">✓ Acknowledge & Dispatch 108</button>
+                <button class="btn-dismiss" onclick="dismissSos()">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <!-- Top KPI Row -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-info">
+                    <h3>Registered Caseload</h3>
+                    <div class="kpi-value" id="kpi-patients">842</div>
+                    <div class="kpi-sub">↑ 12 newly synced today</div>
+                </div>
+                <div class="kpi-icon">👥</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-info">
+                    <h3>Triage Cases Under Review</h3>
+                    <div class="kpi-value" id="kpi-cases">18</div>
+                    <div class="kpi-sub" style="color: var(--warning)">⚡ 4 High Priority</div>
+                </div>
+                <div class="kpi-icon">🩺</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-info">
+                    <h3>Live OPD Tokens Served</h3>
+                    <div class="kpi-value" id="kpi-tokens">47</div>
+                    <div class="kpi-sub" style="color: var(--primary)">⏱️ Avg wait: 14 mins</div>
+                </div>
+                <div class="kpi-icon">🎫</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-info">
+                    <h3>Emergency SOS Incidents</h3>
+                    <div class="kpi-value" id="kpi-sos" style="color: var(--danger)">0</div>
+                    <div class="kpi-sub" style="color: var(--text-muted)">108 Ambulance Standby</div>
+                </div>
+                <div class="kpi-icon">🚨</div>
+            </div>
+        </section>
+
+        <!-- Main Grid: Village Map & Live Feed -->
+        <section class="workspace-grid">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span>🗺️</span> District Geo-Health & Outbreak Radar (Lucknow Sector)
+                    </div>
+                    <span style="font-size: 11px; color: var(--text-muted);">Real-time GPS / ASHA Clusters</span>
+                </div>
+                <div id="map-container"></div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span>📡</span> Live Telemetry & Firestore Push Stream
+                    </div>
+                    <span id="feed-count-badge" class="feed-badge badge-patient">Active</span>
+                </div>
+                <div class="feed-container" id="feed-list">
+                    <!-- Dynamic Feed Items Injected Here -->
+                    <div class="feed-item sync">
+                        <div class="feed-header">
+                            <span class="feed-badge badge-patient">System Start</span>
+                            <span class="feed-time">Just now</span>
+                        </div>
+                        <div class="feed-title">CMO Live Command Dashboard Initialized</div>
+                        <div class="feed-desc">Listening to Firestore cloud streams on project <code>vitalsense-58b28</code>. Tap "Emergency SOS" on mobile app to trigger live synchronization.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Firebase SDK (Modular v10 from CDN) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbVbSP0MHaFCkQYQpIng2-QAZShCz-XO8",
+            authDomain: "vitalsense-58b28.firebaseapp.com",
+            projectId: "vitalsense-58b28",
+            storageBucket: "vitalsense-58b28.firebasestorage.app",
+            appId: "1:1056788502080:web:436d93fe256b585c7db1a5"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Sign in anonymously for Firestore rules
+        signInAnonymously(auth).then(() => {
+            document.getElementById('connection-status').innerText = "Cloud Synced · vitalsense-58b28";
+            document.querySelector('.status-dot').style.background = "var(--success)";
+        }).catch(err => {
+            console.warn("Auth warning (rules may allow read):", err);
+            document.getElementById('connection-status').innerText = "Cloud Stream Listening";
+        });
+
+        // Setup Leaflet Map
+        const map = L.map('map-container').setView([26.8467, 80.9462], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        // Village Coordinates
+        const villages = {
+            "Sundarpura": { lat: 26.8520, lng: 80.9550, asha: "Priya Devi" },
+            "Ramgarh": { lat: 26.8350, lng: 80.9250, asha: "Meera Bai" },
+            "Kishanpur": { lat: 26.8700, lng: 80.9400, asha: "Sunita Yadav" },
+            "Shivnagar": { lat: 26.8250, lng: 80.9700, asha: "Anita Sharma" },
+            "Mohanpur": { lat: 26.8600, lng: 80.9100, asha: "Kiran Verma" }
+        };
+
+        // Plot Base Village Markers
+        const markers = {};
+        for (const [name, coord] of Object.entries(villages)) {
+            const m = L.circleMarker([coord.lat, coord.lng], {
+                radius: 8,
+                fillColor: "#3b82f6",
+                color: "#ffffff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+            m.bindPopup(`<b>Village: ${name}</b><br>ASHA Worker: ${coord.asha}<br>Health Sub-Centre Status: Operational`);
+            markers[name] = m;
+        }
+
+        // Web Audio Synthesizer for Emergency Sirens
+        let audioEnabled = true;
+        window.toggleAudio = function() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-label').innerText = audioEnabled ? "Active" : "Muted";
+            document.getElementById('audio-toggle').style.opacity = audioEnabled ? "1" : "0.6";
+        };
+
+        function playEmergencySiren() {
+            if (!audioEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                
+                // Tone 1
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = "sawtooth";
+                osc1.frequency.setValueAtTime(800, now);
+                osc1.frequency.exponentialRampToValueAtTime(1400, now + 0.35);
+                osc1.frequency.exponentialRampToValueAtTime(800, now + 0.7);
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 1.2);
+
+                // Secondary Chime
+                setTimeout(() => {
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.type = "sine";
+                    osc2.frequency.setValueAtTime(950, ctx.currentTime);
+                    gain2.gain.setValueAtTime(0.4, ctx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start();
+                    osc2.stop(ctx.currentTime + 0.6);
+                }, 400);
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        let emergencyCount = 0;
+
+        // Trigger Live SOS Banner & Map Focus
+        window.triggerSosUI = function(title, details, villageName) {
+            playEmergencySiren();
+            emergencyCount++;
+            document.getElementById('kpi-sos').innerText = emergencyCount;
+
+            const banner = document.getElementById('sos-banner');
+            document.getElementById('sos-details').innerText = details;
+            banner.style.display = 'block';
+
+            // Find village coords
+            const target = villages[villageName] || villages["Sundarpura"];
+            map.flyTo([target.lat, target.lng], 14, { duration: 1.5 });
+
+            // Create Pulsing Marker
+            const pulseIcon = L.divIcon({
+                className: 'pulsing-marker',
+                iconSize: [24, 24]
+            });
+            const sosMarker = L.marker([target.lat, target.lng], { icon: pulseIcon }).addTo(map);
+            sosMarker.bindPopup(`<b>🚨 EMERGENCY DISPATCH!</b><br>${title}<br>${details}`).openPopup();
+
+            // Add to feed
+            addFeedItem("Emergency SOS", title, details, "urgent");
+        };
+
+        window.dismissSos = function() {
+            document.getElementById('sos-banner').style.display = 'none';
+        };
+
+        window.acknowledgeSos = function() {
+            alert("✅ Emergency Dispatch Logged: 108 Ambulance requisition confirmed. GPS coordinates transmitted to Primary Health Centre Medical Officer.");
+            document.getElementById('sos-banner').style.display = 'none';
+        };
+
+        window.simulateSosAlert = function() {
+            triggerSosUI(
+                "🚨 EMERGENCY SOS: Ramesh Kumar",
+                "Patient Ramesh Kumar (Sundarpura, Age 34) triggered an Emergency SOS! Hypoxia & Chest Tightness. Location: Lat 26.8520, Lng 80.9550.",
+                "Sundarpura"
+            );
+        };
+
+        function addFeedItem(badgeText, title, desc, type) {
+            const list = document.getElementById('feed-list');
+            const item = document.createElement('div');
+            item.className = `feed-item ${type}`;
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const badgeClass = type === 'urgent' ? 'badge-urgent' : (type === 'case' ? 'badge-case' : 'badge-patient');
+
+            item.innerHTML = `
+                <div class="feed-header">
+                    <span class="feed-badge ${badgeClass}">${badgeText}</span>
+                    <span class="feed-time">${timeStr}</span>
+                </div>
+                <div class="feed-title">${title}</div>
+                <div class="feed-desc">${desc}</div>
+            `;
+            list.insertBefore(item, list.firstChild);
+        }
+
+        // --- FIRESTORE REAL-TIME LISTENERS ---
+
+        // 1. Listen for Broadcast Notices (Emergency SOS Alerts)
+        try {
+            const noticesCol = collection(db, "broadcast_notices");
+            onSnapshot(noticesCol, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        const isSos = data.isUrgent === true || (data.title && data.title.includes("SOS"));
+                        if (isSos) {
+                            triggerSosUI(data.title || "Emergency SOS", data.message || "Immediate clinical intervention requested.", data.targetVillage || "Sundarpura");
+                        } else {
+                            addFeedItem("Notice", data.title || "Broadcast Notice", data.message || "", "sync");
+                        }
+                    }
+                });
+            }, (error) => console.log("Notices listener error (handled):", error));
+        } catch (e) { console.warn("Firestore notices error:", e); }
+
+        // 2. Listen for Condition Records (New Clinical Triage Cases)
+        try {
+            const conditionsCol = collection(db, "condition_records");
+            onSnapshot(conditionsCol, (snapshot) => {
+                let count = snapshot.size;
+                document.getElementById('kpi-cases').innerText = count;
+
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const c = change.doc.data();
+                        const isHigh = c.severity === "SEVERE" || c.severity === "HIGH";
+                        addFeedItem(
+                            isHigh ? "🚨 High-Risk Case" : "Clinical Case",
+                            `${c.patientName} (${c.villageName || "PHC"}) · ${c.category || "General"}`,
+                            `Severity: ${c.severity} · Notes: ${c.notes || "Logged via mobile"}`,
+                            isHigh ? "urgent" : "case"
+                        );
+                    }
+                });
+            }, (error) => console.log("Conditions listener error (handled):", error));
+        } catch (e) { console.warn("Firestore conditions error:", e); }
+
+        // 3. Listen for Patients
+        try {
+            const patientsCol = collection(db, "patients");
+            onSnapshot(patientsCol, (snapshot) => {
+                document.getElementById('kpi-patients').innerText = snapshot.size;
+            }, (error) => console.log("Patients listener error (handled):", error));
+        } catch (e) { console.warn("Firestore patients error:", e); }
+
+        // 4. Listen for Queue Entries
+        try {
+            const queueCol = collection(db, "queue_entries");
+            onSnapshot(queueCol, (snapshot) => {
+                document.getElementById('kpi-tokens').innerText = snapshot.size;
+            }, (error) => console.log("Queue listener error (handled):", error));
+        } catch (e) { console.warn("Firestore queue error:", e); }
+
+    </script>
+</body>
+</html>

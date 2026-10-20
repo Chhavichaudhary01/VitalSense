@@ -47,6 +47,8 @@ fun AshaHomeScreen(
     onCompleteReferral: (com.vitalsense.app.core.data.model.Referral) -> Unit = {},
     isOffline: Boolean = false,
     pendingOutboxCount: Int = 0,
+    isSunlightMode: Boolean = false,
+    onToggleSunlightMode: () -> Unit = {},
     scrollState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
     modifier: Modifier = Modifier
 ) {
@@ -86,31 +88,68 @@ fun AshaHomeScreen(
         notices.filter { it.senderRole == UserRole.ADMIN && it.id !in dismissedAdvisoryIds }
     }
 
+    val ashBgColor = if (isSunlightMode) Color.White else VS_Background
+    val ashCardBg = if (isSunlightMode) Color.White else VS_Surface
+    val ashCardBorder = if (isSunlightMode) BorderStroke(2.dp, Color.Black) else BorderStroke(1.dp, VS_Outline)
+    val ashTextPrimary = if (isSunlightMode) Color.Black else VS_OnBackground
+    val ashTextSecondary = if (isSunlightMode) Color(0xFF1E293B) else VS_OnSurfaceVariant
+    val ashElevatedBg = if (isSunlightMode) Color(0xFFF8FAFC) else VS_SurfaceVariant
+
     LazyColumn(
         state = scrollState,
         modifier = modifier
             .fillMaxSize()
-            .background(VS_Background)
+            .background(ashBgColor)
             .padding(horizontal = Spacing.md),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
         contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.xxl)
     ) {
-        // 1. Header with Glume Greeting
+        // 1. Header with Glume Greeting & Sunlight High-Contrast Toggle
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-                Text(
-                    text = "Hi, ${asha.name}!",
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    ),
-                    color = VS_OnBackground
-                )
-                Text(
-                    text = "${stringResource(R.string.assignedVillages)} ${asha.assignedVillages.joinToString(", ")}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = VS_OnSurfaceVariant
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                    Text(
+                        text = "Hi, ${asha.name}!",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp
+                        ),
+                        color = ashTextPrimary
+                    )
+                    Text(
+                        text = "${stringResource(R.string.assignedVillages)} ${asha.assignedVillages.joinToString(", ")}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ashTextSecondary
+                    )
+                }
+
+                Surface(
+                    onClick = {
+                        AudioGuidanceHelper.provideHapticFeedback(context, isSuccess = true)
+                        onToggleSunlightMode()
+                    },
+                    shape = PillShape,
+                    color = if (isSunlightMode) Color.Black else VS_Surface,
+                    border = BorderStroke(1.5.dp, if (isSunlightMode) Color.Black else VS_Outline),
+                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(if (isSunlightMode) "☀️" else "🌤️", fontSize = 13.sp)
+                        Text(
+                            text = if (isSunlightMode) "Sunlight: ON" else "Sunlight Mode",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = if (isSunlightMode) Color.White else ashTextPrimary
+                        )
+                    }
+                }
             }
         }
 
@@ -1024,6 +1063,7 @@ fun AshaHomeScreen(
         RegisterPatientDialog(
             asha = asha,
             isOffline = isOffline,
+            isSunlightMode = isSunlightMode,
             onDismiss = { showRegisterPatientDialog = false },
             onRegister = { newPatient ->
                 onSavePatient(newPatient)

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vitalsense.app.core.data.model.ImmunizationRecord
@@ -23,8 +24,14 @@ import com.vitalsense.app.core.ui.theme.*
 @Composable
 fun ImmunizationTrackerScreen(
     records: List<ImmunizationRecord>,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    isSunlightMode: Boolean = false
 ) {
+    val screenBg = if (isSunlightMode) Color.White else VS_Background
+    val cardBg = if (isSunlightMode) Color.White else VS_Surface
+    val cardBorder = if (isSunlightMode) BorderStroke(2.dp, Color.Black) else BorderStroke(1.dp, VS_Outline)
+    val textPrimary = if (isSunlightMode) Color.Black else VS_OnBackground
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -35,13 +42,13 @@ fun ImmunizationTrackerScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VS_SurfaceVariant,
-                    titleContentColor = VS_OnBackground,
-                    navigationIconContentColor = VS_OnBackground
+                    containerColor = if (isSunlightMode) Color.White else VS_SurfaceVariant,
+                    titleContentColor = textPrimary,
+                    navigationIconContentColor = textPrimary
                 )
             )
         },
-        containerColor = VS_Background
+        containerColor = screenBg
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier

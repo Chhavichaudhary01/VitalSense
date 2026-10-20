@@ -126,50 +126,83 @@ fun TopRoleSwitcherBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
             ) {
-                // Syncing Active Spinner / Pending Changes Badge
-                if (isSyncing) {
-                    Surface(
-                        shape = PillShape,
-                        color = VS_PrimaryContainer,
-                        border = BorderStroke(1.dp, VS_Primary.copy(alpha = 0.4f)),
-                        modifier = Modifier.defaultMinSize(minHeight = 32.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(12.dp),
-                                strokeWidth = 2.dp,
-                                color = VS_Primary
-                            )
-                            Text(
-                                text = stringResource(R.string.syncing),
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold),
-                                color = VS_Primary
-                            )
+                // Prominent Network & Sync HUD Pill (§Presentation Wow Factor)
+                val effectiveOffline = isOffline || connectivityState == ConnectivityState.OFFLINE
+
+                val hudBgColor = when {
+                    isSyncing -> VS_PrimaryContainer
+                    effectiveOffline -> Color(0xFFFEF3C7) // Warm Amber
+                    pendingOutboxCount > 0 -> Color(0xFFFEF3C7)
+                    else -> Color(0xFFDCFCE7) // Crisp Mint
+                }
+                val hudBorderColor = when {
+                    isSyncing -> VS_Primary
+                    effectiveOffline -> Color(0xFFF59E0B)
+                    pendingOutboxCount > 0 -> Color(0xFFF59E0B)
+                    else -> Color(0xFF10B981)
+                }
+                val hudTextColor = when {
+                    isSyncing -> VS_Primary
+                    effectiveOffline -> Color(0xFFB45309)
+                    pendingOutboxCount > 0 -> Color(0xFFB45309)
+                    else -> Color(0xFF15803D)
+                }
+
+                Surface(
+                    onClick = {
+                        if (effectiveOffline || pendingOutboxCount > 0) {
+                            onManualSync()
+                        } else {
+                            onToggleOffline()
                         }
-                    }
-                } else if (pendingOutboxCount > 0) {
-                    Surface(
-                        onClick = onManualSync,
-                        shape = PillShape,
-                        color = Color(0xFFFFF8E1), // Warm amber background
-                        border = BorderStroke(1.dp, Color(0xFFFFB300)),
-                        modifier = Modifier.defaultMinSize(minHeight = 32.dp)
+                    },
+                    shape = PillShape,
+                    color = hudBgColor,
+                    border = BorderStroke(1.2.dp, hudBorderColor),
+                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(text = "🔄", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp))
-                            Text(
-                                text = "$pendingOutboxCount",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold),
-                                color = Color(0xFFE65100)
-                            )
+                        when {
+                            isSyncing -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(12.dp),
+                                    strokeWidth = 2.dp,
+                                    color = hudTextColor
+                                )
+                                Text(
+                                    text = "Flushing Outbox to Cloud...",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = hudTextColor
+                                )
+                            }
+                            effectiveOffline -> {
+                                Text("🟡", fontSize = 10.sp)
+                                Text(
+                                    text = if (pendingOutboxCount > 0) "Offline: $pendingOutboxCount in Outbox" else "Offline: Outbox Clear",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = hudTextColor
+                                )
+                            }
+                            pendingOutboxCount > 0 -> {
+                                Text("🔄", fontSize = 10.sp)
+                                Text(
+                                    text = "Flushing ($pendingOutboxCount in Outbox)",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = hudTextColor
+                                )
+                            }
+                            else -> {
+                                Text("🟢", fontSize = 10.sp)
+                                Text(
+                                    text = "Cloud Synced",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = hudTextColor
+                                )
+                            }
                         }
                     }
                 }
@@ -192,62 +225,6 @@ fun TopRoleSwitcherBar(
                             text = currentLanguage.nativeName,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = VS_OnBackground
-                        )
-                    }
-                }
-
-                // Connectivity Mode Pill (Displays Online, Slow, or Offline)
-                val effectiveOffline = isOffline || connectivityState == ConnectivityState.OFFLINE
-                val isSlow = !effectiveOffline && connectivityState == ConnectivityState.SLOW_NETWORK
-
-                val pillBgColor = when {
-                    effectiveOffline -> VS_SurfaceVariant
-                    isSlow -> Color(0xFFFFF3CD)
-                    else -> VS_SuccessContainer
-                }
-                val pillBorderColor = when {
-                    effectiveOffline -> VS_Outline
-                    isSlow -> Color(0xFFFFC107).copy(alpha = 0.6f)
-                    else -> VS_Success.copy(alpha = 0.4f)
-                }
-                val dotColor = when {
-                    effectiveOffline -> VS_OnSurfaceVariant
-                    isSlow -> Color(0xFFFF9800)
-                    else -> VS_Success
-                }
-                val textColor = when {
-                    effectiveOffline -> VS_OnSurfaceVariant
-                    isSlow -> Color(0xFF856404)
-                    else -> VS_OnSuccessContainer
-                }
-                val statusLabel = when {
-                    effectiveOffline -> stringResource(R.string.offline)
-                    isSlow -> stringResource(R.string.slowNetwork)
-                    else -> stringResource(R.string.online)
-                }
-
-                Surface(
-                    onClick = onToggleOffline,
-                    shape = PillShape,
-                    color = pillBgColor,
-                    border = BorderStroke(1.dp, pillBorderColor),
-                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(dotColor)
-                        )
-                        Text(
-                            text = statusLabel,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = textColor
                         )
                     }
                 }

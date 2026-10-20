@@ -26,9 +26,15 @@ import com.vitalsense.app.core.ui.theme.*
 fun MedicineRestockScreen(
     medicines: List<AshaMedicine>,
     onBackClick: () -> Unit,
-    onRequestRestock: (AshaMedicine) -> Unit = {}
+    onRequestRestock: (AshaMedicine) -> Unit = {},
+    isSunlightMode: Boolean = false
 ) {
     var restockSuccessMsg by remember { mutableStateOf<String?>(null) }
+
+    val screenBg = if (isSunlightMode) Color.White else VS_Background
+    val cardBg = if (isSunlightMode) Color.White else VS_Surface
+    val cardBorder = if (isSunlightMode) BorderStroke(2.dp, Color.Black) else BorderStroke(1.dp, VS_Outline)
+    val textPrimary = if (isSunlightMode) Color.Black else VS_OnBackground
 
     Scaffold(
         topBar = {
@@ -40,13 +46,13 @@ fun MedicineRestockScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VS_SurfaceVariant,
-                    titleContentColor = VS_OnBackground,
-                    navigationIconContentColor = VS_OnBackground
+                    containerColor = if (isSunlightMode) Color.White else VS_SurfaceVariant,
+                    titleContentColor = textPrimary,
+                    navigationIconContentColor = textPrimary
                 )
             )
         },
-        containerColor = VS_Background
+        containerColor = screenBg
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -115,8 +121,8 @@ fun MedicineRestockScreen(
                     }
 
                     VitalSenseCard(
-                        backgroundColor = if (isOutOfStock) VS_ErrorContainer else VS_Surface,
-                        border = BorderStroke(1.dp, if (isOutOfStock) VS_Error.copy(alpha = 0.4f) else VS_Outline)
+                        backgroundColor = if (isSunlightMode) Color.White else if (isOutOfStock) VS_ErrorContainer else VS_Surface,
+                        border = if (isSunlightMode) BorderStroke(2.dp, Color.Black) else BorderStroke(1.dp, if (isOutOfStock) VS_Error.copy(alpha = 0.4f) else VS_Outline)
                     ) {
                         Column(
                             modifier = Modifier
