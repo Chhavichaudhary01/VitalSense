@@ -564,12 +564,19 @@
             document.getElementById('connection-status').innerText = "Cloud Stream Listening";
         });
 
-        // Setup Leaflet Map with CartoDB Dark Matter tiles (100% CORS & file:// compatible)
+        // Setup Leaflet Map with Esri World Dark Gray Base (100% Free, NO API KEY REQUIRED, Works offline & file://)
         const map = L.map('map-container').setView([26.8467, 80.9462], 12);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 19
+
+        // Base Dark Gray Map (Esri ArcGIS Online Public Service - Zero API Key)
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri &mdash; National Geographic, DeLorme, NAVTEQ',
+            maxZoom: 16
+        }).addTo(map);
+
+        // Roads & Town Reference Labels Overlay
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '',
+            maxZoom: 16
         }).addTo(map);
 
         // Village Coordinates
