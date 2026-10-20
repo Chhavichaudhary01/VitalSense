@@ -28,6 +28,10 @@ fun VitalSenseCard(
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
+    val isSunlight = LocalSunlightMode.current
+    val effectiveBg = if (isSunlight) Color.White else backgroundColor
+    val effectiveBorder = if (isSunlight) BorderStroke(2.5.dp, Color.Black) else border
+    val effectiveElevation = if (isSunlight) 0.dp else elevation
     if (onClick != null) {
         Surface(
             onClick = onClick,
@@ -35,9 +39,9 @@ fun VitalSenseCard(
                 .fillMaxWidth()
                 .touchSpring(onClick = onClick),
             shape = CardShape,
-            color = backgroundColor,
-            shadowElevation = elevation,
-            border = border
+            color = effectiveBg,
+            shadowElevation = effectiveElevation,
+            border = effectiveBorder
         ) {
             Box(modifier = Modifier.padding(contentPadding)) {
                 content()
@@ -47,9 +51,9 @@ fun VitalSenseCard(
         Surface(
             modifier = modifier.fillMaxWidth(),
             shape = CardShape,
-            color = backgroundColor,
-            shadowElevation = elevation,
-            border = border
+            color = effectiveBg,
+            shadowElevation = effectiveElevation,
+            border = effectiveBorder
         ) {
             Box(modifier = Modifier.padding(contentPadding)) {
                 content()

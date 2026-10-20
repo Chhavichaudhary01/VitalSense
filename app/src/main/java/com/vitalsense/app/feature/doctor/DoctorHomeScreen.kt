@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vitalsense.app.core.call.*
 import com.vitalsense.app.core.data.model.*
+import com.vitalsense.app.core.data.local.seed.SeedDataProvider
 import com.vitalsense.app.core.ui.components.*
 import com.vitalsense.app.core.ui.theme.*
 import com.vitalsense.app.feature.doctor.components.CreateReferralDialog
@@ -68,6 +69,7 @@ fun DoctorHomeScreen(
     modifier: Modifier = Modifier
 ) {
     var showScheduleDialog by remember { mutableStateOf(false) }
+    var showScanPrescriptionDialog by remember { mutableStateOf(false) }
     var selectedPatientForHistory by remember { mutableStateOf<Patient?>(null) }
     var selectedPatientForReferral by remember { mutableStateOf<Patient?>(null) }
     var activeTeleConsultationPatient by remember { mutableStateOf<String?>(null) }
@@ -141,6 +143,32 @@ fun DoctorHomeScreen(
                     )
                 }
 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { showScanPrescriptionDialog = true },
+                        shape = PillShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = VS_PrimaryContainer,
+                            contentColor = VS_Primary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text("📷", fontSize = 13.sp)
+                            Text(
+                                text = "Scan Rx / Lab",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+
                 // On-Call Status Toggle Button (Available / Busy / Offline)
                 Surface(
                     shape = PillShape,
@@ -198,6 +226,7 @@ fun DoctorHomeScreen(
                             )
                         )
                     }
+                }
                 }
             }
         }
@@ -407,9 +436,9 @@ fun DoctorHomeScreen(
         }
 
         // 3.15 Specialist Feedback (Closed-Loop Care) Card
-        val closedLoopReferrals = (if (allReferrals.isNotEmpty()) allReferrals else referrals).filter { ref ->
-            (ref.referringUserId == doctor.id || doctor.id == "doc_rajesh" || ref.referringUserName.contains(doctor.name, ignoreCase = true)) &&
-            (ref.specialistFindings != null || ref.status == ReferralStatus.COMPLETED || ref.status == ReferralStatus.CONSULTATION_COMPLETED || ref.status == ReferralStatus.FOLLOW_UP)
+        val rawReferrals = if (allReferrals.isNotEmpty()) allReferrals else if (referrals.isNotEmpty()) referrals else SeedDataProvider.initialReferrals
+        val closedLoopReferrals = rawReferrals.filter { ref ->
+            ref.specialistFindings != null || ref.status == ReferralStatus.COMPLETED || ref.status == ReferralStatus.CONSULTATION_COMPLETED || ref.status == ReferralStatus.FOLLOW_UP
         }
 
         if (closedLoopReferrals.isNotEmpty()) {
@@ -1832,6 +1861,18 @@ fun DoctorHomeScreen(
                 ) {
                     Text(stringResource(R.string.cancel), color = VS_OnSurfaceVariant)
                 }
+            }
+        )
+    }
+
+    if (showScanPrescriptionDialog) {
+        val targetPatient = patients.firstOrNull() ?: SeedDataProvider.initialPatients.first()
+        com.vitalsense.app.feature.prescriptions.PrescriptionUploadDialog(
+            patient = targetPatient,
+            isAshaProxy = false,
+            onDismiss = { showScanPrescriptionDialog = false },
+            onSavePrescription = { rx ->
+                showScanPrescriptionDialog = false
             }
         )
     }

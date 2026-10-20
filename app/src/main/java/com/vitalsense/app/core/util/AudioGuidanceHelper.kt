@@ -1,6 +1,8 @@
 package com.vitalsense.app.core.util
 
 import android.content.Context
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -104,6 +106,31 @@ object AudioGuidanceHelper {
                 @Suppress("DEPRECATION")
                 vibrator?.vibrate(timings, -1)
             }
+
+            // Audible Morse code beeps in parallel so tablets without vibration motors or placed on tables can clearly be heard
+            Thread {
+                try {
+                    val toneGen = ToneGenerator(AudioManager.STREAM_ALARM, 85)
+                    // S: 3 short beeps
+                    for (i in 0 until 3) {
+                        toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
+                        Thread.sleep(200)
+                    }
+                    Thread.sleep(150)
+                    // O: 3 long beeps
+                    for (i in 0 until 3) {
+                        toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 350)
+                        Thread.sleep(450)
+                    }
+                    Thread.sleep(150)
+                    // S: 3 short beeps
+                    for (i in 0 until 3) {
+                        toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
+                        Thread.sleep(200)
+                    }
+                    toneGen.release()
+                } catch (_: Exception) {}
+            }.start()
         } catch (e: Exception) {
             // Ignore if vibration unavailable
         }

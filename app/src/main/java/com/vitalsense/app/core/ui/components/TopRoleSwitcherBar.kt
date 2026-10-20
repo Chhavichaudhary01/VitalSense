@@ -150,7 +150,9 @@ fun TopRoleSwitcherBar(
 
                 Surface(
                     onClick = {
-                        if (effectiveOffline || pendingOutboxCount > 0) {
+                        if (isOffline) {
+                            onToggleOffline()
+                        } else if (connectivityState == ConnectivityState.OFFLINE || pendingOutboxCount > 0) {
                             onManualSync()
                         } else {
                             onToggleOffline()
@@ -181,8 +183,13 @@ fun TopRoleSwitcherBar(
                             }
                             effectiveOffline -> {
                                 Text("🟡", fontSize = 10.sp)
+                                val offlineLabel = when {
+                                    isOffline -> "Demo Offline (Tap to Reconnect)"
+                                    pendingOutboxCount > 0 -> "Offline: $pendingOutboxCount in Outbox"
+                                    else -> "No Network / Airplane"
+                                }
                                 Text(
-                                    text = if (pendingOutboxCount > 0) "Offline: $pendingOutboxCount in Outbox" else "Offline: Outbox Clear",
+                                    text = offlineLabel,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = hudTextColor
                                 )

@@ -564,11 +564,12 @@
             document.getElementById('connection-status').innerText = "Cloud Stream Listening";
         });
 
-        // Setup Leaflet Map
+        // Setup Leaflet Map with CartoDB Dark Matter tiles (100% CORS & file:// compatible)
         const map = L.map('map-container').setView([26.8467, 80.9462], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
         }).addTo(map);
 
         // Village Coordinates

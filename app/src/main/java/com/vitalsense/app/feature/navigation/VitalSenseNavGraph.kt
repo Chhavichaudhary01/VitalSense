@@ -18,6 +18,7 @@ import com.vitalsense.app.core.ui.components.AppUpdateBanner
 import com.vitalsense.app.core.util.AppUpdateChecker
 import com.vitalsense.app.core.util.AppUpdateInfo
 import com.vitalsense.app.core.ui.components.TopRoleSwitcherBar
+import com.vitalsense.app.core.ui.theme.LocalSunlightMode
 import com.vitalsense.app.core.ui.util.AdaptiveScreenContainer
 import com.vitalsense.app.feature.admin.AdminHomeScreen
 import com.vitalsense.app.feature.admin.AdminDiagnosticsScreen
@@ -172,7 +173,8 @@ fun VitalSenseNavGraph(
                         modifier = modifier
                     )
                 } else {
-                    Scaffold(
+                    CompositionLocalProvider(LocalSunlightMode provides isSunlightMode) {
+                        Scaffold(
                         topBar = {
                             TopRoleSwitcherBar(
                                 currentRole = currentRole,
@@ -873,6 +875,7 @@ fun VitalSenseNavGraph(
                                 }
                             }
                         }
+                    }
                     }
                 }
             }

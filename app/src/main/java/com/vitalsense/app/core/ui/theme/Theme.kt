@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
@@ -121,3 +122,7 @@ private class LocalizedContextWrapper(
     override fun getResources(): Resources = localizedContext.resources
     override fun getAssets(): AssetManager = localizedContext.assets
 }
+
+
+/** Globally provides sunlight high-contrast state across the entire UI tree */
+val LocalSunlightMode = compositionLocalOf { false }

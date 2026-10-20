@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.os.Build
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -111,50 +112,56 @@ class NetworkMonitor @Inject constructor(
             return
         }
 
-        val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build()
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                Log.d(TAG, "Network available: $network")
+                val wasOffline = _connectivityState.value == ConnectivityState.OFFLINE
+                recomputeState()
+                if (wasOffline && !_isManualOfflineForced.value) {
+                    Log.d(TAG, "Internet connectivity restored! Triggering outbox flush.")
+                    onNetworkRestoredCallback?.invoke()
+                }
+            }
 
-        try {
-            connectivityManager.registerNetworkCallback(
-                request,
-                object : ConnectivityManager.NetworkCallback() {
-                    override fun onAvailable(network: Network) {
-                        Log.d(TAG, "Network available: $network")
-                        val wasOffline = _connectivityState.value == ConnectivityState.OFFLINE
-                        recomputeState()
-                        if (wasOffline && !_isManualOfflineForced.value) {
-                            Log.d(TAG, "Internet connectivity restored! Triggering outbox flush.")
-                            onNetworkRestoredCallback?.invoke()
-                        }
-                    }
-
-                    override fun onCapabilitiesChanged(
-                        network: Network,
-                        networkCapabilities: NetworkCapabilities
-                    ) {
-                        Log.d(TAG, "Network capabilities changed: $networkCapabilities")
-                        val state = classifyCapabilities(networkCapabilities)
-                        if (!_isManualOfflineForced.value) {
-                            val previous = _connectivityState.value
-                            _connectivityState.value = state
-                            if (previous == ConnectivityState.OFFLINE && state != ConnectivityState.OFFLINE) {
-                                onNetworkRestoredCallback?.invoke()
-                            }
-                        }
-                    }
-
-                    override fun onLost(network: Network) {
-                        Log.w(TAG, "Network lost: $network")
-                        recomputeState()
-                    }
-
-                    override fun onUnavailable() {
-                        Log.w(TAG, "Network unavailable")
-                        recomputeState()
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities
+            ) {
+                Log.d(TAG, "Network capabilities changed: $networkCapabilities")
+                val state = classifyCapabilities(networkCapabilities)
+                if (!_isManualOfflineForced.value) {
+                    val previous = _connectivityState.value
+                    _connectivityState.value = state
+                    if (previous == ConnectivityState.OFFLINE && state != ConnectivityState.OFFLINE) {
+                        onNetworkRestoredCallback?.invoke()
                     }
                 }
-            )
+            }
+
+            override fun onLost(network: Network) {
+                Log.w(TAG, "Network lost: $network")
+                _connectivityState.value = ConnectivityState.OFFLINE
+                _activeNetworkType.value = "NONE"
+                recomputeState()
+            }
+
+            override fun onUnavailable() {
+                Log.w(TAG, "Network unavailable")
+                _connectivityState.value = ConnectivityState.OFFLINE
+                _activeNetworkType.value = "NONE"
+                recomputeState()
+            }
+        }
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                connectivityManager.registerDefaultNetworkCallback(callback)
+            } else {
+                val request = NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .build()
+                connectivityManager.registerNetworkCallback(request, callback)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to register network callback: ${e.message}", e)
         }
